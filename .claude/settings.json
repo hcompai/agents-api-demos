@@ -1,0 +1,49 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cp:*)",
+      "Bash(gh pr diff:*)",
+      "Bash(gh pr view:*)",
+      "Bash(git diff:*)",
+      "Bash(git log:*)",
+      "Bash(git mv:*)",
+      "Bash(git show:*)",
+      "Bash(git status:*)",
+      "Bash(head:*)",
+      "Bash(mkdir:*)",
+      "Bash(mypy:*)",
+      "Bash(ruff check:*)",
+      "Bash(ruff format:*)",
+      "Bash(tail:*)",
+      "Bash(tree:*)",
+      "Bash(uv run pytest:*)",
+      "Bash(sed:*)",
+      "Bash(wc:*)",
+      "WebFetch(domain:docs.astral.sh)",
+      "WebFetch(domain:docs.pydantic.dev)",
+      "WebFetch(domain:github.com)"
+    ],
+    "deny": [
+      "Read(**/.env*)",
+      "Bash(* .env)",
+      "Bash(* .env *)",
+      "Bash(*.env)",
+      "Bash(*.env *)"
+    ]
+  },
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/format-python.sh",
+            "timeout": 30
+          }
+        ]
+      }
+    ]
+  },
+  "enableAllProjectMcpServers": true,
+  "enabledMcpjsonServers": ["agent-sdk-demo-qa"]
+}
