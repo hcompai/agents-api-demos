@@ -6,5 +6,6 @@ Each subdirectory is one self-contained recipe for the `hai-agents` SDK.
 | --- | --- |
 | [`qa_mcp`](qa_mcp/) | Run an autonomous browser agent against a remote URL to QA a web UI; expose it to Claude Code as an MCP server. |
 | [`qa_cli`](qa_cli/) | Same QA agent, exposed as a shell command (`qa-cli`) and surfaced to Claude via the `qa-via-cli` skill instead of MCP. |
+| [`mcpify_anything`](mcpify_anything/) | A *family* of typed tools off one decorator: `extract` (dynamic schema), `get_product_prices` (typed read), `add_cart_items` (action + read-back). Demonstrates the typed-toolkit pattern. |
 
 To add an example, create a new subdirectory with a `server.py` (or `main.py`), a short `README.md`, and — if it's an MCP server — register it in the root `.mcp.json`.

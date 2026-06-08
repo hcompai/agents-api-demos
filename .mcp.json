@@ -3,6 +3,10 @@
     "agent-sdk-demo-qa": {
       "command": "uv",
       "args": ["run", "--env-file", ".env", "agent-sdk-demo-qa"]
+    },
+    "agent-sdk-demo-mcpify-anything": {
+      "command": "uv",
+      "args": ["run", "--env-file", ".env", "agent-sdk-demo-mcpify-anything"]
     }
   }
 }
