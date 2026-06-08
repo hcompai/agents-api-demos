@@ -1,0 +1,86 @@
+# agent-sdk-demo
+
+Recipes for the [`hai-agents`](https://pypi.org/project/hai-agents/) Python SDK, wired up as **MCP servers and CLI tools for Claude Code**. Each example shows one way to use the SDK in a real workflow.
+
+## What is this?
+
+The `hai-agents` SDK lets you spin up autonomous agents — web-surfing, code-running, vision-capable — and drive them from Python. This repo wraps that SDK into two interface patterns so you can call the agents from inside Claude Code while you work:
+
+- **MCP server** — Claude Code calls the agent like any other MCP tool
+- **CLI + Claude Code skill** — Claude Code runs a shell command that the `qa-via-cli` skill knows how to invoke
+
+The first example implements both patterns for the same task: autonomously QA a web UI and return structured findings.
+
+## Quickstart
+
+```bash
+git clone <this-repo>
+cd agent-sdk-demo
+uv sync
+cp .env.example .env  # add your H_API_KEY from https://portal.hcompany.ai
+claude                 # opens Claude Code in the repo; the MCP server is auto-registered
+```
+
+In Claude Code:
+
+> *"Use `review_web_ui` to check https://news.ycombinator.com — verify the top story link works and the page has reasonable accessibility."*
+
+## Examples
+
+| Example | What it shows | Interface |
+| --- | --- | --- |
+| [`qa_ui`](examples/qa_ui/) | Autonomous browser agent QAs a remote URL and returns structured `{verdict, summary, findings}` | MCP server (`review_web_ui`, `visual_check`) |
+| [`qa_cli`](examples/qa_cli/) | Same QA agent exposed as a shell command, surfaced to Claude Code via the `qa-via-cli` skill | CLI (`qa-cli review / visual`) |
+| [`broken_ui`](examples/broken_ui/) | Static test page with 20 intentional bugs (a11y, SEO, visual, content, JS errors) — point the agent at it to see findings in action | Test fixture |
+
+To test against `broken_ui` locally:
+
+```bash
+cd examples/broken_ui && python -m http.server 8080
+# then in Claude Code:
+# "Use review_web_ui to check http://localhost:8080 for accessibility issues"
+```
+
+## How it works
+
+```mermaid
+flowchart LR
+  user[You in Claude Code] -->|tool call| mcp[MCP server\nexamples/qa_ui/server.py]
+  mcp -->|hai_agents.run_session| api[H Agent API]
+  api -->|controls| browser[Headless browser]
+  browser -->|screenshots + DOM| api
+  api -->|structured answer| mcp
+  mcp -->|findings| user
+```
+
+The MCP server is a thin FastMCP wrapper around `hai_agents.run_session`. Each tool defines an inline agent (with a browser environment and shared skills), submits the user's instruction, and surfaces the structured answer back to Claude Code.
+
+Shared components (agent instructions, `ReviewResult` model, helpers) live in [`examples/_shared.py`](examples/_shared.py) and are imported by both `qa_ui` and `qa_cli`.
+
+## Configuration
+
+| Env var | Required | Source |
+| --- | --- | --- |
+| `H_API_KEY` | yes | https://portal.hcompany.ai |
+
+## Project layout
+
+```
+agent-sdk-demo/
+├── .mcp.json                      # registers the MCP server with Claude Code
+├── .claude/skills/qa-via-cli/     # Claude Code skill for invoking qa-cli
+├── examples/
+│   ├── _shared.py                 # shared instructions, models, and helpers
+│   ├── agent_skills/              # skill docs passed to the ui-reviewer agent
+│   ├── qa_ui/                     # MCP server (review_web_ui + visual_check)
+│   ├── qa_cli/                    # CLI wrapper (qa-cli review / visual)
+│   └── broken_ui/                 # static test page with intentional bugs
+├── AGENTS.md                      # coding rules for contributors
+└── pyproject.toml
+```
+
+## Links
+
+- [hai-agents on PyPI](https://pypi.org/project/hai-agents/)
+- [H Company portal](https://portal.hcompany.ai)
+- [Model Context Protocol](https://modelcontextprotocol.io)
