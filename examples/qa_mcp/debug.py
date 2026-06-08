@@ -22,7 +22,6 @@ from hai_agents import Client, run_session
 from examples._shared import (
     REVIEWER_INSTRUCTIONS,
     ReviewResult,
-    answer_from_events,
     browser_env,
     load_agent_skills,
 )
@@ -53,10 +52,9 @@ def review(url: str, instruction: str = "Review the page for usability and acces
     trace_path = _save_trace("review", url, instruction, elapsed, result)
     print(f"trace → {trace_path}", file=sys.stderr)
 
-    answer = result.answer or answer_from_events(result)
-    if not isinstance(answer, dict):
+    if not isinstance(result.answer, dict):
         sys.exit(f"error: agent did not return a structured answer (status={result.status})")
-    print(json.dumps(ReviewResult.model_validate(answer).model_dump(), indent=2))
+    print(json.dumps(ReviewResult.model_validate(result.answer).model_dump(), indent=2))
 
 
 def visual(url: str, question: str) -> None:

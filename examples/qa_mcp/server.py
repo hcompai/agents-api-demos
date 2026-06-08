@@ -10,7 +10,6 @@ from hai_agents import Client, run_session
 from examples._shared import (
     REVIEWER_INSTRUCTIONS,
     ReviewResult,
-    answer_from_events,
     browser_env,
     load_agent_skills,
 )
@@ -36,9 +35,8 @@ def review_web_ui(url: str, instruction: str) -> ReviewResult:
         max_time_s=360.0,
         answer_format=ReviewResult.model_json_schema(),
     )
-    answer = result.answer or answer_from_events(result)
-    if isinstance(answer, dict):
-        return ReviewResult.model_validate(answer)
+    if isinstance(result.answer, dict):
+        return ReviewResult.model_validate(result.answer)
     raise RuntimeError(f"ui-reviewer did not return a structured answer (status={result.status})")
 
 
