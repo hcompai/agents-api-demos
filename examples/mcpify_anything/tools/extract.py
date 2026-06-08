@@ -20,7 +20,15 @@ class ExtractInput(BaseModel):
 
 
 # Defined above the decorator (out of AGENTS.md private-after-public order) because the
-# ``@browser_tool`` factory binds the reference at module-load time — it has to exist first.
+# ``@browser_tool`` factory binds these references at module-load time — they have to exist first.
+def _site(args: ExtractInput) -> HttpUrl:
+    return args.site
+
+
+def _prompt(args: ExtractInput) -> str:
+    return args.task
+
+
 def _build_answer_model(args: ExtractInput) -> type[BaseModel]:
     # ``WithJsonSchema(args.answer_schema)`` overrides what the model reports via
     # ``model_json_schema()`` — that's what reaches the platform as ``answer_format``. The
@@ -37,8 +45,8 @@ def _build_answer_model(args: ExtractInput) -> type[BaseModel]:
 
 @browser_tool(
     instructions="You browse websites and follow the caller's natural-language task.",
-    site=lambda a: a.site,
-    prompt=lambda a: a.task,
+    site=_site,
+    prompt=_prompt,
     answer_model_factory=_build_answer_model,
 )
 async def extract(args: ExtractInput, answer: dict[str, Any]) -> dict[str, Any]:

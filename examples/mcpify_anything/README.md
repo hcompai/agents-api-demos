@@ -33,14 +33,24 @@ class JobListing(BaseModel):
     url: HttpUrl
 
 
+def _site(args: JobListingsInput) -> HttpUrl:
+    return args.site
+
+
+def _prompt(args: JobListingsInput) -> str:
+    return f"On {args.site}, find listings for {args.role!r}."
+
+
 @browser_tool(
     instructions="You operate job-search UIs.",
-    site=lambda a: a.site,
-    prompt=lambda a: f"On {a.site}, find listings for {a.role!r}.",
+    site=_site,
+    prompt=_prompt,
 )
 async def get_job_listings(args: JobListingsInput, answer: list[JobListing]) -> list[JobListing]:
     return answer
 ```
+
+> Typed `def` helpers (rather than lambdas) so mypy can bind the decorator's `InputT` to your specific `BaseModel` — Python lambdas can't carry parameter annotations.
 
 Three properties of the framework do all the work:
 

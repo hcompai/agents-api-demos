@@ -2,7 +2,7 @@
 
 import inspect
 from collections.abc import Awaitable, Callable, Iterable
-from typing import Generic, TypeVar, get_args, get_origin, get_type_hints
+from typing import Any, Generic, TypeVar, get_args, get_origin, get_type_hints
 
 from fastmcp import FastMCP
 from pydantic import BaseModel, ConfigDict, Field, HttpUrl, RootModel, create_model
@@ -146,7 +146,10 @@ def browser_tool(
     return _decorate
 
 
-def register_specs(specs: Iterable[ToolSpec], mcp: FastMCP, runner: Runner) -> None:
+# ``ToolSpec[Any, Any, Any]`` because each ``SPECS`` tuple is heterogeneous — every entry has its
+# own ``InputT/AnswerT/OutputT`` triple, and a single TypeVar can't express "any combination of
+# parametrisations." Runtime correctness comes from ``ToolSpec``'s frozen Pydantic config.
+def register_specs(specs: Iterable["ToolSpec[Any, Any, Any]"], mcp: FastMCP, runner: Runner) -> None:
     """Wire each ``ToolSpec`` into FastMCP, capturing the runner in a per-tool closure.
 
     Args:
@@ -170,6 +173,11 @@ class _ListWrapper(BaseModel):
     ``{"root": [...]}`` on the wire, which would force every consumer to know about the
     framework's quirk. The named field keeps the wire format a plain JSON object.
     """
+
+    # Declared on the base so the access in ``_unwrap_answer`` typechecks. The concrete
+    # element type ``T`` is bound at runtime by ``create_model(__base__=_ListWrapper,
+    # items=(list[T], Field(...)))`` — mypy can't see that, hence the ``Any`` element.
+    items: list[Any] = Field(default_factory=list)
 
 
 def _materialise_answer_model(annotation: object, *, fn_name: str) -> type[BaseModel]:
@@ -197,7 +205,7 @@ def _unwrap_answer(validated: BaseModel) -> object:
     return validated
 
 
-def _register_one(spec: ToolSpec, mcp: FastMCP, runner: Runner) -> None:
+def _register_one(spec: "ToolSpec[Any, Any, Any]", mcp: FastMCP, runner: Runner) -> None:
     async def _wrapper(args: BaseModel) -> object:
         # Static answer model for curated tools; per-call override for dynamic-schema
         # tools like [extract]. The chosen model drives both the platform's
@@ -222,15 +230,21 @@ def _register_one(spec: ToolSpec, mcp: FastMCP, runner: Runner) -> None:
     # Stamp annotations + signature so FastMCP introspects the *concrete* input/output
     # models (not the generic BaseModel above). Both surfaces are set so any
     # introspection path (function annotations or inspect.signature) sees the same thing.
+    # ``__signature__`` is attached via ``setattr`` because the ``Callable`` protocol mypy uses
+    # doesn't model arbitrary attribute assignment, even though Python functions accept it.
     _wrapper.__annotations__ = {"args": spec.input_model, "return": spec.output_model}
-    _wrapper.__signature__ = inspect.Signature(
-        parameters=[
-            inspect.Parameter(
-                "args",
-                kind=inspect.Parameter.POSITIONAL_OR_KEYWORD,
-                annotation=spec.input_model,
-            )
-        ],
-        return_annotation=spec.output_model,
+    setattr(
+        _wrapper,
+        "__signature__",
+        inspect.Signature(
+            parameters=[
+                inspect.Parameter(
+                    "args",
+                    kind=inspect.Parameter.POSITIONAL_OR_KEYWORD,
+                    annotation=spec.input_model,
+                )
+            ],
+            return_annotation=spec.output_model,
+        ),
     )
     mcp.tool(name=spec.name, description=spec.description)(_wrapper)

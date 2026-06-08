@@ -17,13 +17,29 @@ _DEFAULT_AGENT_ARTIFACT = "mcpify-anything-agent"
 
 
 def build_server() -> FastMCP:
-    """Compose a FastMCP server whose tools are wired to the lazy-built ``CuaRunner``.
+    """Compose a FastMCP server whose tools are wired to a CuaRunner built from env config.
+
+    Validates ``H_API_KEY`` at boot time so a missing key fails before Claude Code can
+    even register the tools, rather than surfacing mid-conversation on the first call.
 
     Returns:
         A ready-to-run FastMCP instance with every tool in ``SPECS`` registered.
+
+    Raises:
+        RuntimeError: ``H_API_KEY`` is not set in the environment.
     """
+    api_key = os.environ.get("H_API_KEY")
+    if not api_key:
+        raise RuntimeError(
+            "H_API_KEY is not set. Copy .env.example to .env and add a key from "
+            "https://portal.hcompany.ai, then re-run."
+        )
+    base_url = os.environ.get("H_BASE_URL", _DEFAULT_BASE_URL)
+    artifact = os.environ.get("H_AGENT_ARTIFACT", _DEFAULT_AGENT_ARTIFACT)
+    runner = CuaRunner(AsyncClient(api_key=api_key, base_url=base_url), base_url, artifact)
+
     mcp: FastMCP = FastMCP("agent-sdk-demo-mcpify-anything")
-    register_specs(SPECS, mcp, _runner())
+    register_specs(SPECS, mcp, runner)
     return mcp
 
 
@@ -31,26 +47,6 @@ def main() -> None:
     """Entry point used by the ``agent-sdk-demo-mcpify-anything`` console script."""
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(name)s %(levelname)s %(message)s")
     build_server().run()
-
-
-_runner_instance: CuaRunner | None = None
-
-
-def _runner() -> CuaRunner:
-    # Lazy singleton — keeps imports cheap and lets the FastMCP server boot even when the
-    # API key isn't set (we fail loud on the first tool call, matching qa_mcp's pattern).
-    global _runner_instance
-    if _runner_instance is None:
-        api_key = os.environ.get("H_API_KEY")
-        if not api_key:
-            raise RuntimeError(
-                "H_API_KEY is not set. Copy .env.example to .env and add a key from "
-                "https://portal.hcompany.ai, then re-run."
-            )
-        base_url = os.environ.get("H_BASE_URL", _DEFAULT_BASE_URL)
-        artifact = os.environ.get("H_AGENT_ARTIFACT", _DEFAULT_AGENT_ARTIFACT)
-        _runner_instance = CuaRunner(AsyncClient(api_key=api_key, base_url=base_url), base_url, artifact)
-    return _runner_instance
 
 
 if __name__ == "__main__":

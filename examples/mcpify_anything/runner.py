@@ -124,7 +124,10 @@ class CuaRunner:
         # Isolated so a recording test subclass can capture the session id without
         # re-implementing the runner.
         try:
-            return await self._client.sessions.create_session(
+            # Typed local first: ``hai_agents`` doesn't ship ``py.typed``, so the SDK call's
+            # return type is ``Any`` to mypy. Anchoring to ``Session`` here lets the return
+            # statement satisfy ``warn_return_any`` without an explicit cast.
+            session: Session = await self._client.sessions.create_session(
                 agent=agent,
                 messages=spec.task,
                 max_steps=spec.max_steps,
@@ -133,6 +136,7 @@ class CuaRunner:
                 answer_format=spec.output_model.model_json_schema(),
                 agent_artifact=self._agent_artifact,
             )
+            return session
         except ApiError as exc:
             raise CuaError(f"session creation failed: {exc}") from exc
 
