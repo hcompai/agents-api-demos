@@ -215,3 +215,8 @@ __marimo__/
 
 # macOS
 .DS_Store
+
+# hai-agents SDK debug artifacts
+trace.json
+trajectory_*.json
+traces/

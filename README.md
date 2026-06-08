@@ -29,23 +29,14 @@ In Claude Code:
 
 | Example | What it shows | Interface |
 | --- | --- | --- |
-| [`qa_ui`](examples/qa_ui/) | Autonomous browser agent QAs a remote URL and returns structured `{verdict, summary, findings}` | MCP server (`review_web_ui`, `visual_check`) |
+| [`qa_mcp`](examples/qa_mcp/) | Autonomous browser agent QAs a remote URL and returns structured `{verdict, summary, findings}` | MCP server (`review_web_ui`, `visual_check`) |
 | [`qa_cli`](examples/qa_cli/) | Same QA agent exposed as a shell command, surfaced to Claude Code via the `qa-via-cli` skill | CLI (`qa-cli review / visual`) |
-| [`broken_ui`](examples/broken_ui/) | Static test page with 20 intentional bugs (a11y, SEO, visual, content, JS errors) — point the agent at it to see findings in action | Test fixture |
-
-To test against `broken_ui` locally:
-
-```bash
-cd examples/broken_ui && python -m http.server 8080
-# then in Claude Code:
-# "Use review_web_ui to check http://localhost:8080 for accessibility issues"
-```
 
 ## How it works
 
 ```mermaid
 flowchart LR
-  user[You in Claude Code] -->|tool call| mcp[MCP server\nexamples/qa_ui/server.py]
+  user[You in Claude Code] -->|tool call| mcp[MCP server\nexamples/qa_mcp/server.py]
   mcp -->|hai_agents.run_session| api[H Agent API]
   api -->|controls| browser[Headless browser]
   browser -->|screenshots + DOM| api
@@ -55,7 +46,7 @@ flowchart LR
 
 The MCP server is a thin FastMCP wrapper around `hai_agents.run_session`. Each tool defines an inline agent (with a browser environment and shared skills), submits the user's instruction, and surfaces the structured answer back to Claude Code.
 
-Shared components (agent instructions, `ReviewResult` model, helpers) live in [`examples/_shared.py`](examples/_shared.py) and are imported by both `qa_ui` and `qa_cli`.
+Shared components (agent instructions, `ReviewResult` model, helpers) live in [`examples/_shared.py`](examples/_shared.py) and are imported by both `qa_mcp` and `qa_cli`.
 
 ## Configuration
 
@@ -72,9 +63,8 @@ agent-sdk-demo/
 ├── examples/
 │   ├── _shared.py                 # shared instructions, models, and helpers
 │   ├── agent_skills/              # skill docs passed to the ui-reviewer agent
-│   ├── qa_ui/                     # MCP server (review_web_ui + visual_check)
-│   ├── qa_cli/                    # CLI wrapper (qa-cli review / visual)
-│   └── broken_ui/                 # static test page with intentional bugs
+│   ├── qa_mcp/                    # MCP server (review_web_ui + visual_check)
+│   └── qa_cli/                    # CLI wrapper (qa-cli review / visual)
 ├── AGENTS.md                      # coding rules for contributors
 └── pyproject.toml
 ```

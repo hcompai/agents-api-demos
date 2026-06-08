@@ -21,8 +21,7 @@ from hai_agents import Client, run_session
 from examples._shared import (
     REVIEWER_INSTRUCTIONS,
     ReviewResult,
-    answer_from_events,
-    build_browser,
+    browser_env,
     load_agent_skills,
 )
 
@@ -39,7 +38,7 @@ def review(url: str, instruction: str = "Do a general usability and accessibilit
             "description": "Reviews a web UI for usability, accessibility, and obvious bugs.",
             "instructions": REVIEWER_INSTRUCTIONS,
             "skills": load_agent_skills(),
-            "environments": [build_browser(url)],
+            "environments": [browser_env(url)],
         },
         messages=instruction,
         max_steps=25,
@@ -47,10 +46,9 @@ def review(url: str, instruction: str = "Do a general usability and accessibilit
         answer_format=ReviewResult.model_json_schema(),
     )
     print(f"completed in {time.monotonic() - started:.1f}s (status={result.status})", file=sys.stderr)
-    answer = result.answer or answer_from_events(result)
-    if not isinstance(answer, dict):
+    if not isinstance(result.answer, dict):
         sys.exit(f"error: agent did not return a structured answer (status={result.status})")
-    print(json.dumps(ReviewResult.model_validate(answer).model_dump(), indent=2))
+    print(json.dumps(ReviewResult.model_validate(result.answer).model_dump(), indent=2))
 
 
 def visual(url: str, question: str) -> None:
@@ -62,7 +60,7 @@ def visual(url: str, question: str) -> None:
             "name": "visual-checker",
             "description": "Answers a single visual question about a web page.",
             "instructions": VISUAL_INSTRUCTIONS,
-            "environments": [build_browser(url)],
+            "environments": [browser_env(url)],
         },
         messages=question,
         max_steps=3,
