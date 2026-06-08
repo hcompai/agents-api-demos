@@ -31,15 +31,6 @@ In Claude Code:
 | --- | --- | --- |
 | [`qa_mcp`](examples/qa_mcp/) | Autonomous browser agent QAs a remote URL and returns structured `{verdict, summary, findings}` | MCP server (`review_web_ui`, `visual_check`) |
 | [`qa_cli`](examples/qa_cli/) | Same QA agent exposed as a shell command, surfaced to Claude Code via the `qa-via-cli` skill | CLI (`qa-cli review / visual`) |
-| [`broken_ui`](examples/broken_ui/) | Static test page with 20 intentional bugs (a11y, SEO, visual, content, JS errors) — point the agent at it to see findings in action | Test fixture |
-
-To test against `broken_ui` locally:
-
-```bash
-cd examples/broken_ui && python -m http.server 8080
-# then in Claude Code:
-# "Use review_web_ui to check http://localhost:8080 for accessibility issues"
-```
 
 ## How it works
 
@@ -72,9 +63,8 @@ agent-sdk-demo/
 ├── examples/
 │   ├── _shared.py                 # shared instructions, models, and helpers
 │   ├── agent_skills/              # skill docs passed to the ui-reviewer agent
-│   ├── qa_mcp/                     # MCP server (review_web_ui + visual_check)
-│   ├── qa_cli/                    # CLI wrapper (qa-cli review / visual)
-│   └── broken_ui/                 # static test page with intentional bugs
+│   ├── qa_mcp/                    # MCP server (review_web_ui + visual_check)
+│   └── qa_cli/                    # CLI wrapper (qa-cli review / visual)
 ├── AGENTS.md                      # coding rules for contributors
 └── pyproject.toml
 ```
