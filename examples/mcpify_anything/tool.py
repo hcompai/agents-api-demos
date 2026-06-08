@@ -2,7 +2,7 @@
 
 import inspect
 from collections.abc import Awaitable, Callable, Iterable
-from typing import Any, Generic, TypeVar, get_args, get_origin, get_type_hints
+from typing import Any, Generic, TypeVar, cast, get_args, get_origin, get_type_hints
 
 from fastmcp import FastMCP
 from pydantic import BaseModel, ConfigDict, Field, HttpUrl, RootModel, create_model
@@ -128,11 +128,15 @@ def browser_tool(
 
         answer_model = _materialise_answer_model(answer_annotation, fn_name=fn.__name__)
 
+        # ``cast`` not ``# type: ignore``: ``input_model``/``answer_model`` come from runtime
+        # annotation extraction (``get_type_hints``) so mypy can only narrow them to
+        # ``type[BaseModel]``, but the surrounding ``Callable[[InputT, AnswerT], ...]`` proves
+        # they ARE ``InputT``/``AnswerT`` for this specific decorator call.
         return ToolSpec(
             name=fn.__name__,
             description=(fn.__doc__ or "").strip(),
-            input_model=input_model,
-            answer_model=answer_model,
+            input_model=cast("type[InputT]", input_model),
+            answer_model=cast("type[AnswerT]", answer_model),
             output_model=output_model,
             instructions=instructions,
             prompt=prompt,
@@ -189,8 +193,13 @@ def _materialise_answer_model(annotation: object, *, fn_name: str) -> type[BaseM
             name = f"{args[0].__name__}List"
             return create_model(name, __base__=_ListWrapper, items=(annotation, Field(...)))
     name = f"{''.join(part.capitalize() for part in fn_name.split('_'))}Answer"
+    # ``RootModel[annotation]`` is metaprogramming: ``annotation`` is a runtime variable that
+    # mypy refuses to evaluate as a static type parameter. Routing the subscript through an
+    # ``Any``-typed alias defers it to runtime — Pydantic resolves it correctly there. The
+    # final ``cast`` re-attaches the static return type for callers.
+    root_model_alias: Any = RootModel
     try:
-        return type(name, (RootModel[annotation],), {})
+        return cast("type[BaseModel]", type(name, (root_model_alias[annotation],), {}))
     except TypeError as exc:
         raise TypeError(
             f"@browser_tool `{fn_name}`: cannot build a Pydantic answer model for annotation {annotation!r}"

@@ -43,13 +43,3 @@ strict = true
 # fastmcp + a few hai_agents internals don't ship ``py.typed``; treat them as untyped imports
 # rather than failing every reference to them.
 ignore_missing_imports = true
-
-[[tool.mypy.overrides]]
-# Framework reads user function annotations at runtime to materialise types/models. This is
-# fundamentally outside mypy's static model: the runtime narrowing in ``_decorate`` and
-# ``_materialise_answer_model`` cannot be propagated to the ``InputT``/``AnswerT`` TypeVars,
-# and ``RootModel[runtime_variable]`` cannot be statically resolved. Module-scoped
-# suppression is the honest documentation of the framework boundary; user-facing tool files
-# (``tools/*.py``) remain fully typechecked.
-module = "examples.mcpify_anything.tool"
-disable_error_code = ["arg-type", "valid-type"]
