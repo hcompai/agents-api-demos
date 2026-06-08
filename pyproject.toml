@@ -15,6 +15,7 @@ dependencies = [
 [project.scripts]
 agent-sdk-demo-qa = "examples.qa_ui.server:main"
 debug-qa = "examples.qa_ui.debug:main"
+qa-cli = "examples.qa_cli.main:main"
 
 [dependency-groups]
 dev = [
