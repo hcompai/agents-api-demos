@@ -11,7 +11,7 @@ from examples._shared import (
     REVIEWER_INSTRUCTIONS,
     ReviewResult,
     answer_from_events,
-    build_browser,
+    browser_env,
     load_agent_skills,
 )
 
@@ -29,7 +29,7 @@ def review_web_ui(url: str, instruction: str) -> ReviewResult:
             "description": "Reviews a web UI for usability, accessibility, and obvious bugs.",
             "instructions": REVIEWER_INSTRUCTIONS,
             "skills": load_agent_skills(),
-            "environments": [build_browser(url)],
+            "environments": [browser_env(url)],
         },
         messages=instruction,
         max_steps=25,
@@ -51,7 +51,7 @@ def visual_check(url: str, question: str) -> str:
             "name": "visual-checker",
             "description": "Answers a single visual question about a web page.",
             "instructions": "Open the page and answer the user's question in one or two sentences.",
-            "environments": [build_browser(url)],
+            "environments": [browser_env(url)],
         },
         messages=question,
         max_steps=3,
