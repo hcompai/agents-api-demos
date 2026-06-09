@@ -1,6 +1,6 @@
 # `mcpify_anything` — typed-toolkit MCP server
 
-A FastMCP server demonstrating the **typed-toolkit pattern**: one decorator declares many MCP tools, each with its own typed input + answer schema, all backed by a single `run_session()` primitive against a cloud browser CUA.
+A FastMCP server demonstrating the **typed-toolkit pattern**: one decorator declares many MCP tools, each with its own typed input + answer schema, all backed by a single shared runner driving a cloud browser CUA.
 
 Where [`qa_mcp`](../qa_mcp/) shows wrapping *one* task as *one* tool, this shows building a **family** of typed tools off the same underlying agent — useful when you want a curated set of structured-output operations to expose to Claude Code.
 
@@ -84,17 +84,19 @@ In Claude Code:
 
 ```
 mcpify_anything/
-├── server.py                   # FastMCP wiring + main() + lazy CuaRunner
+├── server.py                   # FastMCP wiring: build_server (DI) + compose_server + main()
+├── config.py                   # env vars -> validated Settings
 ├── tool.py                     # @browser_tool decorator + register_specs registrar
 ├── runner.py                   # CuaRunner around async_wait_for_session (incl. CuaError)
 ├── schema_hint.py              # JSON-schema-to-prompt rendering
-├── envs.py                     # browser_env helper
+├── links.py                    # AGP base URL -> dashboard agent-view link
 ├── types.py                    # shared Price = Annotated[Decimal, WithJsonSchema(...)]
-└── tools/
-    ├── __init__.py             # explicit SPECS tuple
-    ├── extract.py              # dynamic-schema escape hatch
-    ├── get_product_prices.py   # typed read with capture metadata
-    └── add_cart_items.py       # action + read-back proof + client totals
+├── tools/
+│   ├── __init__.py             # explicit SPECS tuple
+│   ├── extract.py              # dynamic-schema escape hatch
+│   ├── get_product_prices.py   # typed read with capture metadata
+│   └── add_cart_items.py       # action + read-back proof + client totals
+└── tests/                      # behavioural suite (fake Runner via DI) + live integration tests
 ```
 
 ## Configuration

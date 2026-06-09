@@ -75,10 +75,7 @@ class CartReceipt(BaseModel):
     def _cart_total(lines: list[CartLine]) -> Price | None:
         if CartReceipt._currency(lines) is None:
             return None
-        # Filter ``None`` first so mypy sees a ``list[Decimal]`` and we can sum directly. Seeding
-        # with the first total keeps the running type ``Decimal`` (vs ``sum()``'s ``int`` zero).
-        # Self-sufficient empty guard: don't rely on ``_currency`` short-circuiting on ``[]``
-        # — keeping the invariant local makes ``totals[0]`` safe regardless of caller order.
+        # Seeding with the first total keeps the running type Decimal (vs sum()'s int zero).
         totals: list[Decimal] = [line.line_total for line in lines if line.line_total is not None]
         if not totals or len(totals) != len(lines):
             return None

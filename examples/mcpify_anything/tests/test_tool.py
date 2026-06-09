@@ -12,6 +12,7 @@ from typing import Annotated, Any
 
 import pytest
 from fastmcp import Client, FastMCP
+from fastmcp.exceptions import ToolError
 from hai_agents import Environment_Web
 from pydantic import BaseModel, Field, HttpUrl, RootModel, ValidationError, WithJsonSchema
 
@@ -132,8 +133,7 @@ async def test_list_wrapper_schema_is_object_with_items_array() -> None:
 
 
 async def test_answer_model_rejects_bare_list_payload_for_list_annotation() -> None:
-    # The wrapper expects ``{"items": [...]}``; a bare list (the pre-fix wire format) must
-    # be rejected so we surface the contract loud and clear, not silently accept it.
+    # The wrapper expects ``{"items": [...]}``; a bare list must be rejected loudly.
     @browser_tool(
         instructions="ins",
         site=lambda a: a.site,
@@ -291,7 +291,7 @@ async def test_register_specs_validates_input_against_input_model(
 
     async with Client(mcp) as c:
         # Empty ``query`` violates ``min_length=1`` — must be rejected before reaching the runner.
-        with pytest.raises(Exception):
+        with pytest.raises(ToolError):
             await c.call_tool("my_search", {"args": {"site": "https://x.test", "query": ""}})
 
 
@@ -441,8 +441,7 @@ async def test_factory_runs_fresh_on_every_call(make_fake_runner: Callable[[Base
 async def test_factory_default_none_keeps_static_answer_model(
     make_fake_runner: Callable[[BaseModel], FakeRunner],
 ) -> None:
-    # Regression: curated tools (factory not provided) must keep the static ``answer_model``
-    # path unchanged — same identity passed to RunSpec on every call.
+    # Without a factory, the same static ``answer_model`` identity reaches RunSpec on every call.
     @browser_tool(
         instructions="ins",
         site=lambda a: a.site,

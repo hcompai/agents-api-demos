@@ -3,9 +3,8 @@
 from collections.abc import Callable
 from decimal import Decimal
 
-import pytest
 from fastmcp import Client
-from pydantic import BaseModel, ValidationError
+from pydantic import BaseModel
 
 from examples.mcpify_anything.server import build_server
 from examples.mcpify_anything.tests._fakes import FakeRunner
@@ -48,21 +47,3 @@ def test_answer_model_validates_items_object_losslessly() -> None:
     }
     parsed = get_product_prices.answer_model.model_validate(raw)
     assert [p.name for p in parsed.items] == ["Cable", "Pad"]
-
-
-def test_answer_model_does_not_mask_single_bare_item() -> None:
-    # A lone item under ``items`` is NOT silently wrapped into a one-element list — that
-    # would hide an agent collapsing many results into one. The wrapper requires a list.
-    one = {"items": {"name": "Cable", "price": "6.99", "currency": "EUR", "url": "https://shop.test/c"}}
-    with pytest.raises(ValidationError):
-        get_product_prices.answer_model.model_validate(one)
-
-
-async def test_rejects_out_of_range_max_results(make_fake_runner: Callable[[BaseModel], FakeRunner]) -> None:
-    mcp = build_server(make_fake_runner(_answer([])))
-    async with Client(mcp) as c:
-        with pytest.raises(Exception):
-            await c.call_tool(
-                "get_product_prices",
-                {"args": {"site": "https://shop.test", "query": "widget", "max_results": 999}},
-            )

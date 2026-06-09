@@ -34,7 +34,7 @@ In Claude Code:
 | --- | --- | --- |
 | [`qa_mcp`](examples/qa_mcp/) | Autonomous browser agent QAs a remote URL and returns structured `{verdict, summary, findings}` | MCP server (`review_web_ui`, `visual_check`) |
 | [`qa_cli`](examples/qa_cli/) | Same QA agent exposed as a shell command, surfaced to Claude Code via the `qa-via-cli` skill | CLI (`qa-cli review / visual`) |
-| [`mcpify_anything`](examples/mcpify_anything/) | A family of typed tools (`extract`, `get_product_prices`, `add_cart_items`) declared with a single `@browser_tool` decorator over one shared CUA runner | MCP server |
+| [`mcpify_anything`](examples/mcpify_anything/) | Turn any website into typed MCP tools: declare input/output as Pydantic models plus a one-line prompt, and a cloud browser agent fills the contract with schema-validated JSON | MCP server (`get_product_prices`, `add_cart_items`, `extract`) |
 
 ## How it works
 

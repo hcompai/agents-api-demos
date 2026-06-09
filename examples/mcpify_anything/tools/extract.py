@@ -19,14 +19,10 @@ class ExtractInput(BaseModel):
     answer_schema: dict[str, Any] = Field(description="JSON Schema describing the desired return shape")
 
 
-# Defined above the decorator (out of AGENTS.md private-after-public order) because the
-# ``@browser_tool`` factory binds the reference at module-load time — it has to exist first.
+# Defined above the decorator because ``@browser_tool(...)`` binds the reference at module load.
 def _build_answer_model(args: ExtractInput) -> type[BaseModel]:
-    # ``WithJsonSchema(args.answer_schema)`` overrides what the model reports via
-    # ``model_json_schema()`` — that's what reaches the platform as ``answer_format``. The
-    # underlying Python type stays ``dict[str, Any]`` so the registrar's RootModel-unwrap
-    # path returns a plain dict to the handler. The named subclass ``ExtractAnswer`` keeps
-    # the schema's ``title`` a Python identifier (the platform regenerates a class from it).
+    # ``WithJsonSchema`` makes the caller's schema the platform's ``answer_format`` while the
+    # Python type stays ``dict``; the named subclass keeps the schema ``title`` a Python identifier.
     Wrapped = Annotated[dict[str, Any], WithJsonSchema(args.answer_schema)]
 
     class ExtractAnswer(RootModel[Wrapped]):

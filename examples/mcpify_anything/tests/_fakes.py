@@ -10,16 +10,10 @@ T = TypeVar("T", bound=BaseModel)
 
 
 class FakeRunner:
-    """A ``Runner`` stub injected via ``build_server`` — records the last spec, returns a canned value.
-
-    Lets tool tests drive the real server through dependency injection and assert on the
-    ``RunSpec`` the tool built, without monkeypatching module globals. Satisfies the
-    ``Runner`` Protocol structurally: ``run`` is generic on the spec's ``T`` and the cast
-    keeps the canned value typed against whatever model the caller stored.
-    """
+    """A ``Runner`` stub injected via ``build_server`` — records the last spec, returns a canned value."""
 
     def __init__(self, value: BaseModel) -> None:
-        """Bind the stub to the canned answer it should hand back from every ``run()``.
+        """Bind the stub to the canned answer it returns from every ``run()``.
 
         Args:
             value: The validated answer the runner returns on every call.

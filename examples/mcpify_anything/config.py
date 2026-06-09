@@ -9,17 +9,12 @@ _API_KEY_ENV = "H_API_KEY"
 _BASE_URL_ENV = "H_BASE_URL"
 _AGENT_ARTIFACT_ENV = "H_AGENT_ARTIFACT"
 _DEFAULT_BASE_URL = HaiAgentsEnvironment.EU.value
-# Published agent build that matches the tool prompts (and bakes in the answer-format fix).
+# Published agent build matched to these tool prompts.
 _DEFAULT_AGENT_ARTIFACT = "mcpify-anything-agent"
 
 
 class Settings(BaseModel):
-    """Frozen runtime settings consumed by ``compose_server``.
-
-    Field-level ``min_length=1`` guards keep us loud if an env var is ever set to an empty
-    string — a mid-conversation failure on the first tool call is harder to debug than
-    blowing up at boot.
-    """
+    """Frozen runtime settings consumed by ``compose_server``; ``min_length=1`` fails empty env vars at boot."""
 
     model_config = ConfigDict(frozen=True)
 

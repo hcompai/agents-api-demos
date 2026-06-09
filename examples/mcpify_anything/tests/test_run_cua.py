@@ -109,9 +109,7 @@ async def test_sets_answer_format_and_validates(monkeypatch: pytest.MonkeyPatch,
 
 
 async def test_forwards_agent_artifact(monkeypatch: pytest.MonkeyPatch, client: AsyncClient) -> None:
-    # The runner must pass its configured ``agent_artifact`` through to the platform so a
-    # custom-published agent image is what runs the inline agent (otherwise AGP falls back
-    # to its global default and our agent build is never picked up).
+    # Without this, AGP falls back to its global default and our agent build never runs.
     capture: dict[str, Any] = {}
     _patch_create(monkeypatch, client, capture)
     _patch_wait(monkeypatch, _completed_with({"value": 1}))
@@ -152,8 +150,7 @@ async def test_bad_schema_raises(monkeypatch: pytest.MonkeyPatch, client: AsyncC
 
 
 async def test_timeout_propagates(monkeypatch: pytest.MonkeyPatch, client: AsyncClient) -> None:
-    # The SDK's wait helper raises ``TimeoutError`` when the wall-clock budget elapses; we
-    # intentionally do not wrap it — ``TimeoutError`` is semantically clear enough on its own.
+    # Deliberately not wrapped in CuaError — TimeoutError is clear on its own.
     _patch_create(monkeypatch, client)
     _patch_wait_raising(monkeypatch, TimeoutError("session did not finish"))
     with pytest.raises(TimeoutError):
@@ -163,8 +160,7 @@ async def test_timeout_propagates(monkeypatch: pytest.MonkeyPatch, client: Async
 async def test_logs_agent_view_link_on_every_session(
     monkeypatch: pytest.MonkeyPatch, client: AsyncClient, caplog: pytest.LogCaptureFixture
 ) -> None:
-    # Every session must emit an inspectable dashboard link, not only successful ones —
-    # the link is how a developer recovers a trajectory after a failed run.
+    # The dashboard link is how a developer recovers a trajectory after a failed run.
     _patch_create(monkeypatch, client)
     _patch_wait(monkeypatch, _completed_with({"value": 7}))
 

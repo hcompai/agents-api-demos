@@ -10,8 +10,6 @@ from examples.mcpify_anything.runner import CuaRunner, Runner
 from examples.mcpify_anything.tool import register_specs
 from examples.mcpify_anything.tools import SPECS
 
-LOGGER = logging.getLogger("agent-sdk-demo-mcpify-anything")
-
 
 def build_server(runner: Runner) -> FastMCP:
     """Compose a FastMCP server whose tools are wired to the injected runner.

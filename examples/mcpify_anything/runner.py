@@ -12,8 +12,8 @@ from examples.mcpify_anything.links import agent_view_url_from_id
 
 LOGGER = logging.getLogger(__name__)
 
-# Extra wall-clock the SDK waits beyond the session's own ``max_time_s`` before giving up — lets
-# the platform finish writing the terminal answer after it stops the session.
+# Extra wall-clock beyond the session's ``max_time_s`` so the platform can finish writing
+# the terminal answer after it stops the session.
 _CLIENT_GRACE_S = 60.0
 
 T = TypeVar("T", bound=BaseModel)
@@ -49,10 +49,8 @@ class Runner(Protocol):
 class CuaRunner:
     """Drives CUA sessions on an injected ``AsyncClient``.
 
-    Thin wrapper around the SDK: ``create_session`` + ``async_wait_for_session``. The
-    SDK helper owns the polling/cursor/terminal-status loop, so we only handle the
-    bits it can't (binding our ``agent_artifact`` and validating the structured answer
-    against the caller's ``output_model``).
+    Thin wrapper around ``create_session`` + ``async_wait_for_session``: binds the
+    ``agent_artifact`` and validates the structured answer against ``output_model``.
     """
 
     def __init__(self, client: AsyncClient, base_url: str, agent_artifact: str) -> None:
@@ -91,8 +89,8 @@ class CuaRunner:
             instructions=spec.instructions,
         )
         session = await self._create_session(agent, spec)
-        # Every session gets an inspectable trajectory link, not just successful ones — this is
-        # the single best handle for debugging a failed run after the fact.
+        # Logged for every session, not just successful ones — the link is how a failed run
+        # gets debugged after the fact.
         LOGGER.info("agent view: %s", agent_view_url_from_id(self._base_url, session.id))
 
         result = await async_wait_for_session(
@@ -111,13 +109,9 @@ class CuaRunner:
             raise CuaError(f"answer did not match {spec.output_model.__name__}: {exc}") from exc
 
     async def _create_session(self, agent: Agent, spec: RunSpec[T]) -> Session:
-        # Isolated so subclasses can observe the new session id without re-implementing
-        # ``run()``. Concrete user: ``tests/integration/test_tools_live.py::_RecordingRunner``
-        # captures it so a failure-mode dashboard link can still be reported.
+        # Isolated so subclasses can observe the new session id without re-implementing run().
         try:
-            # Typed local first: ``hai_agents`` doesn't ship ``py.typed``, so the SDK call's
-            # return type is ``Any`` to mypy. Anchoring to ``Session`` here lets the return
-            # statement satisfy ``warn_return_any`` without an explicit cast.
+            # ``hai_agents`` ships no ``py.typed``; the typed local anchors the Any return for mypy.
             session: Session = await self._client.sessions.create_session(
                 agent=agent,
                 messages=spec.task,

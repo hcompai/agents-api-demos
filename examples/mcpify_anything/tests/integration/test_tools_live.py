@@ -37,9 +37,8 @@ class LiveCase:
 
 _SCRAPINGCOURSE_HOODIE = "https://www.scrapingcourse.com/ecommerce/product/abominable-hoodie/"
 
-# Trimmed to the 3 tools shipped in this example (curated read, action + read-back, dynamic
-# escape hatch). The three target ``scrapingcourse.com``, a public no-login sandbox.
-LIVE_CASES: list[LiveCase] = [
+# One case per shipped tool, all targeting ``scrapingcourse.com`` — a public no-login sandbox.
+LIVE_CASES: tuple[LiveCase, ...] = (
     LiveCase(
         tool="get_product_prices",
         args={"site": "https://www.scrapingcourse.com/ecommerce/", "query": "hoodie", "max_results": 3},
@@ -66,7 +65,7 @@ LIVE_CASES: list[LiveCase] = [
         },
         check=lambda data: _dict_has_keys("name", "price")(data),
     ),
-]
+)
 
 
 _LIVE_AGENT_ARTIFACT = os.environ.get("H_AGENT_ARTIFACT", "mcpify-anything-agent")

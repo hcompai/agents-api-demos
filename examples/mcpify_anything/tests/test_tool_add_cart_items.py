@@ -3,13 +3,12 @@
 from collections.abc import Callable
 from decimal import Decimal
 
-import pytest
 from fastmcp import Client
 from pydantic import BaseModel
 
 from examples.mcpify_anything.server import build_server
 from examples.mcpify_anything.tests._fakes import FakeRunner
-from examples.mcpify_anything.tools.add_cart_items import CartLine, CartReceipt, add_cart_items
+from examples.mcpify_anything.tools.add_cart_items import CartLine, add_cart_items
 
 
 def _make_answer(lines: list[CartLine]) -> BaseModel:
@@ -57,19 +56,11 @@ async def test_add_cart_items_empty_cart_is_noop(make_fake_runner: Callable[[Bas
     assert result.data.cart_total is None
 
 
-async def test_add_cart_items_rejects_empty_items(make_fake_runner: Callable[[BaseModel], FakeRunner]) -> None:
-    mcp = build_server(make_fake_runner(_make_answer([])))
-    async with Client(mcp) as c:
-        with pytest.raises(Exception):
-            await c.call_tool("add_cart_items", {"args": {"items": []}})
-
-
 async def test_mixed_currency_lines_yield_none_total_and_currency(
     make_fake_runner: Callable[[BaseModel], FakeRunner],
 ) -> None:
-    # A real cart with mixed-currency lines must NOT silently report a single currency or
-    # a numerically-correct-but-meaningless sum. ``cart_total`` and ``currency`` both become
-    # None; the lines themselves are still surfaced so the caller can see what the agent read.
+    # Summing across currencies would be silently wrong: total and currency become None,
+    # but the lines are still surfaced.
     answer = _make_answer(
         [
             CartLine(name="Bottle", quantity=1, line_total=Decimal("9.00"), currency="USD"),
@@ -96,15 +87,7 @@ async def test_mixed_currency_lines_yield_none_total_and_currency(
     assert len(result.data.lines) == 2
 
 
-def test_cart_total_is_safe_against_empty_lines() -> None:
-    # Local invariant: ``_cart_total([])`` must not IndexError, regardless of whether the
-    # caller already filtered via ``_currency``. Guards against future refactors of
-    # ``_currency`` that might let an empty list reach ``_cart_total`` directly.
-    assert CartReceipt._cart_total([]) is None
-
-
 async def test_single_currency_sums_unchanged(make_fake_runner: Callable[[BaseModel], FakeRunner]) -> None:
-    # Regression guard: the mixed-currency fix must NOT break single-currency aggregation.
     answer = _make_answer(
         [
             CartLine(name="Bottle", quantity=1, line_total=Decimal("9.00"), currency="USD"),

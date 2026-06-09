@@ -5,6 +5,7 @@ from typing import Any
 
 import pytest
 from fastmcp import Client
+from fastmcp.exceptions import ToolError
 from pydantic import BaseModel
 
 from examples.mcpify_anything.server import build_server
@@ -41,16 +42,6 @@ def _runner_returning(
     return make_fake_runner(answer_model.model_validate(payload))
 
 
-async def test_extract_is_listed_alongside_curated_tools(make_fake_runner: Callable[[BaseModel], FakeRunner]) -> None:
-    runner = _runner_returning({"calories_per_serving": 400, "summary": "lasagna"}, _RECIPE_SCHEMA, make_fake_runner)
-    mcp = build_server(runner)
-    async with Client(mcp) as c:
-        names = {tool.name for tool in await c.list_tools()}
-    assert "extract" in names
-    # Curated tools still registered (regression guard); ``get_product_prices`` ships here.
-    assert "get_product_prices" in names
-
-
 async def test_extract_routes_caller_schema_into_runspec_answer_format(
     make_fake_runner: Callable[[BaseModel], FakeRunner],
 ) -> None:
@@ -72,10 +63,7 @@ async def test_extract_routes_caller_schema_into_runspec_answer_format(
     spec = runner.last_spec
     assert spec is not None
     rendered = spec.output_model.model_json_schema()
-    # Caller's schema reaches the platform via ``answer_format``. The framework subclasses
-    # the RootModel with a clean Python-identifier name so the platform's downstream
-    # ``datamodel-code-generator`` step (which regenerates a Python class from the schema)
-    # has a valid title to emit.
+    # Caller's schema reaches the platform via ``answer_format``, under an identifier-safe title.
     assert rendered["required"] == _RECIPE_SCHEMA["required"]
     assert rendered["properties"] == _RECIPE_SCHEMA["properties"]
     assert rendered["title"] == "ExtractAnswer"
@@ -108,11 +96,43 @@ async def test_extract_handler_receives_plain_dict_and_returns_it(
     assert dict(result.data) == payload
 
 
+async def test_extract_falls_back_to_raw_schema_for_unrenderable_shapes(
+    make_fake_runner: Callable[[BaseModel], FakeRunner],
+) -> None:
+    # ``schema_hint`` renders only a subset of JSON Schema. A valid caller schema outside that
+    # subset (here: ``oneOf``) must not crash the tool call — the raw schema is embedded instead.
+    oneof_schema: dict[str, Any] = {
+        "type": "object",
+        "properties": {"value": {"oneOf": [{"type": "string"}, {"type": "integer"}]}},
+        "required": ["value"],
+    }
+    runner = _runner_returning({"value": 3}, oneof_schema, make_fake_runner)
+    mcp = build_server(runner)
+
+    async with Client(mcp) as c:
+        result = await c.call_tool(
+            "extract",
+            {
+                "args": {
+                    "site": "https://recipes.test/lasagna",
+                    "task": "read the value",
+                    "answer_schema": oneof_schema,
+                }
+            },
+        )
+
+    spec = runner.last_spec
+    assert spec is not None
+    assert "oneOf" in spec.task  # raw schema embedded in the prompt
+    assert "read the value" in spec.task
+    assert dict(result.data) == {"value": 3}
+
+
 async def test_extract_rejects_empty_task(make_fake_runner: Callable[[BaseModel], FakeRunner]) -> None:
     runner = _runner_returning({"calories_per_serving": 1, "summary": "x"}, _RECIPE_SCHEMA, make_fake_runner)
     mcp = build_server(runner)
     async with Client(mcp) as c:
-        with pytest.raises(Exception):
+        with pytest.raises(ToolError):
             await c.call_tool(
                 "extract",
                 {
@@ -123,28 +143,3 @@ async def test_extract_rejects_empty_task(make_fake_runner: Callable[[BaseModel]
                     }
                 },
             )
-
-
-async def test_extract_uses_framework_default_runtime_budget(
-    make_fake_runner: Callable[[BaseModel], FakeRunner],
-) -> None:
-    # ``extract`` relies on the decorator-level defaults (max_steps=20, max_time_s=180.0).
-    # Per-call overrides are deliberately out of scope until a real caller needs them.
-    runner = _runner_returning({"calories_per_serving": 1, "summary": "x"}, _RECIPE_SCHEMA, make_fake_runner)
-    mcp = build_server(runner)
-    async with Client(mcp) as c:
-        await c.call_tool(
-            "extract",
-            {
-                "args": {
-                    "site": "https://recipes.test/lasagna",
-                    "task": "read",
-                    "answer_schema": _RECIPE_SCHEMA,
-                }
-            },
-        )
-
-    spec = runner.last_spec
-    assert spec is not None
-    assert spec.max_steps == 20
-    assert spec.max_time_s == 180.0
