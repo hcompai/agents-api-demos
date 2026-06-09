@@ -7,7 +7,7 @@ from typing import Any, Generic, TypeVar, cast, get_args, get_origin, get_type_h
 from fastmcp import FastMCP
 from pydantic import BaseModel, ConfigDict, Field, HttpUrl, RootModel, create_model
 
-from examples.mcpify_anything.envs import browser_env
+from examples._shared import browser_env
 from examples.mcpify_anything.runner import Runner, RunSpec
 from examples.mcpify_anything.schema_hint import schema_hint
 

@@ -93,23 +93,13 @@ def _render_items(items: list[CartItem]) -> str:
     return "; ".join(f"{item.product_url} (quantity {item.quantity})" for item in items)
 
 
-# Typed ``def`` helpers (rather than lambdas) so mypy can bind ``InputT`` for the decorator
-# call — Python lambdas can't carry parameter annotations.
-def _site(args: CartItemsInput) -> HttpUrl:
-    return args.items[0].product_url
-
-
-def _prompt(args: CartItemsInput) -> str:
-    return (
-        "Add each of these products to the shopping cart at the given quantity, then open the "
-        f"cart page and read back every line item it now shows. Products: {_render_items(args.items)}."
-    )
-
-
 @browser_tool(
     instructions=("You add items to e-commerce carts and verify the result by reading the cart back."),
-    site=_site,
-    prompt=_prompt,
+    site=lambda a: a.items[0].product_url,
+    prompt=lambda a: (
+        "Add each of these products to the shopping cart at the given quantity, then open the "
+        f"cart page and read back every line item it now shows. Products: {_render_items(a.items)}."
+    ),
 )
 async def add_cart_items(
     args: CartItemsInput,

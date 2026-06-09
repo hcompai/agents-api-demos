@@ -3,20 +3,18 @@
 import logging
 import uuid
 from typing import Generic, Protocol, TypeVar
-from urllib.parse import urlsplit, urlunsplit
 
 from hai_agents import Agent, AgentEnvironmentsItem, AsyncClient, Session, async_wait_for_session
 from hai_agents.core import ApiError
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
+
+from examples.mcpify_anything.links import agent_view_url_from_id
 
 LOGGER = logging.getLogger(__name__)
 
 # Extra wall-clock the SDK waits beyond the session's own ``max_time_s`` before giving up — lets
 # the platform finish writing the terminal answer after it stops the session.
 _CLIENT_GRACE_S = 60.0
-_AGP_SUBDOMAIN = "agp."
-_DASHBOARD_SUBDOMAIN = "dashboard."
-_AGENT_VIEW_PATH = "/agent-view/"
 
 T = TypeVar("T", bound=BaseModel)
 
@@ -71,14 +69,6 @@ class CuaRunner:
         self._base_url = base_url
         self._agent_artifact = agent_artifact
 
-    @property
-    def base_url(self) -> str:
-        return self._base_url
-
-    @property
-    def agent_artifact(self) -> str:
-        return self._agent_artifact
-
     async def run(self, spec: RunSpec[T]) -> T:
         """Run one session whose final answer is forced into ``spec.output_model``'s schema.
 
@@ -103,7 +93,7 @@ class CuaRunner:
         session = await self._create_session(agent, spec)
         # Every session gets an inspectable trajectory link, not just successful ones — this is
         # the single best handle for debugging a failed run after the fact.
-        LOGGER.info("agent view: %s", _agent_view_url(self._base_url, session.id))
+        LOGGER.info("agent view: %s", agent_view_url_from_id(self._base_url, session.id))
 
         result = await async_wait_for_session(
             self._client,
@@ -121,8 +111,9 @@ class CuaRunner:
             raise CuaError(f"answer did not match {spec.output_model.__name__}: {exc}") from exc
 
     async def _create_session(self, agent: Agent, spec: RunSpec[T]) -> Session:
-        # Isolated so a recording test subclass can capture the session id without
-        # re-implementing the runner.
+        # Isolated so subclasses can observe the new session id without re-implementing
+        # ``run()``. Concrete user: ``tests/integration/test_tools_live.py::_RecordingRunner``
+        # captures it so a failure-mode dashboard link can still be reported.
         try:
             # Typed local first: ``hai_agents`` doesn't ship ``py.typed``, so the SDK call's
             # return type is ``Any`` to mypy. Anchoring to ``Session`` here lets the return
@@ -139,14 +130,3 @@ class CuaRunner:
             return session
         except ApiError as exc:
             raise CuaError(f"session creation failed: {exc}") from exc
-
-
-def _agent_view_url(base_url: str, trajectory_id: str) -> str:
-    if not trajectory_id:
-        raise ValueError("trajectory_id must be non-empty")
-    parts = urlsplit(base_url)
-    if not parts.scheme or parts.hostname is None:
-        raise ValueError(f"url missing scheme/host: {base_url!r}")
-    host = parts.hostname
-    dashboard_host = _DASHBOARD_SUBDOMAIN + host[len(_AGP_SUBDOMAIN) :] if host.startswith(_AGP_SUBDOMAIN) else host
-    return urlunsplit((parts.scheme, dashboard_host, f"{_AGENT_VIEW_PATH}{trajectory_id}", "", ""))

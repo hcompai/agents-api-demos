@@ -29,20 +29,10 @@ class ProductPrices(BaseModel):
     products: list[Product]
 
 
-# Typed ``def`` helpers (rather than lambdas) so mypy can bind ``InputT`` for the decorator
-# call — Python lambdas can't carry parameter annotations.
-def _site(args: ProductPricesInput) -> HttpUrl:
-    return args.site
-
-
-def _prompt(args: ProductPricesInput) -> str:
-    return f'On {args.site}, search for "{args.query}" and read up to {args.max_results} product results.'
-
-
 @browser_tool(
     instructions="You read shopping result pages.",
-    site=_site,
-    prompt=_prompt,
+    site=lambda a: a.site,
+    prompt=lambda a: f'On {a.site}, search for "{a.query}" and read up to {a.max_results} product results.',
 )
 async def get_product_prices(
     args: ProductPricesInput,

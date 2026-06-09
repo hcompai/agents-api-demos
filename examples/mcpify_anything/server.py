@@ -6,7 +6,7 @@ import os
 from fastmcp import FastMCP
 from hai_agents import AsyncClient, HaiAgentsEnvironment
 
-from examples.mcpify_anything.runner import CuaRunner
+from examples.mcpify_anything.runner import CuaRunner, Runner
 from examples.mcpify_anything.tool import register_specs
 from examples.mcpify_anything.tools import SPECS
 
@@ -16,14 +16,31 @@ _DEFAULT_BASE_URL = HaiAgentsEnvironment.EU.value
 _DEFAULT_AGENT_ARTIFACT = "mcpify-anything-agent"
 
 
-def build_server() -> FastMCP:
-    """Compose a FastMCP server whose tools are wired to a CuaRunner built from env config.
+def build_server(runner: Runner) -> FastMCP:
+    """Compose a FastMCP server whose tools are wired to the injected runner.
+
+    This is the DI surface tests target: they pass a fake ``Runner`` to assert on the
+    ``RunSpec`` each tool builds, without monkeypatching globals or hitting the network.
+
+    Args:
+        runner: The runner that backs every tool call.
+
+    Returns:
+        A ready-to-run FastMCP instance with every tool in ``SPECS`` registered.
+    """
+    mcp: FastMCP = FastMCP("agent-sdk-demo-mcpify-anything")
+    register_specs(SPECS, mcp, runner)
+    return mcp
+
+
+def compose_server() -> FastMCP:
+    """Production wiring: env -> AsyncClient -> CuaRunner -> ``build_server``.
 
     Validates ``H_API_KEY`` at boot time so a missing key fails before Claude Code can
     even register the tools, rather than surfacing mid-conversation on the first call.
 
     Returns:
-        A ready-to-run FastMCP instance with every tool in ``SPECS`` registered.
+        A ready-to-run FastMCP instance backed by a live ``CuaRunner``.
 
     Raises:
         RuntimeError: ``H_API_KEY`` is not set in the environment.
@@ -37,16 +54,13 @@ def build_server() -> FastMCP:
     base_url = os.environ.get("H_BASE_URL", _DEFAULT_BASE_URL)
     artifact = os.environ.get("H_AGENT_ARTIFACT", _DEFAULT_AGENT_ARTIFACT)
     runner = CuaRunner(AsyncClient(api_key=api_key, base_url=base_url), base_url, artifact)
-
-    mcp: FastMCP = FastMCP("agent-sdk-demo-mcpify-anything")
-    register_specs(SPECS, mcp, runner)
-    return mcp
+    return build_server(runner)
 
 
 def main() -> None:
     """Entry point used by the ``agent-sdk-demo-mcpify-anything`` console script."""
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(name)s %(levelname)s %(message)s")
-    build_server().run()
+    compose_server().run()
 
 
 if __name__ == "__main__":
