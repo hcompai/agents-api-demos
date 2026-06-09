@@ -5,10 +5,7 @@ from pydantic import BaseModel
 
 from examples.mcpify_anything.runner import RunSpec
 from examples.mcpify_anything.server import build_server
-from examples.mcpify_anything.tool import ToolSpec
 from examples.mcpify_anything.tools import SPECS
-
-_EXPECTED_TOOLS = {"extract", "get_product_prices", "add_cart_items"}
 
 
 class _NoopRunner:
@@ -18,17 +15,12 @@ class _NoopRunner:
         raise AssertionError("the registry guard lists tools; it must not execute them")
 
 
-def test_specs_tuple_contains_every_shipped_tool() -> None:
-    # Static guard: the explicit registry tuple itself names exactly the shipped tools.
-    # If you add a tool module, append its spec to ``SPECS`` and update this assertion.
-    assert {spec.name for spec in SPECS} == _EXPECTED_TOOLS
-    assert all(isinstance(spec, ToolSpec) for spec in SPECS)
-
-
-async def test_server_registers_every_spec() -> None:
-    # End-to-end guard: ``build_server`` actually wires every entry in ``SPECS`` to FastMCP.
-    # Bridges the static check above to the running server's surface.
+async def test_server_registers_every_spec_in_tuple() -> None:
+    # Single source of truth: ``SPECS`` itself names the shipped tools, and ``build_server``
+    # must wire every entry into FastMCP. Adding a tool means appending to ``SPECS`` — this
+    # test then follows automatically.
     mcp = build_server(_NoopRunner())
     async with Client(mcp) as client:
         registered = {tool.name for tool in await client.list_tools()}
-    assert registered == _EXPECTED_TOOLS
+    assert registered == {spec.name for spec in SPECS}
+    assert registered, "SPECS must not be empty — at least one tool should ship"

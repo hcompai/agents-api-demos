@@ -8,7 +8,7 @@ from fastmcp import Client
 from pydantic import BaseModel, ValidationError
 
 from examples.mcpify_anything.server import build_server
-from examples.mcpify_anything.tests.conftest import FakeRunner
+from examples.mcpify_anything.tests._fakes import FakeRunner
 from examples.mcpify_anything.tools.get_product_prices import Product, get_product_prices
 
 

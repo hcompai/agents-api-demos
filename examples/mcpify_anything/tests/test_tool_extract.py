@@ -8,7 +8,7 @@ from fastmcp import Client
 from pydantic import BaseModel
 
 from examples.mcpify_anything.server import build_server
-from examples.mcpify_anything.tests.conftest import FakeRunner
+from examples.mcpify_anything.tests._fakes import FakeRunner
 from examples.mcpify_anything.tools.extract import ExtractInput, extract
 
 _RECIPE_SCHEMA: dict[str, Any] = {

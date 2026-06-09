@@ -2,7 +2,7 @@
 
 import inspect
 from collections.abc import Awaitable, Callable, Iterable
-from typing import Any, Generic, TypeVar, cast, get_args, get_origin, get_type_hints
+from typing import Any, TypeVar, cast, get_args, get_origin, get_type_hints
 
 from fastmcp import FastMCP
 from pydantic import BaseModel, ConfigDict, Field, HttpUrl, RootModel, create_model
@@ -30,20 +30,26 @@ AnswerT = TypeVar("AnswerT")
 OutputT = TypeVar("OutputT")
 
 
-class ToolSpec(BaseModel, Generic[InputT, AnswerT, OutputT]):
+class ToolSpec(BaseModel):
     """Declarative description of one MCP tool.
 
     Built by [browser_tool]; consumed by [register_specs]. This is the framework's
     only data type — every tool, regardless of shape (simple read / receipt / action),
     is exactly one ToolSpec record.
+
+    Not parametrised by Generic[InputT, AnswerT, OutputT]: those type variables only
+    bind locally to the decorator call's lambdas and the wrapped function; once the spec
+    exists, the registrar consumes it as ``Iterable[ToolSpec]`` and uses runtime
+    introspection (``input_model``, ``answer_model``, ``output_model``) — the static
+    parametrisation never paid off.
     """
 
     model_config = ConfigDict(arbitrary_types_allowed=True, frozen=True)
 
     name: str
     description: str
-    input_model: type[InputT]
-    answer_model: type[AnswerT]  # platform-facing; may be ``RootModel[list[T]]``
+    input_model: type[BaseModel]
+    answer_model: type[BaseModel]  # platform-facing; may be ``RootModel[list[T]]``
     output_model: object  # user fn's ``-> ...`` annotation; may be a generic like ``list[T]``
     instructions: str
     prompt: Callable[..., str]  # ``(InputT) -> str`` — Pydantic stores the callable as-is
@@ -66,10 +72,7 @@ def browser_tool(
     answer_model_factory: Callable[[InputT], type[BaseModel]] | None = None,
     max_steps: int = 20,
     max_time_s: float = 180.0,
-) -> Callable[
-    [Callable[[InputT, AnswerT], Awaitable[OutputT]]],
-    ToolSpec[InputT, AnswerT, OutputT],
-]:
+) -> Callable[[Callable[[InputT, AnswerT], Awaitable[OutputT]]], ToolSpec]:
     """Build a [ToolSpec] from a typed ``(args, answer) -> output`` async function.
 
     ``instructions`` vs ``prompt`` — the contract:
@@ -106,9 +109,7 @@ def browser_tool(
         A decorator that turns the wrapped async function into a ``ToolSpec``.
     """
 
-    def _decorate(
-        fn: Callable[[InputT, AnswerT], Awaitable[OutputT]],
-    ) -> ToolSpec[InputT, AnswerT, OutputT]:
+    def _decorate(fn: Callable[[InputT, AnswerT], Awaitable[OutputT]]) -> ToolSpec:
         hints = get_type_hints(fn)
         try:
             input_model = hints["args"]
@@ -126,17 +127,11 @@ def browser_tool(
                 f"subclass, got {input_model!r}"
             )
 
-        answer_model = _materialise_answer_model(answer_annotation, fn_name=fn.__name__)
-
-        # ``cast`` not ``# type: ignore``: ``input_model``/``answer_model`` come from runtime
-        # annotation extraction (``get_type_hints``) so mypy can only narrow them to
-        # ``type[BaseModel]``, but the surrounding ``Callable[[InputT, AnswerT], ...]`` proves
-        # they ARE ``InputT``/``AnswerT`` for this specific decorator call.
         return ToolSpec(
             name=fn.__name__,
             description=(fn.__doc__ or "").strip(),
-            input_model=cast("type[InputT]", input_model),
-            answer_model=cast("type[AnswerT]", answer_model),
+            input_model=input_model,
+            answer_model=_materialise_answer_model(answer_annotation, fn_name=fn.__name__),
             output_model=output_model,
             instructions=instructions,
             prompt=prompt,
@@ -150,10 +145,7 @@ def browser_tool(
     return _decorate
 
 
-# ``ToolSpec[Any, Any, Any]`` because each ``SPECS`` tuple is heterogeneous — every entry has its
-# own ``InputT/AnswerT/OutputT`` triple, and a single TypeVar can't express "any combination of
-# parametrisations." Runtime correctness comes from ``ToolSpec``'s frozen Pydantic config.
-def register_specs(specs: Iterable["ToolSpec[Any, Any, Any]"], mcp: FastMCP, runner: Runner) -> None:
+def register_specs(specs: Iterable[ToolSpec], mcp: FastMCP, runner: Runner) -> None:
     """Wire each ``ToolSpec`` into FastMCP, capturing the runner in a per-tool closure.
 
     Args:
@@ -214,7 +206,7 @@ def _unwrap_answer(validated: BaseModel) -> object:
     return validated
 
 
-def _register_one(spec: "ToolSpec[Any, Any, Any]", mcp: FastMCP, runner: Runner) -> None:
+def _register_one(spec: ToolSpec, mcp: FastMCP, runner: Runner) -> None:
     async def _wrapper(args: BaseModel) -> object:
         # Static answer model for curated tools; per-call override for dynamic-schema
         # tools like [extract]. The chosen model drives both the platform's
@@ -239,21 +231,19 @@ def _register_one(spec: "ToolSpec[Any, Any, Any]", mcp: FastMCP, runner: Runner)
     # Stamp annotations + signature so FastMCP introspects the *concrete* input/output
     # models (not the generic BaseModel above). Both surfaces are set so any
     # introspection path (function annotations or inspect.signature) sees the same thing.
-    # ``__signature__`` is attached via ``setattr`` because the ``Callable`` protocol mypy uses
-    # doesn't model arbitrary attribute assignment, even though Python functions accept it.
     _wrapper.__annotations__ = {"args": spec.input_model, "return": spec.output_model}
-    setattr(
-        _wrapper,
-        "__signature__",
-        inspect.Signature(
-            parameters=[
-                inspect.Parameter(
-                    "args",
-                    kind=inspect.Parameter.POSITIONAL_OR_KEYWORD,
-                    annotation=spec.input_model,
-                )
-            ],
-            return_annotation=spec.output_model,
-        ),
+    # ``__signature__`` is a real Python function attribute, but typeshed doesn't model it on
+    # ``Callable``. Aliasing to ``Any`` (rather than ``# type: ignore`` or ``setattr``) keeps
+    # the assignment a plain attribute write while satisfying mypy strict.
+    untyped_wrapper: Any = _wrapper
+    untyped_wrapper.__signature__ = inspect.Signature(
+        parameters=[
+            inspect.Parameter(
+                "args",
+                kind=inspect.Parameter.POSITIONAL_OR_KEYWORD,
+                annotation=spec.input_model,
+            )
+        ],
+        return_annotation=spec.output_model,
     )
     mcp.tool(name=spec.name, description=spec.description)(_wrapper)

@@ -15,7 +15,7 @@ from fastmcp import Client, FastMCP
 from hai_agents import Environment_Web
 from pydantic import BaseModel, Field, HttpUrl, RootModel, ValidationError, WithJsonSchema
 
-from examples.mcpify_anything.tests.conftest import FakeRunner
+from examples.mcpify_anything.tests._fakes import FakeRunner
 from examples.mcpify_anything.tool import _OPERATOR_PREAMBLE, ToolSpec, browser_tool, register_specs
 
 
