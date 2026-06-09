@@ -17,7 +17,7 @@ The first example implements both patterns for the same task: autonomously QA a 
 git clone <this-repo>
 cd agent-sdk-demo
 uv sync
-cp .env.example .env  # add your H_API_KEY from https://portal.hcompany.ai
+cp .env.example .env  # add your H_API_KEY from https://platform.hcompany.ai/settings/api-keys
 claude                 # opens Claude Code in the repo; the MCP server is auto-registered
 ```
 
@@ -52,7 +52,7 @@ Shared components (agent instructions, `ReviewResult` model, helpers) live in [`
 
 | Env var | Required | Source |
 | --- | --- | --- |
-| `H_API_KEY` | yes | https://portal.hcompany.ai |
+| `H_API_KEY` | yes | https://platform.hcompany.ai/settings/api-keys |
 
 ## Project layout
 
