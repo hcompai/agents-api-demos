@@ -103,6 +103,6 @@ Tests live at the repo root in [`tests/mcpify_anything/`](../../tests/mcpify_any
 
 | Env var | Required | Default | Source |
 | --- | --- | --- | --- |
-| `H_API_KEY` | yes | — | https://portal.hcompany.ai |
+| `H_API_KEY` | yes | — | https://platform.hcompany.ai/settings/api-keys |
 | `H_BASE_URL` | no | `HaiAgentsEnvironment.EU` | override only when targeting a different deployment |
 | `H_AGENT_ARTIFACT` | no | `mcpify-anything-agent` | the published agent build matched to these prompts |
