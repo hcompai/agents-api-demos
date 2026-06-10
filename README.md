@@ -13,6 +13,7 @@ Each example also demonstrates a different *recipe* on top of the SDK:
 
 - [`qa_mcp`](examples/qa_mcp/) / [`qa_cli`](examples/qa_cli/): **single-task pattern** — wrap one agent task as one tool/command.
 - [`mcpify_anything`](examples/mcpify_anything/): **typed-toolkit pattern** — declare a family of typed tools with one decorator and a shared runner.
+- [`counterfeit_detection`](examples/counterfeit_detection/): **single-agent + custom-tools pattern** — upgrade one agent with local Python tools (Playwright screenshots, Holo visual compare) and a step/time budget, no orchestration.
 
 ## Quickstart
 
@@ -35,6 +36,7 @@ In Claude Code:
 | [`qa_mcp`](examples/qa_mcp/) | Autonomous browser agent QAs a remote URL and returns structured `{verdict, summary, findings}` | MCP server (`review_web_ui`, `visual_check`) |
 | [`qa_cli`](examples/qa_cli/) | Same QA agent exposed as a shell command, surfaced to Claude Code via the `qa-via-cli` skill | CLI (`qa-cli review / visual`) |
 | [`mcpify_anything`](examples/mcpify_anything/) | Turn any website into typed MCP tools: declare input/output as Pydantic models plus a one-line prompt, and a cloud browser agent fills the contract with schema-validated JSON | MCP server (`get_product_prices`, `add_cart_items`, `extract`) |
+| [`counterfeit_detection`](examples/counterfeit_detection/) | Three-stage cookbook: a bare `run_session` finds one counterfeit of a genuine product; local custom tools add screenshot-grounded visual verdicts; a `max_steps`/`max_time_s` budget turns it into an exhaustive sweep | CLI (`counterfeit-cli simple / tooled / sweep`) |
 
 ## How it works
 
@@ -69,7 +71,8 @@ agent-sdk-demo/
 │   ├── agent_skills/              # skill docs passed to the ui-reviewer agent
 │   ├── qa_mcp/                    # MCP server (review_web_ui + visual_check)
 │   ├── qa_cli/                    # CLI wrapper (qa-cli review / visual)
-│   └── mcpify_anything/           # typed-toolkit MCP server (3 example tools)
+│   ├── mcpify_anything/           # typed-toolkit MCP server (3 example tools)
+│   └── counterfeit_detection/     # cookbook CLI (counterfeit-cli simple / tooled / sweep)
 ├── AGENTS.md                      # coding rules for contributors
 └── pyproject.toml
 ```

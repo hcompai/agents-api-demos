@@ -16,7 +16,7 @@ from pathlib import Path
 
 import tyro
 from dotenv import load_dotenv
-from hai_agents import Client, run_session
+from hai_agents import Agent, Client, SessionRunResult, run_session
 
 from examples._shared import (
     REVIEWER_INSTRUCTIONS,
@@ -34,17 +34,17 @@ def review(url: str, instruction: str = "Review the page for usability and acces
     started = time.monotonic()
     result = run_session(
         _client(),
-        agent={
-            "name": "ui-reviewer",
-            "description": "Reviews a web UI for usability, accessibility, and obvious bugs.",
-            "instructions": REVIEWER_INSTRUCTIONS,
-            "skills": load_agent_skills(),
-            "environments": [browser_env(url)],
-        },
+        agent=Agent(
+            name="ui-reviewer",
+            description="Reviews a web UI for usability, accessibility, and obvious bugs.",
+            instructions=REVIEWER_INSTRUCTIONS,
+            skills=load_agent_skills(),
+            environments=[browser_env(url)],
+            answer_format=ReviewResult.model_json_schema(),
+        ),
         messages=instruction,
         max_steps=25,
         max_time_s=360.0,
-        answer_format=ReviewResult.model_json_schema(),
     )
     elapsed = time.monotonic() - started
     print(f"completed in {elapsed:.1f}s (status={result.status})", file=sys.stderr)
@@ -62,12 +62,12 @@ def visual(url: str, question: str) -> None:
     started = time.monotonic()
     result = run_session(
         _client(),
-        agent={
-            "name": "visual-checker",
-            "description": "Answers a single visual question about a web page.",
-            "instructions": "Open the page and answer the user's question in one or two sentences.",
-            "environments": [browser_env(url)],
-        },
+        agent=Agent(
+            name="visual-checker",
+            description="Answers a single visual question about a web page.",
+            instructions="Open the page and answer the user's question in one or two sentences.",
+            environments=[browser_env(url)],
+        ),
         messages=question,
         max_steps=3,
         max_time_s=120.0,
@@ -84,7 +84,7 @@ def visual(url: str, question: str) -> None:
     print(answer if isinstance(answer, str) else json.dumps(answer))
 
 
-def _save_trace(subcommand: str, url: str, instruction: str, elapsed: float, result) -> Path:
+def _save_trace(subcommand: str, url: str, instruction: str, elapsed: float, result: SessionRunResult) -> Path:
     TRACES_DIR.mkdir(exist_ok=True)
     timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
     path = TRACES_DIR / f"{subcommand}_{timestamp}.json"

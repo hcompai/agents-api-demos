@@ -5,7 +5,7 @@ from types import SimpleNamespace
 from typing import Any
 
 import pytest
-from hai_agents import AsyncClient, Environment_Web, SessionRunResult, TrajectoryChanges
+from hai_agents import AsyncClient, Browser, SessionRunResult, TrajectoryChanges
 from hai_agents.core import ApiError
 from pydantic import BaseModel
 
@@ -19,8 +19,8 @@ class _Out(BaseModel):
     value: int
 
 
-def _env() -> list[Environment_Web | str]:
-    return [Environment_Web(id="browser", headless=True, width=800, height=600, start_url="https://x.test")]
+def _env() -> list[Browser | str]:
+    return [Browser(id="browser", headless=True, width=800, height=600, start_url="https://x.test")]
 
 
 def _runner(client: AsyncClient, agent_artifact: str) -> CuaRunner:
@@ -46,12 +46,10 @@ def _patch_create(monkeypatch: pytest.MonkeyPatch, client: AsyncClient, capture:
         max_steps: int | None = None,
         max_time_s: float | None = None,
         idle_timeout_s: int | None = None,
-        answer_format: dict[str, Any] | None = None,
         agent_artifact: str | None = None,
         **_kwargs: Any,
     ) -> Any:
         if capture is not None:
-            capture["answer_format"] = answer_format
             capture["agent"] = agent
             capture["idle_timeout_s"] = idle_timeout_s
             capture["agent_artifact"] = agent_artifact
@@ -102,7 +100,7 @@ async def test_sets_answer_format_and_validates(monkeypatch: pytest.MonkeyPatch,
     result = await _runner(client, _TEST_ARTIFACT).run(_spec())
 
     assert result == _Out(value=7)
-    assert capture["answer_format"] == _Out.model_json_schema()
+    assert capture["agent"].answer_format == _Out.model_json_schema()  # carried by the inline Agent since SDK 0.1.6
     assert capture["idle_timeout_s"] is None  # one-shot: session ends when the agent answers
 
 

@@ -7,7 +7,7 @@ from typing import Annotated, Any
 import pytest
 from fastmcp import Client, FastMCP
 from fastmcp.exceptions import ToolError
-from hai_agents import Environment_Web
+from hai_agents import Browser
 from pydantic import BaseModel, Field, HttpUrl, RootModel, ValidationError, WithJsonSchema
 
 from tests.mcpify_anything._fakes import FakeRunner
@@ -202,7 +202,7 @@ async def test_register_specs_builds_runspec_with_prompt_and_schema_hint(
     assert spec.instructions.startswith(_OPERATOR_PREAMBLE)
     assert "you read things" in spec.instructions
     env = spec.environments[0]
-    assert isinstance(env, Environment_Web)
+    assert isinstance(env, Browser)
     assert env.start_url == "https://x.test/"
 
 
