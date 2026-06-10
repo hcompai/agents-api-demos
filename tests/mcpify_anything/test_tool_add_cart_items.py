@@ -7,7 +7,7 @@ from fastmcp import Client
 from pydantic import BaseModel
 
 from examples.mcpify_anything.server import build_server
-from examples.mcpify_anything.tests._fakes import FakeRunner
+from tests.mcpify_anything._fakes import FakeRunner
 from examples.mcpify_anything.tools.add_cart_items import CartLine, add_cart_items
 
 

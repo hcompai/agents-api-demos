@@ -96,8 +96,9 @@ mcpify_anything/
 │   ├── extract.py              # dynamic-schema escape hatch
 │   ├── get_product_prices.py   # typed read with capture metadata
 │   └── add_cart_items.py       # action + read-back proof + client totals
-└── tests/                      # behavioural suite (fake Runner via DI) + live integration tests
 ```
+
+Tests live at the repo root in [`tests/mcpify_anything/`](../../tests/mcpify_anything/): a behavioural suite (fake Runner via DI) plus live integration tests under `integration/` (gated behind the `integration` marker).
 
 ## Configuration
 

@@ -40,7 +40,7 @@ line-length = 120
 convention = "google"
 
 [tool.pytest.ini_options]
-testpaths = ["examples/mcpify_anything/tests"]
+testpaths = ["tests"]
 asyncio_mode = "auto"
 addopts = "-ra -q -m 'not integration'"
 markers = [
@@ -69,5 +69,5 @@ disable_error_code = ["attr-defined"]
 # on the runtime-synthesised list-wrapper that's statically ``type[list[T]]`` (``attr-defined``,
 # ``no-any-return``), and identity checks between specs and those wrappers (``comparison-
 # overlap``). All four are the same runtime-vs-static gap; not test code smells.
-module = "examples.mcpify_anything.tests.*"
+module = "tests.mcpify_anything.*"
 disable_error_code = ["arg-type", "attr-defined", "comparison-overlap", "no-any-return"]

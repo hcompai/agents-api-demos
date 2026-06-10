@@ -6,7 +6,7 @@ import pytest
 from hai_agents import AsyncClient
 from pydantic import BaseModel
 
-from examples.mcpify_anything.tests._fakes import FakeRunner
+from tests.mcpify_anything._fakes import FakeRunner
 
 
 @pytest.fixture
