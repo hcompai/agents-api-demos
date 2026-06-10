@@ -76,7 +76,7 @@ def _client() -> Client:
         if not api_key:
             raise RuntimeError(
                 "H_API_KEY is not set. Copy .env.example to .env and add a key from "
-                "https://portal.hcompany.ai, then re-run."
+                "https://platform.hcompany.ai/settings/api-keys, then re-run."
             )
         _client_instance = Client(api_key=api_key)
     return _client_instance

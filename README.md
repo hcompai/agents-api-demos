@@ -72,5 +72,5 @@ agent-sdk-demo/
 ## Links
 
 - [hai-agents on PyPI](https://pypi.org/project/hai-agents/)
-- [H Company portal](https://portal.hcompany.ai)
+- [H Company Platform](https://platform.hcompany.ai)
 - [Model Context Protocol](https://modelcontextprotocol.io)
