@@ -49,6 +49,10 @@ It opens the browser (one Google click), exchanges the code, picks the org, revo
 - [environments-vaults.md](references/agp/environments-vaults.md) — the `web` (Browser) environment kind; vaults (1Password, env-manager proxy)
 - [conventions-and-sdk.md](references/agp/conventions-and-sdk.md) — base URLs/regions, gateway auth detail, errors, hai-agents↔HTTP mapping, MCP tools
 
+**SDKs** (`references/sdk/` — read the matching one BEFORE writing SDK code; don't hand-roll HTTP when the SDK fits):
+- [python.md](references/sdk/python.md) — `hai-agents` on PyPI: `run_session`/`start_session`→`SessionHandle`, Client↔route mapping, events/polling, exceptions, EU-default gotchas
+- [typescript.md](references/sdk/typescript.md) — `hai-agents` on npm: `runSession`/`SessionHandle`, client surface, error classes, ESM/CJS, EU-default gotchas
+
 **Extras** (`references/extras/` — dev UI/UX knowledge, not endpoint docs):
 - [agent-view-replay.md](references/extras/agent-view-replay.md) — reviewing/replaying runs in the browser (`platform[.eu].hcompany.ai/agent-view/{id}`), deep-linking to an event, sharing a run with someone outside the org
 
@@ -57,7 +61,7 @@ It opens the browser (one Google click), exchanges the code, picks the org, revo
 1. `POST /api/v2/sessions` with a stored agent id or an inline Agent spec (`{name, instructions, model, environments: [{kind: "web", ...}], skills}`). Pass an idempotency key — retried creates replay instead of duplicating (422 conflicting reuse, 409 in-flight).
 2. Long-poll `GET /api/v2/sessions/{id}/changes?from_index=N&wait_for_seconds=30` (cap 60 s). Empty window → **204 + `ETag: <from_index>`**, not an error: keep the cursor, re-poll. Advance by `from_index += len(events)` — never reset.
 3. React to events (`AgentEvent.kind` ∈ policy_event / tool_result / answer_event / observation_event / message_event / error_event, plus AgentStarted/Completion/Error, MetricsUpdate, LiveViewUrl, ChatMessage). Interact via `POST .../messages`, `pause`/`resume`, `force_answer`.
-4. In Python this is just `hai_agents.run_session(...)` — read the SDK mapping reference before hand-rolling HTTP.
+4. In Python this is just `hai_agents.run_session(...)`, in TypeScript `client.runSession(...)` — read [references/sdk/python.md](references/sdk/python.md) or [references/sdk/typescript.md](references/sdk/typescript.md) before hand-rolling HTTP.
 5. **Always hand the user the replay link**: `https://platform.hcompany.ai/agent-view/{session_id}` (EU sessions → `platform.eu.hcompany.ai`; match the region of the API you called). That's how they review what the agent actually did, live or after the fact — see [references/extras/agent-view-replay.md](references/extras/agent-view-replay.md).
 
 ## Gotchas that bite

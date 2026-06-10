@@ -87,6 +87,8 @@ Specifics worth knowing:
 
 ## 4. SDK mapping (hai-agents)
 
+> Deeper, per-language SDK references (full method↔route tables, handles, exceptions, gotchas): [../sdk/python.md](../sdk/python.md) and [../sdk/typescript.md](../sdk/typescript.md). This section is just the bridge between the HTTP API and the SDKs.
+
 `sdk-codegen/` generates both public SDKs from the public v2 OpenAPI schema with [Fern](https://buildwithfern.com) (`fern/generators.yml`, normalized by `prepare_openapi.py`):
 
 - **Python**: package `hai_agents`, published to PyPI as [`hai-agents`](https://pypi.org/project/hai-agents/) (mirror repo `hcompai/hai-agents-python`). Entry points: `hai_agents.Client` / `hai_agents.AsyncClient` (overlay subclasses of Fern's `BaseClient`), plus procedural helpers `run_session`, `wait_for_session`, `async_run_session`, `async_wait_for_session` and the `SessionHandle` / `AsyncSessionHandle` classes.
