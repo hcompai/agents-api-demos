@@ -1,8 +1,9 @@
-"""The ``@browser_tool`` decorator and ``register_specs`` registrar — the core of the typed-tool framework."""
+"""The ``@browser_tool`` decorator and ``register_specs`` registrar."""
 
 import inspect
 import json
 from collections.abc import Awaitable, Callable, Iterable
+from pathlib import Path
 from typing import Any, TypeVar, cast, get_args, get_origin, get_type_hints
 
 from fastmcp import FastMCP
@@ -12,41 +13,28 @@ from examples._shared import browser_env
 from examples.mcpify_anything.runner import Runner, RunSpec
 from examples.mcpify_anything.schema_hint import schema_hint
 
-# Prepended to every tool's ``instructions`` so the JSON-output protocol has a single source
-# of truth (mirroring the auto-appended ``schema_hint`` on the user-message side).
-_OPERATOR_PREAMBLE = (
-    "Report exactly what is shown on the page as JSON. "
-    "Do not invent fields or values. "
-    "Do not wrap the answer in markdown or code fences."
-)
+# Prepended to every tool's ``instructions`` so the JSON-output contract has one source of truth.
+_OPERATOR_PREAMBLE = (Path(__file__).parent.parent / "prompts" / "operator_preamble.md").read_text().strip()
 
 InputT = TypeVar("InputT", bound=BaseModel)
-# Unbounded: handlers may take a ``BaseModel`` or ``list[BaseModel]``; ``_materialise_answer_model``
-# enforces the real contract at decoration time.
 AnswerT = TypeVar("AnswerT")
 OutputT = TypeVar("OutputT")
 
 
 class ToolSpec(BaseModel):
-    """Declarative description of one MCP tool.
-
-    Built by [browser_tool]; consumed by [register_specs]. Every tool, regardless of
-    shape, is exactly one ToolSpec record.
-    """
+    """Declarative description of one MCP tool."""
 
     model_config = ConfigDict(arbitrary_types_allowed=True, frozen=True)
 
     name: str
     description: str
     input_model: type[BaseModel]
-    answer_model: type[BaseModel]  # platform-facing; may be ``RootModel[list[T]]``
-    output_model: object  # user fn's ``-> ...`` annotation; may be a generic like ``list[T]``
+    answer_model: type[BaseModel]
+    output_model: object
     instructions: str
-    prompt: Callable[..., str]  # ``(InputT) -> str``
-    site: Callable[..., HttpUrl | str]  # ``(InputT) -> HttpUrl | str``
-    handler: Callable[..., Awaitable[object]]  # ``(InputT, AnswerT) -> Awaitable[OutputT]``
-    # Per-call override for dynamic-schema tools ([extract]); curated tools leave it None
-    # and use the static ``answer_model``.
+    prompt: Callable[..., str]
+    site: Callable[..., HttpUrl | str]
+    handler: Callable[..., Awaitable[object]]
     answer_model_factory: Callable[..., type[BaseModel]] | None
     max_steps: int
     max_time_s: float
@@ -61,29 +49,13 @@ def browser_tool(
     max_steps: int = 20,
     max_time_s: float = 180.0,
 ) -> Callable[[Callable[[InputT, AnswerT], Awaitable[OutputT]]], ToolSpec]:
-    """Build a [ToolSpec] from a typed ``(args, answer) -> output`` async function.
+    """Build a ``ToolSpec`` from a typed ``(args, answer) -> output`` async function.
 
-    ``instructions`` vs ``prompt``: ``instructions`` is the static system message (persona /
-    behavioural heuristics only — the framework prepends ``_OPERATOR_PREAMBLE``); ``prompt``
-    is the per-call user message built from ``args`` (the framework appends
-    ``schema_hint(answer_model)``, so per-tool prompts never restate the JSON shape).
+    ``instructions`` is the static system message (the framework prepends ``_OPERATOR_PREAMBLE``).
+    ``prompt`` builds the per-call user message (the framework appends ``schema_hint(answer_model)``).
 
-    The function's annotations are the contract: ``answer: list[T]`` is wrapped in a
-    synthesised model and unwrapped again before the handler runs, so handlers always see
-    the natural Python shape.
-
-    Args:
-        instructions: Static system message describing the agent's role and behavioural rules.
-        site: Function that resolves the start URL of the browser environment from ``args``.
-        prompt: Function that builds the per-call user message from ``args``.
-        answer_model_factory: Optional per-call factory yielding a fresh ``BaseModel`` whose
-            JSON schema becomes the platform's ``answer_format``. Leave ``None`` for tools
-            with a static answer shape; use it only for dynamic-schema tools like ``extract``.
-        max_steps: Upper bound on the agent's CUA steps before the platform stops it.
-        max_time_s: Upper bound on the agent's wall-clock seconds before the platform stops it.
-
-    Returns:
-        A decorator that turns the wrapped async function into a ``ToolSpec``.
+    The function's annotations are the contract: ``answer: list[T]`` is wrapped in a synthesised
+    model and unwrapped before the handler runs, so handlers always see the natural Python shape.
     """
 
     def _decorate(fn: Callable[[InputT, AnswerT], Awaitable[OutputT]]) -> ToolSpec:
@@ -123,13 +95,7 @@ def browser_tool(
 
 
 def register_specs(specs: Iterable[ToolSpec], mcp: FastMCP, runner: Runner) -> None:
-    """Wire each ``ToolSpec`` into FastMCP, capturing the runner in a per-tool closure.
-
-    Args:
-        specs: The collection of tool specs to register, typically the example's ``SPECS`` tuple.
-        mcp: The FastMCP server to attach each tool to.
-        runner: The runner that executes ``RunSpec`` invocations behind every tool call.
-    """
+    """Wire each ``ToolSpec`` into FastMCP, capturing the runner in a per-tool closure."""
     for spec in specs:
         _register_one(spec, mcp, runner)
 
@@ -137,13 +103,10 @@ def register_specs(specs: Iterable[ToolSpec], mcp: FastMCP, runner: Runner) -> N
 class _ListWrapper(BaseModel):
     """Marker base for auto-generated ``answer: list[T]`` wrappers (``items: list[T]``).
 
-    A named-field BaseModel rather than ``RootModel[list[T]]`` because RootModel shapes
-    round-trip as ``{"root": [...]}`` on the platform wire; ``{"items": [...]}`` keeps the
-    format a plain JSON object. The registrar unwraps ``.items`` before the handler runs.
+    Named-field rather than ``RootModel[list[T]]`` so the wire format is ``{"items": [...]}``
+    instead of ``{"root": [...]}``. The registrar unwraps ``.items`` before the handler runs.
     """
 
-    # Declared on the base so ``_unwrap_answer`` typechecks; the concrete element type is
-    # bound at runtime via ``create_model``, hence the ``Any`` element.
     items: list[Any] = Field(default_factory=list)
 
 
@@ -156,8 +119,6 @@ def _materialise_answer_model(annotation: object, *, fn_name: str) -> type[BaseM
             name = f"{args[0].__name__}List"
             return create_model(name, __base__=_ListWrapper, items=(annotation, Field(...)))
     name = f"{''.join(part.capitalize() for part in fn_name.split('_'))}Answer"
-    # ``annotation`` is a runtime variable, so the RootModel subscript must go through an
-    # ``Any``-typed alias for mypy; the ``cast`` re-attaches the static return type.
     root_model_alias: Any = RootModel
     try:
         return cast("type[BaseModel]", type(name, (root_model_alias[annotation],), {}))
@@ -168,8 +129,7 @@ def _materialise_answer_model(annotation: object, *, fn_name: str) -> type[BaseM
 
 
 def _answer_shape_hint(answer_model: type[BaseModel]) -> str:
-    # ``schema_hint`` is strict and renders only a subset of JSON Schema. Curated tools always
-    # fall inside it; caller-supplied schemas ([extract]) may not — embed the raw schema then.
+    # ``schema_hint`` is strict; ``extract``'s caller-supplied schemas may fall outside it.
     try:
         return schema_hint(answer_model)
     except (KeyError, ValueError):
@@ -187,7 +147,6 @@ def _unwrap_answer(validated: BaseModel) -> object:
 
 def _register_one(spec: ToolSpec, mcp: FastMCP, runner: Runner) -> None:
     async def _wrapper(args: BaseModel) -> object:
-        # The chosen model drives both the platform's ``answer_format`` and the validation contract.
         answer_model = spec.answer_model_factory(args) if spec.answer_model_factory is not None else spec.answer_model
         task = spec.prompt(args) + "\n" + _answer_shape_hint(answer_model)
         run_spec: RunSpec[BaseModel] = RunSpec(
@@ -205,10 +164,9 @@ def _register_one(spec: ToolSpec, mcp: FastMCP, runner: Runner) -> None:
     _wrapper.__name__ = spec.name
     _wrapper.__qualname__ = spec.name
     _wrapper.__doc__ = spec.description
-    # Stamp both annotations and __signature__ so every FastMCP introspection path sees the
-    # concrete input/output models rather than the generic BaseModel above.
+    # FastMCP introspects both ``__annotations__`` and ``__signature__``; set both to the
+    # concrete models so the tool surfaces with proper schemas instead of generic BaseModel.
     _wrapper.__annotations__ = {"args": spec.input_model, "return": spec.output_model}
-    # typeshed doesn't model ``__signature__`` on Callable; the Any alias keeps mypy happy.
     untyped_wrapper: Any = _wrapper
     untyped_wrapper.__signature__ = inspect.Signature(
         parameters=[

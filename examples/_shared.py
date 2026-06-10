@@ -1,5 +1,6 @@
 """Shared agent definition components used across the example servers."""
 
+import os
 from pathlib import Path
 from typing import Literal
 
@@ -8,8 +9,6 @@ from pydantic import BaseModel
 
 _PROMPTS_DIR = Path(__file__).parent / "prompts"
 AGENT_SKILLS_DIR = Path(__file__).parent / "agent_skills"
-_DEFAULT_WIDTH = 1280
-_DEFAULT_HEIGHT = 800
 
 REVIEWER_INSTRUCTIONS: str = (_PROMPTS_DIR / "reviewer_instructions.md").read_text()
 
@@ -41,10 +40,21 @@ def browser_env(start_url: str) -> Environment_Web:
     return Environment_Web(
         id="browser",
         headless=True,
-        width=_DEFAULT_WIDTH,
-        height=_DEFAULT_HEIGHT,
+        width=1280,
+        height=800,
         start_url=start_url,
     )
+
+
+def require_api_key() -> str:
+    """Return ``H_API_KEY`` from the environment or raise with a remediation hint."""
+    api_key = os.environ.get("H_API_KEY")
+    if not api_key:
+        raise RuntimeError(
+            "H_API_KEY is not set. Copy .env.example to .env and add a key from "
+            "https://platform.hcompany.ai/settings/api-keys, then re-run."
+        )
+    return api_key
 
 
 def load_agent_skills() -> list[dict]:

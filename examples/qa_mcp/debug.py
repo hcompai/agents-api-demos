@@ -9,7 +9,6 @@ Every run auto-saves a trace to traces/<subcommand>_<timestamp>.json for post-ru
 
 import json
 import logging
-import os
 import sys
 import time
 from datetime import datetime, timezone
@@ -24,6 +23,7 @@ from examples._shared import (
     ReviewResult,
     browser_env,
     load_agent_skills,
+    require_api_key,
 )
 
 TRACES_DIR = Path("traces")
@@ -113,13 +113,7 @@ def _save_trace(subcommand: str, url: str, instruction: str, elapsed: float, res
 
 
 def _client() -> Client:
-    api_key = os.environ.get("H_API_KEY")
-    if not api_key:
-        raise RuntimeError(
-            "H_API_KEY is not set. Copy .env.example to .env and add a key from "
-            "https://platform.hcompany.ai/settings/api-keys, then re-run."
-        )
-    return Client(api_key=api_key)
+    return Client(api_key=require_api_key())
 
 
 def main() -> None:

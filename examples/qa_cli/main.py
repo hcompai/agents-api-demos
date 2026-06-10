@@ -10,7 +10,6 @@ server. Designed to be invoked from a terminal or from the ``qa-via-cli`` Claude
 
 import json
 import logging
-import os
 import sys
 import time
 
@@ -23,6 +22,7 @@ from examples._shared import (
     ReviewResult,
     browser_env,
     load_agent_skills,
+    require_api_key,
 )
 
 VISUAL_INSTRUCTIONS = "Open the page and answer the user's question in one or two sentences."
@@ -74,13 +74,7 @@ def visual(url: str, question: str) -> None:
 
 
 def _client() -> Client:
-    api_key = os.environ.get("H_API_KEY")
-    if not api_key:
-        raise RuntimeError(
-            "H_API_KEY is not set. Copy .env.example to .env and add a key from "
-            "https://platform.hcompany.ai/settings/api-keys, then re-run."
-        )
-    return Client(api_key=api_key)
+    return Client(api_key=require_api_key())
 
 
 def main() -> None:

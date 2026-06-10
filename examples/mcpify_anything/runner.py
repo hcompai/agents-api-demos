@@ -3,17 +3,16 @@
 import logging
 import uuid
 from typing import Generic, Protocol, TypeVar
+from urllib.parse import urlsplit, urlunsplit
 
 from hai_agents import Agent, AgentEnvironmentsItem, AsyncClient, Session, async_wait_for_session
 from hai_agents.core import ApiError
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
-from examples.mcpify_anything.links import agent_view_url_from_id
-
 LOGGER = logging.getLogger(__name__)
 
-# Extra wall-clock beyond the session's ``max_time_s`` so the platform can finish writing
-# the terminal answer after it stops the session.
+# Extra wall-clock beyond ``max_time_s`` so the platform can finish writing the terminal
+# answer after it stops the session.
 _CLIENT_GRACE_S = 60.0
 
 T = TypeVar("T", bound=BaseModel)
@@ -24,11 +23,7 @@ class CuaError(Exception):
 
 
 class RunSpec(BaseModel, Generic[T]):
-    """One CUA invocation: what to run and how to bound it.
-
-    Operational knobs (`max_steps`, `max_time_s`) carry defaults so a new tool only states
-    what is unique to it; override them per call when a tool needs to.
-    """
+    """One CUA invocation: what to run and how to bound it."""
 
     model_config = ConfigDict(arbitrary_types_allowed=True, frozen=True)
 
@@ -41,27 +36,15 @@ class RunSpec(BaseModel, Generic[T]):
 
 
 class Runner(Protocol):
-    """Anything that can execute a RunSpec — lets the registrar depend on a duck type."""
+    """Anything that can execute a ``RunSpec`` — lets the registrar depend on a duck type."""
 
     async def run(self, spec: RunSpec[T]) -> T: ...
 
 
 class CuaRunner:
-    """Drives CUA sessions on an injected ``AsyncClient``.
-
-    Thin wrapper around ``create_session`` + ``async_wait_for_session``: binds the
-    ``agent_artifact`` and validates the structured answer against ``output_model``.
-    """
+    """Drives CUA sessions on an injected ``AsyncClient``."""
 
     def __init__(self, client: AsyncClient, base_url: str, agent_artifact: str) -> None:
-        """Bind a runner to a specific AGP deployment and published agent build.
-
-        Args:
-            client: SDK client used to create and poll sessions.
-            base_url: AGP base URL — used to derive a ``dashboard.…/agent-view/<id>`` log link.
-            agent_artifact: Identifier of the published agent build that AGP launches for
-                each session. Required (no default) so this is an explicit deployment choice.
-        """
         assert agent_artifact, "agent_artifact must be a non-empty identifier"
         self._client = client
         self._base_url = base_url
@@ -70,17 +53,11 @@ class CuaRunner:
     async def run(self, spec: RunSpec[T]) -> T:
         """Run one session whose final answer is forced into ``spec.output_model``'s schema.
 
-        Args:
-            spec: Declarative description of the task, instructions, environments, and bounds.
-
-        Returns:
-            A validated instance of ``spec.output_model``.
-
         Raises:
             CuaError: The platform rejects the request, the session ends without a
-                structured answer, or the answer fails to validate against ``output_model``.
+                structured answer, or the answer fails to validate.
             TimeoutError: The session does not reach a terminal status within
-                ``max_time_s + _CLIENT_GRACE_S`` wall-clock seconds.
+                ``max_time_s + _CLIENT_GRACE_S`` seconds.
         """
         agent = Agent(
             name=f"mcpify-{uuid.uuid4().hex[:12]}",
@@ -89,9 +66,8 @@ class CuaRunner:
             instructions=spec.instructions,
         )
         session = await self._create_session(agent, spec)
-        # Logged for every session, not just successful ones — the link is how a failed run
-        # gets debugged after the fact.
-        LOGGER.info("agent view: %s", agent_view_url_from_id(self._base_url, session.id))
+        # Logged on every session so a failed run is debuggable after the fact.
+        LOGGER.info("agent view: %s", agent_view_url(self._base_url, session.id))
 
         result = await async_wait_for_session(
             self._client,
@@ -99,8 +75,6 @@ class CuaRunner:
             timeout_seconds=spec.max_time_s + _CLIENT_GRACE_S,
         )
 
-        # ``answer_format=...`` requests a structured payload, so the SDK should hand us a
-        # dict. A None or string answer is a contract violation.
         if not isinstance(result.answer, dict):
             raise CuaError(f"session {session.id} ended in {result.status} without a structured answer")
         try:
@@ -109,9 +83,8 @@ class CuaRunner:
             raise CuaError(f"answer did not match {spec.output_model.__name__}: {exc}") from exc
 
     async def _create_session(self, agent: Agent, spec: RunSpec[T]) -> Session:
-        # Isolated so subclasses can observe the new session id without re-implementing run().
+        # Separate hook so tests can subclass to observe the new session id (see _RecordingRunner).
         try:
-            # ``hai_agents`` ships no ``py.typed``; the typed local anchors the Any return for mypy.
             session: Session = await self._client.sessions.create_session(
                 agent=agent,
                 messages=spec.task,
@@ -124,3 +97,15 @@ class CuaRunner:
             return session
         except ApiError as exc:
             raise CuaError(f"session creation failed: {exc}") from exc
+
+
+def agent_view_url(base_url: str, trajectory_id: str) -> str:
+    """``https://agp.<region>.…`` + id  →  ``https://dashboard.<region>.…/agent-view/<id>``."""
+    if not trajectory_id:
+        raise ValueError("trajectory_id must be non-empty")
+    parts = urlsplit(base_url)
+    if not parts.scheme or parts.hostname is None:
+        raise ValueError(f"url missing scheme/host: {base_url!r}")
+    host = parts.hostname
+    dashboard_host = "dashboard." + host[len("agp.") :] if host.startswith("agp.") else host
+    return urlunsplit((parts.scheme, dashboard_host, f"/agent-view/{trajectory_id}", "", ""))

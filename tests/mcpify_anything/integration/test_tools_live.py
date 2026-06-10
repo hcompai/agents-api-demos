@@ -14,8 +14,7 @@ import pytest
 from fastmcp import Client
 from hai_agents import Agent, AsyncClient, HaiAgentsEnvironment, Session
 
-from examples.mcpify_anything.links import agent_view_url_from_id
-from examples.mcpify_anything.runner import CuaRunner, RunSpec
+from examples.mcpify_anything.runner import CuaRunner, RunSpec, agent_view_url
 from examples.mcpify_anything.server import build_server
 
 pytestmark = [
@@ -90,7 +89,7 @@ class _RecordingRunner(CuaRunner):
         return created
 
     def link_for(self, sid: str) -> str:
-        return agent_view_url_from_id(self._base_url_for_links, sid)
+        return agent_view_url(self._base_url_for_links, sid)
 
 
 @dataclass

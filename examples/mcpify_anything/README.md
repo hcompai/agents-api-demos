@@ -89,7 +89,6 @@ mcpify_anything/
 ├── tool.py                     # @browser_tool decorator + register_specs registrar
 ├── runner.py                   # CuaRunner around async_wait_for_session (incl. CuaError)
 ├── schema_hint.py              # JSON-schema-to-prompt rendering
-├── links.py                    # AGP base URL -> dashboard agent-view link
 ├── types.py                    # shared Price = Annotated[Decimal, WithJsonSchema(...)]
 ├── tools/
 │   ├── __init__.py             # explicit SPECS tuple

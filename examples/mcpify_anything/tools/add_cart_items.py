@@ -1,4 +1,4 @@
-"""Action tool: add items to a cart, then read the cart back as proof and derive client-side totals."""
+"""Action tool: add items to a cart, read the cart back, derive client-side totals."""
 
 from __future__ import annotations  # ``from_run`` returns the enclosing class — needs deferred eval.
 
@@ -22,9 +22,8 @@ class CartItemsInput(BaseModel):
     items: list[CartItem] = Field(min_length=1)
 
 
-# Agent-facing per-line schema. The answer is ``list[CartLine]``; the receipt status,
-# total, currency, and evidence are derived client-side below — the agent only reports
-# what it can read off the cart page.
+# Agent-facing per-line schema. Status, totals, currency, and evidence are derived client-side
+# below — the agent only reports what it can read off the cart page.
 class CartLine(BaseModel):
     name: str = Field(description="product name exactly as shown in the cart")
     quantity: int = Field(description="quantity for this line as shown in the cart")
@@ -63,9 +62,8 @@ class CartReceipt(BaseModel):
 
     @staticmethod
     def _currency(lines: list[CartLine]) -> str | None:
-        # Mixed-currency carts are real (international shops, multi-vendor marketplaces). Summing
-        # across currencies would be silently wrong, so we return None and surface "we can't
-        # compute one" — matching how _cart_total already handles missing line totals.
+        # Mixed-currency carts are real (multi-vendor marketplaces). Summing across currencies
+        # would be silently wrong, so return None and let the caller see no total was computed.
         seen = {line.currency for line in lines if line.currency}
         if len(seen) != 1:
             return None
@@ -75,7 +73,7 @@ class CartReceipt(BaseModel):
     def _cart_total(lines: list[CartLine]) -> Price | None:
         if CartReceipt._currency(lines) is None:
             return None
-        # Seeding with the first total keeps the running type Decimal (vs sum()'s int zero).
+        # Seeded with the first total to keep the running type Decimal (vs sum()'s int zero).
         totals: list[Decimal] = [line.line_total for line in lines if line.line_total is not None]
         if not totals or len(totals) != len(lines):
             return None
@@ -93,7 +91,7 @@ def _render_items(items: list[CartItem]) -> str:
 
 
 @browser_tool(
-    instructions=("You add items to e-commerce carts and verify the result by reading the cart back."),
+    instructions="You add items to e-commerce carts and verify the result by reading the cart back.",
     site=lambda a: a.items[0].product_url,
     prompt=lambda a: (
         "Add each of these products to the shopping cart at the given quantity, then open the "
