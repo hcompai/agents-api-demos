@@ -9,7 +9,10 @@ The `hai-agents` SDK lets you spin up autonomous agents — web-surfing, code-ru
 - **MCP server** — Claude Code calls the agent like any other MCP tool
 - **CLI + Claude Code skill** — Claude Code runs a shell command that the `qa-via-cli` skill knows how to invoke
 
-The first example implements both patterns for the same task: autonomously QA a web UI and return structured findings.
+Each example also demonstrates a different *recipe* on top of the SDK:
+
+- [`qa_mcp`](examples/qa_mcp/) / [`qa_cli`](examples/qa_cli/): **single-task pattern** — wrap one agent task as one tool/command.
+- [`mcpify_anything`](examples/mcpify_anything/): **typed-toolkit pattern** — declare a family of typed tools with one decorator and a shared runner.
 
 ## Quickstart
 
@@ -31,6 +34,7 @@ In Claude Code:
 | --- | --- | --- |
 | [`qa_mcp`](examples/qa_mcp/) | Autonomous browser agent QAs a remote URL and returns structured `{verdict, summary, findings}` | MCP server (`review_web_ui`, `visual_check`) |
 | [`qa_cli`](examples/qa_cli/) | Same QA agent exposed as a shell command, surfaced to Claude Code via the `qa-via-cli` skill | CLI (`qa-cli review / visual`) |
+| [`mcpify_anything`](examples/mcpify_anything/) | Turn any website into typed MCP tools: declare input/output as Pydantic models plus a one-line prompt, and a cloud browser agent fills the contract with schema-validated JSON | MCP server (`get_product_prices`, `add_cart_items`, `extract`) |
 
 ## How it works
 
@@ -58,13 +62,14 @@ Shared components (agent instructions, `ReviewResult` model, helpers) live in [`
 
 ```
 agent-sdk-demo/
-├── .mcp.json                      # registers the MCP server with Claude Code
+├── .mcp.json                      # registers MCP servers with Claude Code
 ├── .claude/skills/qa-via-cli/     # Claude Code skill for invoking qa-cli
 ├── examples/
-│   ├── _shared.py                 # shared instructions, models, and helpers
+│   ├── _shared.py                 # shared instructions, models, and helpers (qa_*)
 │   ├── agent_skills/              # skill docs passed to the ui-reviewer agent
 │   ├── qa_mcp/                    # MCP server (review_web_ui + visual_check)
-│   └── qa_cli/                    # CLI wrapper (qa-cli review / visual)
+│   ├── qa_cli/                    # CLI wrapper (qa-cli review / visual)
+│   └── mcpify_anything/           # typed-toolkit MCP server (3 example tools)
 ├── AGENTS.md                      # coding rules for contributors
 └── pyproject.toml
 ```

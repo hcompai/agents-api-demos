@@ -14,6 +14,7 @@ dependencies = [
 
 [project.scripts]
 agent-sdk-demo-qa = "examples.qa_mcp.server:main"
+agent-sdk-demo-mcpify-anything = "examples.mcpify_anything.server:main"
 debug-qa = "examples.qa_mcp.debug:main"
 qa-cli = "examples.qa_cli.main:main"
 
@@ -22,6 +23,7 @@ dev = [
     "ruff>=0.6",
     "mypy>=1.10",
     "pytest>=8.0",
+    "pytest-asyncio>=0.24",
 ]
 
 [build-system]
@@ -36,3 +38,36 @@ line-length = 120
 
 [tool.ruff.lint.pydocstyle]
 convention = "google"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+addopts = "-ra -q -m 'not integration'"
+markers = [
+    "integration: hits a live Agent Platform backend (requires H_API_KEY)",
+    "slow: integration tests that consume significant tokens or wall-clock time",
+]
+
+[tool.mypy]
+strict = true
+# fastmcp + a few hai_agents internals don't ship ``py.typed``; treat them as untyped imports
+# rather than failing every reference to them.
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+# Tool decorator lambdas (``site=lambda a: a.field``) legitimately reference fields on the
+# bound ``InputT`` Pydantic model, but Python lambdas can't carry parameter annotations so
+# mypy can't narrow ``a`` through the ``@browser_tool`` factory's TypeVar inference. The
+# inline-DSL style is the value proposition of the framework — the shape of a tool definition
+# matters more here than zero suppressions. Scoped to ``tools/*.py`` only.
+module = "examples.mcpify_anything.tools.*"
+disable_error_code = ["attr-defined"]
+
+[[tool.mypy.overrides]]
+# Tests exercise the same framework boundary that ``tools/*.py`` documents — lambdas whose
+# ``InputT`` only binds at runtime (``attr-defined``/``arg-type``), calls to ``model_validate``
+# on the runtime-synthesised list-wrapper that's statically ``type[list[T]]`` (``attr-defined``,
+# ``no-any-return``), and identity checks between specs and those wrappers (``comparison-
+# overlap``). All four are the same runtime-vs-static gap; not test code smells.
+module = "tests.mcpify_anything.*"
+disable_error_code = ["arg-type", "attr-defined", "comparison-overlap", "no-any-return"]

@@ -1,12 +1,15 @@
-"""Shared agent definition components used by both the qa_mcp and qa_cli examples."""
+"""Shared agent definition components used across the example servers."""
 
 from pathlib import Path
 from typing import Literal
 
+from hai_agents import Environment_Web
 from pydantic import BaseModel
 
 _PROMPTS_DIR = Path(__file__).parent / "prompts"
 AGENT_SKILLS_DIR = Path(__file__).parent / "agent_skills"
+_DEFAULT_WIDTH = 1280
+_DEFAULT_HEIGHT = 800
 
 REVIEWER_INSTRUCTIONS: str = (_PROMPTS_DIR / "reviewer_instructions.md").read_text()
 
@@ -19,16 +22,29 @@ class ReviewResult(BaseModel):
     steps_taken: list[str] = []
 
 
-def browser_env(start_url: str) -> dict:
-    """Return a web environment config dict seeded at ``start_url``."""
-    return {
-        "id": "browser",
-        "kind": "web",
-        "headless": True,
-        "width": 1280,
-        "height": 800,
-        "start_url": start_url,
-    }
+def browser_env(start_url: str) -> Environment_Web:
+    """Build the inline cloud web environment a tool drives.
+
+    A catalog-id ``str`` would also be valid in ``Agent.environments`` (the env-agnostic
+    seam), but every shipped example today binds to an inline headless browser.
+
+    ``mode`` is left unset (``None``) so it is omitted from the wire and the server applies its
+    own default (currently ``visual``). Omitting keeps us forward-compatible if the field's
+    values change, and avoids pinning a default the backend owns.
+
+    Args:
+        start_url: The URL the browser should navigate to as it boots the session.
+
+    Returns:
+        A configured ``Environment_Web`` object ready to slot into ``Agent.environments``.
+    """
+    return Environment_Web(
+        id="browser",
+        headless=True,
+        width=_DEFAULT_WIDTH,
+        height=_DEFAULT_HEIGHT,
+        start_url=start_url,
+    )
 
 
 def load_agent_skills() -> list[dict]:
