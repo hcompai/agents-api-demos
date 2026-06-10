@@ -19,10 +19,8 @@ class ExtractInput(BaseModel):
     answer_schema: dict[str, Any] = Field(description="JSON Schema describing the desired return shape")
 
 
-# Defined above the decorator because ``@browser_tool(...)`` binds the reference at module load.
+# Defined above the decorator: ``@browser_tool(...)`` binds the reference at module load.
 def _build_answer_model(args: ExtractInput) -> type[BaseModel]:
-    # ``WithJsonSchema`` makes the caller's schema the platform's ``answer_format`` while the
-    # Python type stays ``dict``; the named subclass keeps the schema ``title`` a Python identifier.
     Wrapped = Annotated[dict[str, Any], WithJsonSchema(args.answer_schema)]
 
     class ExtractAnswer(RootModel[Wrapped]):
@@ -38,10 +36,5 @@ def _build_answer_model(args: ExtractInput) -> type[BaseModel]:
     answer_model_factory=_build_answer_model,
 )
 async def extract(args: ExtractInput, answer: dict[str, Any]) -> dict[str, Any]:
-    """Open a site, follow a natural-language task, return JSON matching `answer_schema`.
-
-    The escape hatch for sites/shapes that don't have a dedicated curated tool. Caller
-    supplies the JSON Schema; the framework wires it into the platform's `answer_format`
-    so the agent answers against the caller's contract.
-    """
+    """Open a site, follow a natural-language task, return JSON matching `answer_schema`."""
     return answer

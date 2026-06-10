@@ -1,11 +1,5 @@
-"""Tests for ``@browser_tool`` (decorator -> ToolSpec) and ``register_specs`` (ToolSpec -> FastMCP).
-
-Covers the whole framework's static contract:
-- signature introspection,
-- ``list[T]`` -> ``_ListWrapper`` synthesis (with title + wire-format guards),
-- registrar wiring (RunSpec construction, list-unwrap, input validation, runtime bounds),
-- ``answer_model_factory`` per-call dynamic schemas (the [extract] mechanism).
-"""
+"""Tests for ``@browser_tool`` and ``register_specs``: signature introspection,
+``list[T]`` wrapper synthesis, registrar wiring, and per-call dynamic answer models."""
 
 from collections.abc import Callable
 from typing import Annotated, Any
@@ -86,9 +80,8 @@ async def test_decorator_wraps_list_annotation_in_basemodel_with_items_field() -
         """list."""
         return answer
 
-    # ``list[T]`` is wrapped in a ``BaseModel`` with an ``items: list[T]`` field (NOT a
-    # ``RootModel``) so the agent-side serialisation produces ``{"items": [...]}`` rather
-    # than ``{"root": [...]}`` — the platform's regenerated class round-trips cleanly.
+    # Named-field wrapper (NOT RootModel) so the wire format is ``{"items": [...]}``,
+    # not ``{"root": [...]}`` — the platform's regenerated class round-trips cleanly.
     assert issubclass(my_search.answer_model, BaseModel)
     assert not issubclass(my_search.answer_model, RootModel)
     parsed = my_search.answer_model.model_validate({"items": [{"name": "a"}, {"name": "b"}]})
@@ -96,9 +89,7 @@ async def test_decorator_wraps_list_annotation_in_basemodel_with_items_field() -
 
 
 async def test_list_wrapper_carries_a_python_identifier_title() -> None:
-    # The platform regenerates a Python class from the answer schema's ``title``. Square
-    # brackets in titles like ``RootModel[list[Item]]`` break that step — assert the title
-    # is a valid Python identifier.
+    # Platform regenerates a Python class from the schema ``title``; brackets break it.
     @browser_tool(
         instructions="ins",
         site=lambda a: a.site,
@@ -114,9 +105,7 @@ async def test_list_wrapper_carries_a_python_identifier_title() -> None:
 
 
 async def test_list_wrapper_schema_is_object_with_items_array() -> None:
-    # The wire-format contract: agent receives a top-level object schema with an
-    # ``items`` array property — not a top-level array. This is what makes the answer
-    # round-trip through datamodel-code-generator without a ``{"root": [...]}`` wrapping.
+    # Wire format must be a top-level object with ``items: array``, not a top-level array.
     @browser_tool(
         instructions="ins",
         site=lambda a: a.site,
@@ -133,7 +122,7 @@ async def test_list_wrapper_schema_is_object_with_items_array() -> None:
 
 
 async def test_answer_model_rejects_bare_list_payload_for_list_annotation() -> None:
-    # The wrapper expects ``{"items": [...]}``; a bare list must be rejected loudly.
+    # A bare list must be rejected loudly — the wrapper expects ``{"items": [...]}``.
     @browser_tool(
         instructions="ins",
         site=lambda a: a.site,
@@ -148,8 +137,7 @@ async def test_answer_model_rejects_bare_list_payload_for_list_annotation() -> N
 
 
 async def test_answer_model_rejects_single_bare_item_for_list_annotation() -> None:
-    # Safety property: a single bare item must NOT be silently wrapped into a one-element
-    # list — that would mask "agent collapsed many results into one" as a successful answer.
+    # A single bare item must NOT be silently wrapped — would mask "agent collapsed to one".
     @browser_tool(
         instructions="ins",
         site=lambda a: a.site,
@@ -211,8 +199,6 @@ async def test_register_specs_builds_runspec_with_prompt_and_schema_hint(
     assert spec.output_model is my_search.answer_model
     assert "on https://x.test/ for q" in spec.task
     assert "Return ONLY a JSON object matching this shape" in spec.task  # schema_hint header
-    # The framework wraps every tool's persona with ``_OPERATOR_PREAMBLE`` so the JSON-output
-    # protocol lives in one place (mirroring schema_hint on the user-message side).
     assert spec.instructions.startswith(_OPERATOR_PREAMBLE)
     assert "you read things" in spec.instructions
     env = spec.environments[0]
@@ -232,7 +218,7 @@ async def test_register_specs_unwraps_list_wrapper_before_calling_handler(
     )
     async def my_search(args: _SearchInput, answer: list[_Item]) -> list[_Item]:
         """list."""
-        # User-facing contract: ``answer`` is a real list[_Item], not a wrapper.
+        # Handler sees a real list[_Item], not the wrapper.
         captured["answer_type"] = type(answer).__name__
         captured["names"] = [i.name for i in answer]
         return answer
@@ -290,7 +276,7 @@ async def test_register_specs_validates_input_against_input_model(
     register_specs([my_search], mcp, runner)
 
     async with Client(mcp) as c:
-        # Empty ``query`` violates ``min_length=1`` — must be rejected before reaching the runner.
+        # Empty ``query`` violates ``min_length=1`` — rejected before reaching the runner.
         with pytest.raises(ToolError):
             await c.call_tool("my_search", {"args": {"site": "https://x.test", "query": ""}})
 
@@ -380,8 +366,6 @@ async def test_factory_overrides_static_answer_model_per_call(
         "properties": {"name": {"type": "string"}, "n": {"type": "integer"}},
         "required": ["name", "n"],
     }
-    # The fake runner echoes the dict back, validated against whatever output_model the
-    # registrar built per call. The factory's RootModel accepts any dict[str, Any].
     factory_model = _build_dynamic_model(
         _DynamicInput.model_validate({"site": "https://x.test", "answer_schema": caller_schema})
     )
@@ -394,13 +378,10 @@ async def test_factory_overrides_static_answer_model_per_call(
 
     spec = runner.last_spec
     assert spec is not None
-    # The platform-facing schema is built per call from ``args.answer_schema``. It carries
-    # the caller's required fields (the auto-injected Pydantic ``title`` is incidental).
     rendered = spec.output_model.model_json_schema()
     assert rendered["required"] == ["name", "n"]
     assert rendered["properties"]["name"] == {"type": "string"}
-    # The handler still receives a plain dict (registrar unwrapped RootModel.root).
-    assert dict(result.data) == {"name": "ok", "n": 7}
+    assert dict(result.data) == {"name": "ok", "n": 7}  # registrar unwrapped RootModel.root
 
 
 async def test_factory_runs_fresh_on_every_call(make_fake_runner: Callable[[BaseModel], FakeRunner]) -> None:
@@ -434,14 +415,12 @@ async def test_factory_runs_fresh_on_every_call(make_fake_runner: Callable[[Base
         await c.call_tool("dyn", {"args": {"site": "https://x.test", "answer_schema": schema_a}})
         await c.call_tool("dyn", {"args": {"site": "https://x.test", "answer_schema": schema_b}})
 
-    # Factory runs on every invocation, not just at decoration time.
-    assert schemas_seen == [schema_a, schema_b]
+    assert schemas_seen == [schema_a, schema_b]  # factory runs every call, not just at decoration
 
 
 async def test_factory_default_none_keeps_static_answer_model(
     make_fake_runner: Callable[[BaseModel], FakeRunner],
 ) -> None:
-    # Without a factory, the same static ``answer_model`` identity reaches RunSpec on every call.
     @browser_tool(
         instructions="ins",
         site=lambda a: a.site,

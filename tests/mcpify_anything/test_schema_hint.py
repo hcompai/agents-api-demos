@@ -1,8 +1,4 @@
-"""Tests for ``schema_hint`` — the JSON-schema-to-prompt renderer.
-
-Fixtures are local to this file so the renderer's tests stay decoupled from any tool's
-shipping model (which can evolve). Each fixture exercises one schema-shape branch.
-"""
+"""Tests for ``schema_hint`` — the JSON-schema-to-prompt renderer."""
 
 from decimal import Decimal
 from typing import Annotated, Literal
@@ -15,8 +11,6 @@ from examples.mcpify_anything.types import Price
 
 
 class _StatusFixture(BaseModel):
-    """Exercises enum + description-as-comment + nullable + Price collapse in one model."""
-
     status: Literal["alpha", "beta", "gamma"] = Field(description="lifecycle stage")
     price: Price | None = Field(description="total price shown")
     currency: str | None = Field(description="currency of the price, or null")
@@ -42,7 +36,6 @@ def test_enum_rendered_as_pipe_separated_literals() -> None:
 
 
 def test_field_description_rendered_as_comment() -> None:
-    # The semantics that used to live in hand-written prompts now live on the model.
     hint = schema_hint(_StatusFixture)
     assert "lifecycle stage" in hint
 
@@ -52,14 +45,11 @@ def test_nullable_renders_pipe_null() -> None:
 
 
 def test_price_anyof_collapses_to_number() -> None:
-    # Price is Annotated[Decimal, anyOf(number, string)]; we collapse to a clean ``number``.
     assert '"price": number|null' in schema_hint(_StatusFixture)
 
 
 def test_number_or_string_anyof_collapses_for_any_type_not_just_price() -> None:
-    # The collapse rule must be domain-neutral: any pydantic type that advertises a
-    # number-or-string anyOf via WithJsonSchema renders as ``number`` in prompts. Guards
-    # against re-introducing a ``Price``-specific code path that would skip other types.
+    # Collapse rule must be domain-neutral, not Price-specific.
     NumberOrString = Annotated[Decimal, WithJsonSchema({"anyOf": [{"type": "number"}, {"type": "string"}]})]
 
     class _Bag(BaseModel):
@@ -67,7 +57,7 @@ def test_number_or_string_anyof_collapses_for_any_type_not_just_price() -> None:
 
     hint = schema_hint(_Bag)
     assert '"amount": number' in hint
-    assert "string" not in hint  # the union side was collapsed, not just hidden behind ``number|string``
+    assert "string" not in hint
 
 
 def test_nested_list_of_objects_rendered() -> None:
@@ -79,8 +69,7 @@ def test_nested_list_of_objects_rendered() -> None:
 
 
 def test_unknown_type_raises() -> None:
-    # A model whose schema carries a type ``schema_hint`` cannot map should fail loudly,
-    # not silently emit a wrong token.
+    # Fail loud on schema shapes the renderer can't map — never emit a wrong token silently.
     class _Weird(BaseModel):
         blob: object
 

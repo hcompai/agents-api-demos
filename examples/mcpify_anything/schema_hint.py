@@ -1,38 +1,21 @@
-"""Render a Pydantic model's JSON schema into a compact 'return ONLY this JSON' prompt instruction."""
+"""Render a Pydantic model's JSON schema into a compact 'return ONLY this JSON' prompt."""
 
 from typing import Any
 
 from pydantic import BaseModel
 
-# ``model_json_schema()`` returns nested ``dict[str, Any]`` (arbitrary JSON Schema). ``Any`` is
-# the honest type for a schema node since its keys/values vary by shape; we narrow each node
-# by inspecting the keys we render and fail loud on anything we do not understand.
 SchemaNode = dict[str, Any]
 
 _INDENT = "  "
 _HEADER = "Return ONLY a JSON object matching this shape, with no other prose:\n"
-_SCALAR_TOKENS = {
-    "string": "string",
-    "number": "number",
-    "integer": "integer",
-    "boolean": "boolean",
-    "null": "null",
-}
+_SCALAR_TOKENS = frozenset({"string", "number", "integer", "boolean", "null"})
 
 
 def schema_hint(model: type[BaseModel]) -> str:
     """Render a model's JSON schema into a 'return ONLY this JSON' prompt instruction.
 
-    Single source of truth for the answer shape: the model defines the structure and (via
-    ``Field(description=...)``) the per-field semantics, so a tool's prompt never restates
-    either by hand. Nested models (``$defs``/``$ref``), arrays, enums, nullables and the
-    ``Price`` number-or-string union are rendered as compact, model-friendly tokens.
-
-    Args:
-        model: The Pydantic model whose schema should be rendered.
-
-    Returns:
-        A multi-line string suitable to be appended to the user message of a CUA prompt.
+    Nested models (``$defs``/``$ref``), arrays, enums, nullables and the ``Price``
+    number-or-string union are rendered as compact, model-friendly tokens.
     """
     schema = model.model_json_schema()
     defs: dict[str, SchemaNode] = schema.get("$defs", {})
@@ -91,9 +74,8 @@ def _anyof_token(subschemas: list[SchemaNode], defs: dict[str, SchemaNode]) -> s
     for sub in subschemas:
         resolved = _resolve(sub, defs)
         tokens.append(_enum_token(resolved["enum"]) if "enum" in resolved else _scalar_token(resolved.get("type")))
-    # Some pydantic types (notably Decimals whose default regex pattern we strip via
-    # WithJsonSchema) advertise a number-or-string anyOf in their JSON schema. Render the
-    # cleaner ``number`` token in prompts so the agent isn't told it may answer with a string.
+    # ``Price`` (Decimal) advertises a number-or-string anyOf; render only ``number`` so the
+    # agent isn't told a string answer is acceptable.
     if "number" in tokens and "string" in tokens:
         tokens = [token for token in tokens if token != "string"]
     deduped: list[str] = []
@@ -104,7 +86,6 @@ def _anyof_token(subschemas: list[SchemaNode], defs: dict[str, SchemaNode]) -> s
 
 
 def _scalar_token(node_type: object) -> str:
-    token = _SCALAR_TOKENS.get(node_type) if isinstance(node_type, str) else None
-    if token is None:
-        raise ValueError(f"schema_hint cannot render schema node of type {node_type!r}")
-    return token
+    if isinstance(node_type, str) and node_type in _SCALAR_TOKENS:
+        return node_type
+    raise ValueError(f"schema_hint cannot render schema node of type {node_type!r}")

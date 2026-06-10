@@ -1,4 +1,4 @@
-"""Tests for ``CuaRunner.run`` — wire-up to the SDK + error/timeout/logging behaviour."""
+"""Tests for ``CuaRunner.run`` — SDK wiring, errors, timeouts, logging."""
 
 import logging
 from types import SimpleNamespace
@@ -61,8 +61,6 @@ def _patch_create(monkeypatch: pytest.MonkeyPatch, client: AsyncClient, capture:
 
 
 def _patch_wait(monkeypatch: pytest.MonkeyPatch, result: SessionRunResult) -> None:
-    """Stub the SDK polling helper at the module boundary the runner imports it from."""
-
     async def fake_wait(_client: AsyncClient, _session_id: str, **_kwargs: Any) -> SessionRunResult:
         return result
 
@@ -109,7 +107,7 @@ async def test_sets_answer_format_and_validates(monkeypatch: pytest.MonkeyPatch,
 
 
 async def test_forwards_agent_artifact(monkeypatch: pytest.MonkeyPatch, client: AsyncClient) -> None:
-    # Without this, AGP falls back to its global default and our agent build never runs.
+    # Without this, AGP falls back to its default and our agent build never runs.
     capture: dict[str, Any] = {}
     _patch_create(monkeypatch, client, capture)
     _patch_wait(monkeypatch, _completed_with({"value": 1}))
@@ -150,7 +148,7 @@ async def test_bad_schema_raises(monkeypatch: pytest.MonkeyPatch, client: AsyncC
 
 
 async def test_timeout_propagates(monkeypatch: pytest.MonkeyPatch, client: AsyncClient) -> None:
-    # Deliberately not wrapped in CuaError — TimeoutError is clear on its own.
+    # Not wrapped in CuaError on purpose — TimeoutError is clearer on its own.
     _patch_create(monkeypatch, client)
     _patch_wait_raising(monkeypatch, TimeoutError("session did not finish"))
     with pytest.raises(TimeoutError):
@@ -160,7 +158,7 @@ async def test_timeout_propagates(monkeypatch: pytest.MonkeyPatch, client: Async
 async def test_logs_agent_view_link_on_every_session(
     monkeypatch: pytest.MonkeyPatch, client: AsyncClient, caplog: pytest.LogCaptureFixture
 ) -> None:
-    # The dashboard link is how a developer recovers a trajectory after a failed run.
+    # The link is how a developer recovers a trajectory after a failed run.
     _patch_create(monkeypatch, client)
     _patch_wait(monkeypatch, _completed_with({"value": 7}))
 
