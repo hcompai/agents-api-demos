@@ -9,8 +9,6 @@ from pydantic import BaseModel
 
 _PROMPTS_DIR = Path(__file__).parent / "prompts"
 AGENT_SKILLS_DIR = Path(__file__).parent / "agent_skills"
-_DEFAULT_WIDTH = 1280
-_DEFAULT_HEIGHT = 800
 
 REVIEWER_INSTRUCTIONS: str = (_PROMPTS_DIR / "reviewer_instructions.md").read_text()
 
@@ -42,8 +40,8 @@ def browser_env(start_url: str) -> Environment_Web:
     return Environment_Web(
         id="browser",
         headless=True,
-        width=_DEFAULT_WIDTH,
-        height=_DEFAULT_HEIGHT,
+        width=1280,
+        height=800,
         start_url=start_url,
     )
 

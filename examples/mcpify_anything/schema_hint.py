@@ -78,11 +78,7 @@ def _anyof_token(subschemas: list[SchemaNode], defs: dict[str, SchemaNode]) -> s
     # agent isn't told a string answer is acceptable.
     if "number" in tokens and "string" in tokens:
         tokens = [token for token in tokens if token != "string"]
-    deduped: list[str] = []
-    for token in tokens:
-        if token not in deduped:
-            deduped.append(token)
-    return "|".join(deduped)
+    return "|".join(dict.fromkeys(tokens))
 
 
 def _scalar_token(node_type: object) -> str:
