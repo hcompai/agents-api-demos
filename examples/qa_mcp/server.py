@@ -2,7 +2,6 @@
 
 import json
 import logging
-import os
 
 from fastmcp import FastMCP
 from hai_agents import Client, run_session
@@ -12,6 +11,7 @@ from examples._shared import (
     ReviewResult,
     browser_env,
     load_agent_skills,
+    require_api_key,
 )
 
 LOGGER = logging.getLogger("agent-sdk-demo-qa")
@@ -72,13 +72,7 @@ _client_instance: Client | None = None
 def _client() -> Client:
     global _client_instance
     if _client_instance is None:
-        api_key = os.environ.get("H_API_KEY")
-        if not api_key:
-            raise RuntimeError(
-                "H_API_KEY is not set. Copy .env.example to .env and add a key from "
-                "https://platform.hcompany.ai/settings/api-keys, then re-run."
-            )
-        _client_instance = Client(api_key=api_key)
+        _client_instance = Client(api_key=require_api_key())
     return _client_instance
 
 
