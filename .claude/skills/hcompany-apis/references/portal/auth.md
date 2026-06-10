@@ -1,6 +1,6 @@
-# Auth API Reference (portal-h)
+# Auth API Reference (portal)
 
-All authentication endpoints for the H Company platform backend (Cognito-backed, custom JWT sessions). Router prefix `/auth`, mounted under `/api` → all paths below are `https://platform.hcompany.ai/api/auth/...`.
+All authentication endpoints for the portal backend (Cognito-backed, custom JWT sessions). Router prefix `/auth`, mounted under `/api` → all paths below live on the **portal API hosts**: production US `https://portal.production.hcompany.ai/api/auth/...`, production EU `https://portal.api.eu.hcompany.ai/api/auth/...`, staging `https://portal.api.eu.staging.sandboxh.ai/api/auth/...`. (`https://platform.hcompany.ai` is the separate product frontend and does **not** serve these routes — its `/api/auth/*` returns the HTML app shell.)
 
 ## Table of contents
 
@@ -80,7 +80,7 @@ For native apps/CLIs that can't hold cookies. Step by step:
        &code_challenge=<challenge>&code_challenge_method=S256
    ```
    - `redirect_uri` **must be loopback**: `http://127.0.0.1:*` or `http://[::1]:*` (RFC 8252 §7.3). `localhost` is rejected (can resolve off-loopback). Non-loopback + PKCE → `400 invalid_redirect_url`. Method other than `S256` → `400 invalid_pkce_method`.
-   - The server packs `redirect_uri` + `code_challenge` into a signed **state JWT valid 5 minutes** (HS256, iss `portal-h`, aud `portal-h-desktop-state`) and redirects to Cognito.
+   - The server packs `redirect_uri` + `code_challenge` into a signed **state JWT valid 5 minutes** (HS256, iss `portal`, aud `portal-desktop-state`) and redirects to Cognito.
 3. User completes Google login; Cognito hits `GET /api/auth/callback/google`. The server decodes the state, mints a **one-time opaque code (32 bytes, expires in 60 s)** bound to the user, challenge, and redirect_uri (only SHA-256 of the code is stored), and `307`s to `http://127.0.0.1:51739/callback?code=<code>`.
 4. **Client exchanges the code**:
    ```

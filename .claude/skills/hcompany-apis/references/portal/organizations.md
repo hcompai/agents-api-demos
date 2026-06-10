@@ -1,6 +1,6 @@
 # Organizations & Invitations API
 
-Public endpoints for organizations, memberships, and invitations in the portal-h backend (serves `https://platform.hcompany.ai`, all routes under `/api`).
+Public endpoints for organizations, memberships, and invitations in the portal backend (portal API hosts: EU `https://portal.api.eu.hcompany.ai`, US `https://portal.production.hcompany.ai`, staging `https://portal.api.eu.staging.sandboxh.ai`; all routes under `/api`).
 
 Source: `backend/portal_h/src/portal_h/domains/organization/` (`controller.py`, `invitation_controller.py`, `dtos.py`, `guard.py`, `exceptions.py`) and `domains/services/organization.py`.
 

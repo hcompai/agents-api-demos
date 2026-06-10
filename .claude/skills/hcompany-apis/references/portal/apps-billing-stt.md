@@ -1,6 +1,6 @@
 # Applications, Billing, STT & Guest
 
-Endpoints for application catalog CRUD, Stripe credit billing, and realtime speech-to-text token minting on the H Company platform (`https://platform.hcompany.ai`, API under `/api`), plus shared API conventions (errors, health, environments, admin surface).
+Endpoints for application catalog CRUD, Stripe credit billing, and realtime speech-to-text token minting on the portal API (EU `https://portal.api.eu.hcompany.ai`, US `https://portal.production.hcompany.ai`, routes under `/api`), plus shared API conventions (errors, health, environments, admin surface).
 
 **Sources:** `domains/application/{controller,dtos}.py`, `domains/billing/{controller,dtos,exceptions}.py`, `domains/stt/{controller,dtos,exceptions}.py`, `domains/guest/controller.py`, `core/{exceptions,exception_handlers,middleware,health,routes,dependencies}.py`, `django/settings.py`, `app.py`, frontend `src/lib/portal/portal-client.ts`.
 
@@ -149,7 +149,7 @@ Query params: `limit` (1–100, default 10), `starting_after` (transaction id cu
 
 ## Speech-to-text (STT)
 
-Router prefix `/stt`. **Auth differs from the rest of this file:** authenticated with a Portal-H API key (`hk-...`) via `require_api_key`, sent as `Authorization: Bearer hk-...` or `x-api-key: hk-...`. No session cookie involved. Missing key → 401 `unauthorized` / "Missing API key."; invalid or expired key → 401 `unauthorized` / "Invalid or expired API key."
+Router prefix `/stt`. **Auth differs from the rest of this file:** authenticated with a portal API key (`hk-...`) via `require_api_key`, sent as `Authorization: Bearer hk-...` or `x-api-key: hk-...`. No session cookie involved. Missing key → 401 `unauthorized` / "Missing API key."; invalid or expired key → 401 `unauthorized` / "Invalid or expired API key."
 
 ### POST /api/stt/token → 200
 
@@ -183,7 +183,7 @@ Mint rate limits (Redis sliding windows, defaults from `SttSettings`, all env-ov
 
 ## Guest domain (no HTTP routes)
 
-`domains/guest/controller.py` exposes **no FastAPI routes**. `GuestAuthorizerController` is a branch of the AWS API Gateway REQUEST Lambda authorizer: for configured guest resources (currently only paths matching the agent-computer-use resource marker), when a request has *no* `Authorization` header and *no* Portal access-token cookie, it returns an IAM `Allow` policy with `principalId: "anonymous"` and context `{anonymous: "true", auth_type: "anonymous", role: "anonymous", orgRole: "anonymous"}` so the downstream API can decide which paths actually need auth. Any credentialed request falls through to full key/JWT validation. Nothing here is callable on `platform.hcompany.ai` directly.
+`domains/guest/controller.py` exposes **no FastAPI routes**. `GuestAuthorizerController` is a branch of the AWS API Gateway REQUEST Lambda authorizer: for configured guest resources (currently only paths matching the agent-computer-use resource marker), when a request has *no* `Authorization` header and *no* Portal access-token cookie, it returns an IAM `Allow` policy with `principalId: "anonymous"` and context `{anonymous: "true", auth_type: "anonymous", role: "anonymous", orgRole: "anonymous"}` so the downstream API can decide which paths actually need auth. Any credentialed request falls through to full key/JWT validation. Nothing here is callable on the portal API hosts directly.
 
 ## Conventions
 
@@ -221,11 +221,12 @@ There is **no global rate-limit middleware** on the FastAPI app — `core/middle
 
 ### Environments & base URLs
 
-- **Production:** `https://platform.hcompany.ai` (frontend + `/api`). The frontend client (`portal-client.ts`) targets `NEXT_PUBLIC_PORTAL_API_URL`, defaulting to `http://localhost:8000` in dev; the older `https://portal.hcompany.ai` host still appears in OAuth/docs code.
+- **Portal API hosts (verified live):** production US `https://portal.production.hcompany.ai` (unauthenticated browser requests 302 to the Cognito flow on `oauth.hcompany.ai`), production EU `https://portal.api.eu.hcompany.ai` (302 to `sso.hcompany.ai`), staging `https://portal.api.eu.staging.sandboxh.ai`. All portal routes in these docs live under these hosts + `/api`.
+- **Portal frontends** (cookie domain, login pages): `https://portal.hcompany.ai` (US) and `https://portal.eu.hcompany.ai` (EU).
+- **`https://platform.hcompany.ai` is NOT the portal API** — it is the separate Next.js product frontend (`platform-frontend`). It hosts the API-keys management UI at `/settings/api-keys` and a server-side proxy `/api/portal/[...path]` that forwards (cookies only) to the portal API. Calling `platform.hcompany.ai/api/auth/*` directly returns the HTML app shell, not JSON.
 - **Environment switch:** `ENVIRONMENT` env var ∈ `DEV` (default), `SANDBOX`, `STAGING`, `PRODUCTION`, `test`. It drives cookie naming (`{env}_access_token` prefix except production), `DEBUG` (DEV only), and `COOKIE_SECURE` (true for SANDBOX/STAGING/PRODUCTION). `COOKIE_DOMAIN` env sets the cookie scope (e.g. `.hcompany.ai` in production).
-- **Staging/sandbox hosts:** no portal staging URL is hard-coded in settings; migrations use the pattern `https://agent-computer-use.{stage}.hcompany.ai` (and `https://tester.{stage}.hcompany.ai`) for non-production app hosts.
 - **Local dev:** backend `http://localhost:8000` (public app), frontend `http://localhost:3000`. With `ENVIRONMENT=DEV` the Django admin panel is additionally mounted at `/web`.
 
 ### Admin / internal routers
 
-Admin and admin-engine routers (organizations, users, memberships, invitations, applications, app access/resources, API keys, rate-limit tiers, internal user/org lookup, plus `/docs`) exist but are **not** part of the public API. There is no `ENABLE_*` env var: `app.py` builds two ASGI apps from the same codebase — `create_app(is_internal=True)` → `portal_h.asgi:internal_app` (all public routes + admin routers + OpenAPI docs) and `create_app(is_internal=False)` → `portal_h.asgi:public_app` (public routes only, docs/openapi disabled). The deployment-time gate is which ASGI target uvicorn serves: `deploy.sh` runs `public_app` on port 8000 and `internal_app` on port 9000, and only the public app is exposed at `platform.hcompany.ai`; admin routes 404 on the public app. The only env-var-gated mount is the Django admin (`ENVIRONMENT=DEV` mounts it at `/web`).
+Admin and admin-engine routers (organizations, users, memberships, invitations, applications, app access/resources, API keys, rate-limit tiers, internal user/org lookup, plus `/docs`) exist but are **not** part of the public API. There is no `ENABLE_*` env var: `app.py` builds two ASGI apps from the same codebase — `create_app(is_internal=True)` → `portal_h.asgi:internal_app` (all public routes + admin routers + OpenAPI docs) and `create_app(is_internal=False)` → `portal_h.asgi:public_app` (public routes only, docs/openapi disabled). The deployment-time gate is which ASGI target uvicorn serves: `deploy.sh` runs `public_app` on port 8000 and `internal_app` on port 9000, and only the public app is exposed at the public portal API hosts (`portal.production.hcompany.ai` / `portal.api.eu.hcompany.ai`); admin routes 404 on the public app. The only env-var-gated mount is the Django admin (`ENVIRONMENT=DEV` mounts it at `/web`).

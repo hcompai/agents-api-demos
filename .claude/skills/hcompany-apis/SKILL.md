@@ -1,6 +1,6 @@
 ---
 name: hcompany-apis
-description: Expert knowledge of the two H Company backends — the portal (platform.hcompany.ai — auth, organizations, API keys, invitations, billing) and the agent platform v2 API (agp.hcompany.ai — sessions, agents, skills, environments, vaults, long-polling, the hai-agents SDK). Use this skill whenever the user mentions portal-h, agent_platform, platform.hcompany.ai, agp.hcompany.ai, H_API_KEY or hk-... keys, hai-agents / hai_agents, run_session, agent sessions or trajectories, /api/v2 endpoints, browser agent environments, vaults for agent secrets, organizations or invitations on the H platform, the desktop OAuth/PKCE login flow, or wants to call, integrate with, debug, or automate anything against an H Company API — even without naming it (e.g. "get me an API key", "set up my .env", "launch a web agent", "why is my session stuck", "why am I getting 401 from the platform?").
+description: Expert knowledge of the two H Company backends — the portal (portal, API at portal.api.eu.hcompany.ai / portal.production.hcompany.ai — auth, organizations, API keys, invitations, billing) and the agent platform v2 API (agp.hcompany.ai — sessions, agents, skills, environments, vaults, long-polling, the hai-agents SDK). Use this skill whenever the user mentions portal, agent_platform, platform.hcompany.ai, agp.hcompany.ai, H_API_KEY or hk-... keys, hai-agents / hai_agents, run_session, agent sessions or trajectories, agent-view or replaying/reviewing a run, /api/v2 endpoints, browser agent environments, vaults for agent secrets, organizations or invitations on the H platform, the desktop OAuth/PKCE login flow, or wants to call, integrate with, debug, or automate anything against an H Company API — even without naming it (e.g. "get me an API key", "set up my .env", "launch a web agent", "why is my session stuck", "show me what the agent did", "why am I getting 401 from the platform?").
 ---
 
 # H Company APIs (portal + agent platform)
@@ -9,8 +9,10 @@ H Company runs two backends that work together. Pick the right one first:
 
 | You're touching… | Product | Base URL | Read |
 |---|---|---|---|
-| Login, users, organizations, invitations, **API key management**, billing, STT tokens | **Portal** (portal-h) | `https://platform.hcompany.ai/api` | [references/portal/](references/portal/) |
+| Login, users, organizations, invitations, **API key management**, billing, STT tokens | **Portal** (portal) | EU: `https://portal.api.eu.hcompany.ai/api` · US: `https://portal.production.hcompany.ai/api` | [references/portal/](references/portal/) |
 | **Running agents**: sessions, stored agents, skills, environments, vaults, events/long-polling, hai-agents SDK, MCP server | **Agent platform** (agp) | `https://agp.hcompany.ai/api` (EU: `agp.eu.hcompany.ai`) | [references/agp/](references/agp/) |
+
+⚠️ `https://platform.hcompany.ai` is the **product frontend** (the API-keys UI lives at `/settings/api-keys`), not the portal API — its `/api/*` paths return the HTML app shell, except a server-side `/api/portal/[...path]` proxy.
 
 They connect through one object: the **H API key (`hk-...`)** is *created* on the portal (by a logged-in user) and *consumed* by the agent platform (as `Authorization: Bearer hk-...` at the gateway). "Get a key" → portal; "use a key" → agp.
 
@@ -24,14 +26,14 @@ Critical constraint: **the full `hk-...` value is returned only once, at creatio
 
 ## Getting an H_API_KEY into .env automatically
 
-Don't make the user copy-paste from the settings page — run the bundled script (stdlib-only):
+Don't make the user copy-paste from the settings page (`https://platform.hcompany.ai/settings/api-keys`) — run the bundled script (stdlib-only):
 
 ```bash
 python scripts/h_login.py                 # full desktop PKCE flow → writes H_API_KEY into ./.env, no-op if set
-python scripts/h_login.py --force         # rotate/replace; also --env-file, --key-name, --no-rotate
+python scripts/h_login.py --force         # rotate/replace; also --region us|eu (default: eu), --env-file, --key-name, --no-rotate
 ```
 
-It opens the browser (one Google click), exchanges the code, picks the org, revokes stale same-name keys, creates a fresh key, writes `.env` (chmod 600). Headless fallback: `POST /api/auth/token` with `{email, password}` + header `X-SDK-Auth: true` (tokens in the body) — see [references/portal/auth.md](references/portal/auth.md).
+It opens the browser (one Google click), exchanges the code, picks the org, revokes stale same-name keys, creates a fresh key, writes `.env` (chmod 600). `--region eu` (default) targets `portal.api.eu.hcompany.ai`; `--region us` targets `portal.production.hcompany.ai`. Headless fallback: `POST /api/auth/token` with `{email, password}` + header `X-SDK-Auth: true` (tokens in the body) — see [references/portal/auth.md](references/portal/auth.md).
 
 ## Reference map
 
@@ -45,7 +47,10 @@ It opens the browser (one Google click), exchanges the code, picks the org, revo
 - [sessions.md](references/agp/sessions.md) — the 17 session routes: create/run/cancel, `/changes` long-poll + cursor, event kinds, pause/force_answer, quota, sharing
 - [agents-skills.md](references/agp/agents-skills.md) — stored agent specs, skill docs, the reserved `h/` namespace
 - [environments-vaults.md](references/agp/environments-vaults.md) — the `web` (Browser) environment kind; vaults (1Password, env-manager proxy)
-- [conventions-and-sdk.md](references/agp/conventions-and-sdk.md) — base URLs/regions, gateway auth detail, errors, v1-vs-v2, hai-agents↔HTTP mapping, MCP tools
+- [conventions-and-sdk.md](references/agp/conventions-and-sdk.md) — base URLs/regions, gateway auth detail, errors, hai-agents↔HTTP mapping, MCP tools
+
+**Extras** (`references/extras/` — dev UI/UX knowledge, not endpoint docs):
+- [agent-view-replay.md](references/extras/agent-view-replay.md) — reviewing/replaying runs in the browser (`platform[.eu].hcompany.ai/agent-view/{id}`), deep-linking to an event, sharing a run with someone outside the org
 
 ## The canonical agent workflow (agp)
 
@@ -53,6 +58,7 @@ It opens the browser (one Google click), exchanges the code, picks the org, revo
 2. Long-poll `GET /api/v2/sessions/{id}/changes?from_index=N&wait_for_seconds=30` (cap 60 s). Empty window → **204 + `ETag: <from_index>`**, not an error: keep the cursor, re-poll. Advance by `from_index += len(events)` — never reset.
 3. React to events (`AgentEvent.kind` ∈ policy_event / tool_result / answer_event / observation_event / message_event / error_event, plus AgentStarted/Completion/Error, MetricsUpdate, LiveViewUrl, ChatMessage). Interact via `POST .../messages`, `pause`/`resume`, `force_answer`.
 4. In Python this is just `hai_agents.run_session(...)` — read the SDK mapping reference before hand-rolling HTTP.
+5. **Always hand the user the replay link**: `https://platform.hcompany.ai/agent-view/{session_id}` (EU sessions → `platform.eu.hcompany.ai`; match the region of the API you called). That's how they review what the agent actually did, live or after the fact — see [references/extras/agent-view-replay.md](references/extras/agent-view-replay.md).
 
 ## Gotchas that bite
 
@@ -67,4 +73,4 @@ It opens the browser (one Google click), exchanges the code, picks the org, revo
 
 ## Source of truth
 
-Shapes in doubt → the backend sources win: `github.com/hcompai/portal-h` (`backend/portal_h/src/portal_h/domains/<domain>/{controller,dtos}.py`) and `github.com/hcompai/agent_platform` (`backend/agent_api/src/agent_api/{routers,models}/`). Beware on agp: some models live in the private `agent-interface` package — check the version pinned in `uv.lock`, not a stale checkout. Clone shallow and grep rather than guessing. Public agp OpenAPI: `https://agp.hcompany.ai/share/docs`.
+Shapes in doubt → the backend sources win: `github.com/hcompai/portal` (`backend/portal_h/src/portal_h/domains/<domain>/{controller,dtos}.py`) and `github.com/hcompai/agent_platform` (`backend/agent_api/src/agent_api/{routers,models}/`). Beware on agp: some models live in the private `agent-interface` package — check the version pinned in `uv.lock`, not a stale checkout. Clone shallow and grep rather than guessing. Public agp OpenAPI: `https://agp.hcompany.ai/share/docs`.

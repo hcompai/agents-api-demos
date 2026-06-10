@@ -1,6 +1,6 @@
 # API Keys
 
-API key management (create / list / revoke under an organization), the key "whoami" endpoint, and how `hk-...` keys authenticate requests on the H Company platform (`https://platform.hcompany.ai`, API under `/api`).
+API key management (create / list / revoke under an organization), the key "whoami" endpoint, and how `hk-...` keys authenticate requests against the portal API (EU `https://portal.api.eu.hcompany.ai`, US `https://portal.production.hcompany.ai`, routes under `/api`). The browser UI for managing keys is on the separate product frontend: `https://platform.hcompany.ai/settings/api-keys`.
 
 **Sources:** `domains/api_key/controller.py`, `domains/api_key/dtos.py`, `domains/services/api_key.py`, `core/dependencies.py` (`require_api_key`), `domains/key_validator/` + `domains/api_key_validator/` (Lambda authorizers).
 
@@ -97,7 +97,8 @@ No query parameters. Returns **all** keys in the organization (every member's ke
 Authenticated by the API key itself (no cookie/session needed) — pass `Authorization: Bearer hk-...` or `x-api-key: hk-...`. Use it to discover which key/org a credential belongs to.
 
 ```bash
-curl https://platform.hcompany.ai/api/api-keys/me \
+# EU host shown; US: https://portal.production.hcompany.ai
+curl https://portal.api.eu.hcompany.ai/api/api-keys/me \
   -H "Authorization: Bearer hk-3f9a1c0d...0e2b"
 ```
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Obtain an H platform API key via the portal-h desktop OAuth flow (RFC 8252 + PKCE)
+"""Obtain an H platform API key via the portal desktop OAuth flow (RFC 8252 + PKCE)
 and write it to a .env file as H_API_KEY. Stdlib only — no dependencies.
 
 Usage:
@@ -9,8 +9,9 @@ Usage:
     python h_login.py --key-name "my-key"   # custom key name (default: "<cwd-name> @ <hostname>")
     python h_login.py --no-rotate           # keep older keys with the same name (default: revoke them)
 
-Flow: open browser -> Google login on platform.hcompany.ai -> loopback callback
--> exchange one-time code for an access token -> create an org API key -> write .env.
+Flow: open browser -> Google login via the portal API (portal.api.eu.hcompany.ai)
+-> loopback callback -> exchange one-time code for an access token
+-> create an org API key -> write .env.
 """
 
 import argparse
@@ -28,7 +29,16 @@ import urllib.request
 import webbrowser
 from http.server import BaseHTTPRequestHandler, HTTPServer
 
-DEFAULT_BASE_URL = "https://platform.hcompany.ai"
+# portal API hosts (portal.hcompany.ai / platform.hcompany.ai are frontends, NOT the API)
+PORTAL_API_URLS = {
+    "us": "https://portal.production.hcompany.ai",
+    "eu": "https://portal.api.eu.hcompany.ai",
+}
+# agent platform hosts, used to validate the freshly minted key end-to-end
+AGP_API_URLS = {
+    "us": "https://agp.hcompany.ai",
+    "eu": "https://agp.eu.hcompany.ai",
+}
 CALLBACK_TIMEOUT_S = 180
 
 SUCCESS_HTML = b"""<!doctype html><html><head><meta charset="utf-8"><title>H Login</title></head>
@@ -106,12 +116,14 @@ def write_env(env_path: str, key_value: str) -> None:
 
 def main() -> None:
     p = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    p.add_argument("--base-url", default=os.environ.get("H_PORTAL_URL", DEFAULT_BASE_URL))
+    p.add_argument("--region", choices=["us", "eu"], default="eu", help="portal region (default: eu)")
+    p.add_argument("--base-url", default=os.environ.get("H_PORTAL_URL"), help="override the portal API URL")
     p.add_argument("--env-file", default=".env")
     p.add_argument("--key-name", default=None)
     p.add_argument("--force", action="store_true", help="replace an existing H_API_KEY")
     p.add_argument("--no-rotate", action="store_true", help="keep older keys with the same name")
     args = p.parse_args()
+    base_url = args.base_url or PORTAL_API_URLS[args.region]
 
     if not args.force and os.path.exists(args.env_file):
         with open(args.env_file) as f:
@@ -130,7 +142,7 @@ def main() -> None:
     redirect_uri = f"http://127.0.0.1:{port}/callback"
 
     # 2. Send the user to Google login via the portal
-    authorize_url = f"{args.base_url}/api/auth/authorize?" + urllib.parse.urlencode(
+    authorize_url = f"{base_url}/api/auth/authorize?" + urllib.parse.urlencode(
         {
             "provider": "google",
             "redirect_uri": redirect_uri,
@@ -145,39 +157,45 @@ def main() -> None:
     # 3. Receive the one-time code (valid 60 s) and exchange it (PKCE-verified)
     code = wait_for_code(port)
     tokens = api(
-        args.base_url,
+        base_url,
         "POST",
         "/api/auth/desktop/exchange",
         body={"code": code, "code_verifier": verifier, "redirect_uri": redirect_uri},
     )
     access_token = tokens["access_token"]
 
-    # 4. Pick the organization
-    orgs = api(args.base_url, "GET", "/api/organizations/", token=access_token)
-    if not orgs:
-        sys.exit("error: this account belongs to no organization")
-    if len(orgs) == 1:
-        org = orgs[0]
-    else:
-        for i, o in enumerate(orgs):
-            print(f"  [{i}] {o['name']} ({o['id']})")
-        org = orgs[int(input("Organization number: "))]
+    # 4. Resolve the organization: /auth/me, then owned orgs, then first membership
+    me = api(base_url, "GET", "/api/auth/me", token=access_token)
+    org_id = (me or {}).get("org_id")
+    if not org_id:
+        owned = api(base_url, "GET", "/api/organizations/owned", token=access_token)
+        orgs = owned or api(base_url, "GET", "/api/organizations/", token=access_token)
+        if not orgs:
+            sys.exit("error: this account belongs to no organization — create one in the portal first")
+        org_id = orgs[0]["id"]
+        print(f"Using organization: {orgs[0].get('name', org_id)}")
 
     # 5. Rotate: revoke previous keys created under the same name
     if not args.no_rotate:
-        existing = api(args.base_url, "GET", f"/api/organizations/{org['id']}/keys/", token=access_token)
+        existing = api(base_url, "GET", f"/api/organizations/{org_id}/keys/", token=access_token)
         for k in existing or []:
             if k["name"] == key_name:
-                api(args.base_url, "DELETE", f"/api/organizations/{org['id']}/keys/{k['id']}", token=access_token)
+                api(base_url, "DELETE", f"/api/organizations/{org_id}/keys/{k['id']}", token=access_token)
                 print(f"Revoked previous key {k.get('key_display', k['id'])} ({key_name})")
 
     # 6. Create the key — the full value is only ever returned here
-    created = api(
-        args.base_url, "POST", f"/api/organizations/{org['id']}/keys/", token=access_token, body={"name": key_name}
-    )
+    created = api(base_url, "POST", f"/api/organizations/{org_id}/keys/", token=access_token, body={"name": key_name})
+
+    # 7. Validate end-to-end against the agent platform before declaring victory
+    agp = AGP_API_URLS[args.region]
+    try:
+        api(agp, "GET", "/api/v2/agents?page=1&size=1", token=created["key"])
+        validated = "validated against AgP"
+    except SystemExit:
+        validated = "WARNING: key not (yet) accepted by AgP — it may take a moment to propagate"
 
     write_env(args.env_file, created["key"])
-    print(f"✓ H_API_KEY written to {args.env_file} (key '{key_name}', org '{org['name']}')")
+    print(f"✓ H_API_KEY written to {args.env_file} (key '{key_name}', org {org_id}, {validated})")
 
 
 if __name__ == "__main__":

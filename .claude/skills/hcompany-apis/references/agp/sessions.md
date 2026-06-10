@@ -87,6 +87,8 @@ curl -s -X POST https://agp.hcompany.ai/api/v2/sessions \
 
 `messages` accepts a plain string, a single `UserMessageEvent`, or a list of either. With a stored agent: `"agent": "my-org-agent"` (string catalog id; the platform resolves it and every nested environment/skill/subagent reference).
 
+As soon as you have the session `id`, give the user the browser view link — `https://platform.hcompany.ai/agent-view/{id}` (EU API → `platform.eu.hcompany.ai`) — so they can watch the run live and replay it afterwards ([../extras/agent-view-replay.md](../extras/agent-view-replay.md)).
+
 **Step 2 — long-poll for events and the answer** (`GET /{id}/changes`). Keep a cursor `from_index` (count of events you have already seen); loop:
 
 ```bash
@@ -267,7 +269,7 @@ Top-level `type` values:
 | `AgentEvent` | the inner agent event, flattened (see below) | a step of the agent loop |
 | `MetricsUpdateEvent` | `{metrics: {steps, cost_per_model, ...}}` | usage/cost refresh |
 | `ActiveStateChangeEvent` | `{state: "running" \| "idle"}` | agent went busy/idle (drives `idle` status) |
-| `LiveViewUrlEvent` | `{url}` | live browser view became available |
+| `LiveViewUrlEvent` | `{url}` | transient in-run live-browser URL; the durable review link is the agent-view pattern ([../extras/agent-view-replay.md](../extras/agent-view-replay.md)) |
 | `ChatMessageEvent` | chat payload (may carry a `screenshot`) | agent-authored chat message |
 
 For `AgentEvent`, the API flattens the stored record so `data` **is** the inner event, discriminated by `data.kind`:

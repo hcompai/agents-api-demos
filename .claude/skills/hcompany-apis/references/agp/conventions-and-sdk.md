@@ -1,15 +1,14 @@
 # Agent Platform v2 — Conventions, Auth, Errors, SDKs, MCP
 
-One-line summary: cross-cutting reference for the Agent Platform (AgP) v2 API — base URLs and environments, the H API key auth flow, error shapes, v1-vs-v2 guidance, how the published `hai-agents` SDKs map to v2 HTTP calls, and the `/mcp` server.
+One-line summary: cross-cutting reference for the Agent Platform (AgP) v2 API — base URLs and environments, the H API key auth flow, error shapes, how the published `hai-agents` SDKs map to v2 HTTP calls, and the `/mcp` server.
 
 ## Table of contents
 
 1. [Base URLs & environments](#1-base-urls--environments)
 2. [Authentication end-to-end](#2-authentication-end-to-end)
 3. [Error conventions](#3-error-conventions)
-4. [v1 vs v2](#4-v1-vs-v2)
-5. [SDK mapping (hai-agents)](#5-sdk-mapping-hai-agents)
-6. [MCP server](#6-mcp-server)
+4. [SDK mapping (hai-agents)](#4-sdk-mapping-hai-agents)
+5. [MCP server](#5-mcp-server)
 
 ---
 
@@ -29,7 +28,6 @@ The OpenAPI schema declares two SDK regions: **Europe** `https://agp.eu.hcompany
 
 | Path | What |
 |---|---|
-| `/api/v1/...` | Legacy v1 routers (trajectories, commands, guides, agents, feedback, auth) |
 | `/api/v2/...` | The v2 API: sessions, agents, skills, environments, vaults |
 | `/mcp` | MCP server, streamable-HTTP. Public URL: `https://agp.hcompany.ai/mcp` (also `https://agp.eu.hcompany.ai/mcp`) |
 | `/share/...` | Public share surface (e.g. `/share/api/v1/trajectories/{id}` for shared sessions) plus the docs |
@@ -37,7 +35,7 @@ The OpenAPI schema declares two SDK regions: **Europe** `https://agp.eu.hcompany
 
 ### OpenAPI & docs
 
-The OpenAPI schema is served unauthenticated at `/share/openapi.json` and rendered at `/share/docs` (v2). The legacy v1 surface has its own schema at `/share/openapi-v1.json`, rendered at `/share/docs-v1`. Generated SDKs are built from `/share/openapi.json`.
+The OpenAPI schema is served unauthenticated at `/share/openapi.json` and rendered at `/share/docs`. Generated SDKs are built from `/share/openapi.json`.
 
 ## 2. Authentication end-to-end
 
@@ -48,7 +46,7 @@ client ── Authorization: Bearer hk-... ──> API Gateway (Lambda authorize
           ──> AgP backend (agent_api routers never see the key, only the headers)
 ```
 
-- **Getting a key**: create an H API key (`hk-` prefix) in the platform — [platform.hcompany.ai](https://platform.hcompany.ai/) (docs also reference its predecessor Portal-H at portal.hcompany.ai). Send it on every request:
+- **Getting a key**: create an H API key (`hk-` prefix) in the platform — [platform.hcompany.ai](https://platform.hcompany.ai/) (docs also reference its predecessor portal at portal.hcompany.ai). No key yet? Don't send the user to copy-paste from the settings page: the portal side of this skill documents the full automated flow (desktop OAuth → key creation → `.env` write) in [../portal/api-keys.md](../portal/api-keys.md), and `scripts/h_login.py` at the skill root does it end-to-end — offer to run it. Send the key on every request:
 
 ```bash
 curl https://agp.hcompany.ai/api/v2/agents \
@@ -87,13 +85,7 @@ Specifics worth knowing:
 - Request bodies over **5 MB** are rejected by the server; the SDKs enforce this client-side (`MAX_REQUEST_BYTES`) with a clear `ValueError` ("Downscale images before sending").
 - The 503/504 mapping lives in `hplatform/app.py` (`OneShotWriteError`/`OneShotReadError` handlers) and applies to command publish/consume paths.
 
-## 4. v1 vs v2
-
-**v1** (`/api/v1/...`) is the legacy AgentConfig surface consumed by HoloTab, HDaemon, `agp_client`, and the dashboard: `trajectories`, `commands`, `guides`, `agents`, `feedback`, `auth`. It is still served and documented at `/share/docs-v1`, but it is frozen.
-
-**v2** (`/api/v2/...`) is the agents API: `sessions`, `agents`, `skills`, `environments` — plus thin `vaults` proxies (`/api/v2/vaults`, forwarding to env-manager). **New integrations should target v2** — it is the surface backing the docs (`/share/docs`), the published SDKs, and the MCP server.
-
-## 5. SDK mapping (hai-agents)
+## 4. SDK mapping (hai-agents)
 
 `sdk-codegen/` generates both public SDKs from the public v2 OpenAPI schema with [Fern](https://buildwithfern.com) (`fern/generators.yml`, normalized by `prepare_openapi.py`):
 
@@ -155,7 +147,7 @@ skill = client.skills.create_skill(                     # POST /api/v2/skills (2
 
 Same pattern for `client.environments` (`/api/v2/environments`). The polling/overlay layer is hand-written in `sdk-codegen/python/{polling,client}.py.static` (TS equivalents in `ts/`) and overlaid at generation time; everything else is generated.
 
-## 6. MCP server
+## 5. MCP server
 
 The Agent API MCP (`hplatform/mcp/server.py`, FastMCP, name `hai-agents`) is mounted **in-process** at `/mcp` — stateless streamable-HTTP with JSON responses, registry name `io.github.hcompai/hai-agents` (`mcp/server.json`). It is a thin proxy over `/api/v2`: tool calls are dispatched against the app itself reusing the caller's gateway-injected `X-User-*` identity, so it requires the same `Authorization: Bearer hk-...` header. Missing identity yields the tool error "Missing identity: authenticate with an 'hk-' key to inject X-User-* headers."
 
