@@ -17,7 +17,7 @@ def build_server(runner: Runner) -> FastMCP:
     The DI seam tests target: pass a fake ``Runner`` and assert on the ``RunSpec`` each tool
     builds, no monkeypatching or network involved.
     """
-    mcp: FastMCP = FastMCP("agent-sdk-demo-mcpify-anything")
+    mcp: FastMCP = FastMCP("hai-agent-demos-mcpify-anything")
     register_specs(SPECS, mcp, runner)
     return mcp
 
@@ -34,7 +34,7 @@ def compose_server() -> FastMCP:
 
 
 def main() -> None:
-    """Entry point for the ``agent-sdk-demo-mcpify-anything`` console script."""
+    """Entry point for the ``hai-agent-demos-mcpify-anything`` console script."""
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(name)s %(levelname)s %(message)s")
     compose_server().run()
 

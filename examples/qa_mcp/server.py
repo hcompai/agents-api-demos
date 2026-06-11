@@ -14,8 +14,8 @@ from examples._shared import (
     require_api_key,
 )
 
-LOGGER = logging.getLogger("agent-sdk-demo-qa")
-mcp = FastMCP("agent-sdk-demo-qa")
+LOGGER = logging.getLogger("hai-agent-demos-qa")
+mcp = FastMCP("hai-agent-demos-qa")
 
 
 @mcp.tool

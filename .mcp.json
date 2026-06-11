@@ -1,12 +1,12 @@
 {
   "mcpServers": {
-    "agent-sdk-demo-qa": {
+    "hai-agent-demos-qa": {
       "command": "uv",
-      "args": ["run", "--env-file", ".env", "agent-sdk-demo-qa"]
+      "args": ["run", "--env-file", ".env", "hai-agent-demos-qa"]
     },
-    "agent-sdk-demo-mcpify-anything": {
+    "hai-agent-demos-mcpify-anything": {
       "command": "uv",
-      "args": ["run", "--env-file", ".env", "agent-sdk-demo-mcpify-anything"]
+      "args": ["run", "--env-file", ".env", "hai-agent-demos-mcpify-anything"]
     }
   }
 }
