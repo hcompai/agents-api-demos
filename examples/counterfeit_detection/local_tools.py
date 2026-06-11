@@ -169,7 +169,10 @@ def _holo_verdict(models_client: ChatCompletionsClient, store: SnapshotStore, su
         "You are comparing product photos. The first images show the GENUINE product. The last image is a "
         f"SUSPECT listing. Investigator note: {note or '(none)'}.\n"
         f"Respond on a single line with one of: {' | '.join(COMPARE_VERDICTS)}, then a colon, then ONE "
-        "sentence of visual evidence (logo proportions, stitching, hardware, pricing banner, page quality)."
+        "sentence of visual evidence (logo proportions, stitching, hardware, pricing banner, page quality).\n"
+        "If the SUSPECT image is a bot check, captcha, access-denied, or error page rather than a product "
+        "listing, respond exactly: INCONCLUSIVE: suspect page blocked the local render; judge this suspect "
+        "from your own browser observations instead."
     )
     content: list[dict[str, object]] = [{"type": "text", "text": instruction}]
     for reference in store.items:

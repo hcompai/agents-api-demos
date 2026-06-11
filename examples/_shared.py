@@ -39,6 +39,7 @@ def browser_env(start_url: str) -> Browser:
     """
     return Browser(
         id="browser",
+        kind="web",  # the API's environment union discriminates on this tag; the SDK doesn't default it
         headless=True,
         width=1280,
         height=800,

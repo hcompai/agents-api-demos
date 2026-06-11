@@ -32,7 +32,7 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "fastmcp", specifier = ">=2.0" },
-    { name = "hai-agents", git = "https://github.com/hcompai/hai-agents-python?rev=bcd8bcc0db67fa9c29f4a5027a31574961b059b9" },
+    { name = "hai-agents", specifier = ">=0.1.7" },
     { name = "openai", specifier = ">=1.40" },
     { name = "playwright", specifier = ">=1.40" },
     { name = "pydantic", specifier = ">=2.7" },
@@ -637,12 +637,16 @@ wheels = [
 
 [[package]]
 name = "hai-agents"
-version = "0.1.6"
-source = { git = "https://github.com/hcompai/hai-agents-python?rev=bcd8bcc0db67fa9c29f4a5027a31574961b059b9#bcd8bcc0db67fa9c29f4a5027a31574961b059b9" }
+version = "0.1.7"
+source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "httpx" },
     { name = "pydantic" },
     { name = "typing-extensions" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/58/37/5949618e9b9761b1aef2027492681365b63343901216a43c76f5e14a04df/hai_agents-0.1.7.tar.gz", hash = "sha256:a202a4714d3d8051a996e9c02f2c4aa2f084e6cf34d8f0b7b748460c0ca01f31", size = 1219115, upload-time = "2026-06-10T21:17:56.724Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/17/6b/6c460ca35cf584d924ad6e7fe7772c65eb34c2fe46be2c923df7a043aef1/hai_agents-0.1.7-py3-none-any.whl", hash = "sha256:8ea62f306a061045a4ce75afe72f64828a1d83876735df0706ce0ef24aa20f3a", size = 133106, upload-time = "2026-06-10T21:17:55.084Z" },
 ]
 
 [[package]]

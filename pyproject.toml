@@ -5,7 +5,7 @@ description = "Demo recipes for the hai-agents Python SDK, wired up as MCP serve
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
-    "hai-agents>=0.1.6",   # custom tools (run_session tools=...) need the git source below until 0.1.7 ships
+    "hai-agents>=0.1.7",   # 0.1.7 ships custom tools (@tool + run_session tools=...)
     "fastmcp>=2.0",
     "pydantic>=2.7",
     "tyro>=0.9",
@@ -20,11 +20,6 @@ agent-sdk-demo-mcpify-anything = "examples.mcpify_anything.server:main"
 debug-qa = "examples.qa_mcp.debug:main"
 qa-cli = "examples.qa_cli.main:main"
 counterfeit-cli = "examples.counterfeit_detection.main:main"
-
-[tool.uv.sources]
-# TODO: drop this once hai-agents 0.1.7 is on PyPI — custom tools (@tool + run_session tools=...)
-# merged in hcompai/hai-agents-python#81 but are not yet in a published release.
-hai-agents = { git = "https://github.com/hcompai/hai-agents-python", rev = "bcd8bcc0db67fa9c29f4a5027a31574961b059b9" }
 
 [dependency-groups]
 dev = [
