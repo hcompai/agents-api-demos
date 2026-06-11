@@ -1,8 +1,8 @@
 """Standalone CLI for the hai-agents-powered QA reviewer.
 
 Same SDK calls as ``examples/qa_mcp/server.py``, exposed as a plain shell command instead of an MCP
-server. Designed to be invoked from a terminal or from the ``qa-via-cli`` Claude Code skill (see
-``.claude/skills/qa-via-cli/SKILL.md``).
+server. Designed to be invoked from a terminal or from the ``hai-qa-via-cli`` Claude Code skill (see
+``skills/hai-qa-via-cli/SKILL.md``).
 
     uv run qa-cli review --url https://example.com --instruction "look for broken links"
     uv run qa-cli visual --url https://example.com --question "what color is the heading?"
