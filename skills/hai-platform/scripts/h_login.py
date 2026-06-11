@@ -22,7 +22,7 @@ import os
 import secrets
 import socket
 import sys
-import threading
+import time
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -87,12 +87,13 @@ def wait_for_code(port: int) -> str:
             pass
 
     server = HTTPServer(("127.0.0.1", port), Handler)
-    server.timeout = CALLBACK_TIMEOUT_S
     # handle_request returns after one request (or timeout); a second request can
-    # arrive for /favicon.ico, so loop until we have an outcome.
-    deadline = threading.Event()
-    threading.Timer(CALLBACK_TIMEOUT_S, deadline.set).start()
-    while not result and not deadline.is_set():
+    # arrive for /favicon.ico, so loop until we have an outcome. A monotonic
+    # deadline (not a Timer thread) so nothing outlives the loop and keeps the
+    # interpreter alive after a successful login.
+    deadline = time.monotonic() + CALLBACK_TIMEOUT_S
+    while not result and (remaining := deadline - time.monotonic()) > 0:
+        server.timeout = remaining
         server.handle_request()
     server.server_close()
     if "error" in result:
