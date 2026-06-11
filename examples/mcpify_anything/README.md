@@ -66,10 +66,10 @@ flowchart LR
 ## Run
 
 ```bash
-cd agent-sdk-demo
+cd hai-agent-demos
 uv sync
 cp .env.example .env  # add H_API_KEY
-agent-sdk-demo-mcpify-anything   # MCP server over stdio (Claude Code auto-registers via .mcp.json)
+hai-agent-demos-mcpify-anything   # MCP server over stdio (Claude Code auto-registers via .mcp.json)
 ```
 
 In Claude Code:

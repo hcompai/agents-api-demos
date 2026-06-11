@@ -1,5 +1,5 @@
 [project]
-name = "agent-sdk-demo"
+name = "hai-agent-demos"
 version = "0.1.0"
 description = "Demo recipes for the hai-agents Python SDK, wired up as MCP servers for Claude Code."
 readme = "README.md"
@@ -13,8 +13,8 @@ dependencies = [
 ]
 
 [project.scripts]
-agent-sdk-demo-qa = "examples.qa_mcp.server:main"
-agent-sdk-demo-mcpify-anything = "examples.mcpify_anything.server:main"
+hai-agent-demos-qa = "examples.qa_mcp.server:main"
+hai-agent-demos-mcpify-anything = "examples.mcpify_anything.server:main"
 debug-qa = "examples.qa_mcp.debug:main"
 qa-cli = "examples.qa_cli.main:main"
 

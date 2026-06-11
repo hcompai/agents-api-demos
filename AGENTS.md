@@ -1,4 +1,4 @@
-# AGENTS.md — agent-sdk-demo
+# AGENTS.md — hai-agent-demos
 
 ## Working with Users
 

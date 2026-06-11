@@ -1,4 +1,4 @@
-# agent-sdk-demo
+# hai-agent-demos
 
 Recipes for the [`hai-agents`](https://pypi.org/project/hai-agents/) Python SDK, wired up as **MCP servers and CLI tools for Claude Code**. Each example shows one way to use the SDK in a real workflow.
 
@@ -18,7 +18,7 @@ Each example also demonstrates a different *recipe* on top of the SDK:
 
 ```bash
 git clone <this-repo>
-cd agent-sdk-demo
+cd hai-agent-demos
 uv sync
 cp .env.example .env  # add your H_API_KEY from https://platform.hcompany.ai/settings/api-keys
 claude                 # opens Claude Code in the repo; the MCP server is auto-registered
@@ -61,7 +61,7 @@ Shared components (agent instructions, `ReviewResult` model, helpers) live in [`
 ## Project layout
 
 ```
-agent-sdk-demo/
+hai-agent-demos/
 ├── .mcp.json                      # registers MCP servers with Claude Code
 ├── .claude/skills/qa-via-cli/     # Claude Code skill for invoking qa-cli
 ├── examples/
