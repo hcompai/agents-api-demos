@@ -1,5 +1,5 @@
 ---
-name: qa-via-cli
+name: hai-qa-via-cli
 description: >
   Run an autonomous QA review of a web UI by invoking the local `qa-cli` command via Bash.
   Trigger when the user asks to QA a URL, check a deployed site for accessibility, usability,

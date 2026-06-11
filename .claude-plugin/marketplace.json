@@ -1,5 +1,5 @@
 {
-  "name": "hcompany-skills",
+  "name": "hai-skills",
   "owner": {
     "name": "Mathieu Diaz",
     "email": "mathieudiaz@hcompany.ai"
@@ -10,18 +10,18 @@
   },
   "plugins": [
     {
-      "name": "hcompany-platform",
+      "name": "hai-platform",
       "description": "Expert knowledge of the H Company APIs: portal (auth, orgs, API keys), agent platform v2 (sessions, agents, skills, environments, vaults), hai-agents Python/TS SDKs, automated H_API_KEY setup, and agent-view run replay.",
       "source": "./",
       "strict": false,
-      "skills": ["./skills/hcompany-platform"]
+      "skills": ["./skills/hai-platform"]
     },
     {
-      "name": "qa-via-cli",
+      "name": "hai-qa-via-cli",
       "description": "Run an autonomous QA review of a web UI by invoking the local qa-cli command via Bash: structured reviews (accessibility, usability, correctness) and quick visual checks on live pages.",
       "source": "./",
       "strict": false,
-      "skills": ["./skills/qa-via-cli"]
+      "skills": ["./skills/hai-qa-via-cli"]
     }
   ]
 }
