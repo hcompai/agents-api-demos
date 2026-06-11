@@ -15,7 +15,7 @@ uv run qa-cli visual --url https://example.com --question "what color is the hea
 
 ## Skill
 
-The skill lives at [`.claude/skills/hai-qa-via-cli/SKILL.md`](../../.claude/skills/hai-qa-via-cli/SKILL.md). Claude Code picks it up automatically and triggers when the user asks to QA a URL or get a quick visual answer about a page.
+The skill lives at [`skills/hai-qa-via-cli/SKILL.md`](../../skills/hai-qa-via-cli/SKILL.md). Claude Code picks it up automatically and triggers when the user asks to QA a URL or get a quick visual answer about a page.
 
 > *"QA https://example.com for accessibility issues."*
 
@@ -25,7 +25,7 @@ Claude invokes the CLI via Bash, parses stdout, and surfaces findings in chat.
 
 | Aspect | `qa_ui` (MCP) | `qa_cli` (CLI + skill) |
 | --- | --- | --- |
-| Wiring | `.mcp.json` registers an MCP server | `.claude/skills/hai-qa-via-cli/SKILL.md` |
+| Wiring | `.mcp.json` registers an MCP server | `skills/hai-qa-via-cli/SKILL.md` |
 | Invocation in Claude | Native `mcp__...` tool call | Bash invocation of `qa-cli` |
 | Result handling | Structured tool return | Claude parses stdout JSON |
 | Runnable outside Claude | Need an MCP client | Just run the CLI |
