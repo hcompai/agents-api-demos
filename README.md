@@ -60,16 +60,41 @@ Shared components (agent instructions, `ReviewResult` model, helpers) live in [`
 | --- | --- | --- |
 | `H_API_KEY` | yes | auto-setup via `python3 skills/hcompany-platform/scripts/h_login.py`, or manually from https://platform.hcompany.ai/settings/api-keys |
 
-## Install the skills (Claude Code plugin marketplace)
+## Skills & plugin marketplace
 
-This repo doubles as a Claude Code plugin marketplace ([`.claude-plugin/marketplace.json`](.claude-plugin/marketplace.json)), same layout as [anthropics/skills](https://github.com/anthropics/skills). In any Claude Code session:
+[Agent Skills](https://docs.claude.com/en/docs/agents-and-tools/agent-skills/overview) are folders of instructions, scripts, and resources that Claude loads dynamically to improve performance on specialized tasks. Each skill is a directory under [`skills/`](skills/) containing a `SKILL.md` with YAML frontmatter (`name`, `description`) followed by the instructions Claude follows when the skill is active — same layout as [anthropics/skills](https://github.com/anthropics/skills).
+
+This repo doubles as a **Claude Code plugin marketplace** ([`.claude-plugin/marketplace.json`](.claude-plugin/marketplace.json)): each skill is published as a plugin under the `hcompany-skills` marketplace, so anyone can install them into their own Claude Code without cloning the repo.
+
+### Available skills
+
+| Skill | What Claude learns | Pairs with |
+| --- | --- | --- |
+| [`hcompany-platform`](skills/hcompany-platform/) | The H Company APIs end-to-end: portal (auth, orgs, API keys + the automated `H_API_KEY` → `.env` login script), agent platform v2 (sessions, agents, environments, vaults, long-polling), the hai-agents Python/TS SDKs, and the agent-view run-replay workflow | any project calling the H Company platform |
+| [`qa-via-cli`](skills/qa-via-cli/) | When and how to invoke `qa-cli review` / `qa-cli visual` to QA a live web page and surface the structured findings | the [`qa_cli`](examples/qa_cli/) example in this repo |
+
+### Install in Claude Code
+
+In any Claude Code session:
 
 ```
 /plugin marketplace add hcompai/hai-agent-demos      # or a local clone path
 /plugin install hcompany-platform@hcompany-skills
+/plugin install qa-via-cli@hcompany-skills
 ```
 
-The `hcompany-platform` skill ([`skills/hcompany-platform/`](skills/hcompany-platform/)) gives Claude expert knowledge of the H Company APIs: portal (auth, orgs, API keys + the automated `H_API_KEY` → `.env` login script), agent platform v2 (sessions, agents, environments, vaults, long-polling), the hai-agents Python/TS SDKs, and the agent-view run-replay workflow. On claude.ai, upload the `skills/hcompany-platform/` folder via Settings → Skills.
+Once installed, the skills trigger automatically when a conversation matches their `description` — e.g. asking about H Company sessions or API keys pulls in `hcompany-platform`.
+
+### Use elsewhere
+
+- **claude.ai** (paid plans): upload a skill folder (e.g. `skills/hcompany-platform/`) via Settings → Skills.
+- **Claude API**: attach the skill files to your agent following the [Agent Skills docs](https://docs.claude.com/en/docs/agents-and-tools/agent-skills/overview).
+
+### Add a new skill
+
+1. Create `skills/<your-skill>/SKILL.md` with `name` and `description` frontmatter (keep the description specific — it's what triggers the skill).
+2. Add reference docs or scripts alongside it as needed (see `hcompany-platform/references/` for the pattern).
+3. Register it as a plugin entry in [`.claude-plugin/marketplace.json`](.claude-plugin/marketplace.json).
 
 ## Project layout
 
