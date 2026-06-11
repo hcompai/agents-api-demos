@@ -95,7 +95,7 @@ result = run_session(
 print(json.dumps({"findings": log.items, ...}))       # the real output lives in the local log
 ```
 
-Even a `timed_out` session returns a full findings list — nothing confirmed is ever lost. The agent's final answer is demoted to a one-line summary (`recorded_count`, `stopped_reason`); the local `FindingsLog` is the source of truth.
+Even a `timed_out` session returns a full findings list — nothing confirmed is ever lost. The agent's final answer is demoted to a one-line summary (`recorded_count`, `stopped_reason`); the local `FindingsLog` is the source of truth. That last part is not a stylistic choice: in live runs the agent's self-reported count drifts from reality (one budget-exhausted sweep claimed 9 recorded findings while the log held 4 distinct URLs — the model counted listings it had *seen*, not calls that landed). Trust the log, print the log.
 
 ## Files
 
