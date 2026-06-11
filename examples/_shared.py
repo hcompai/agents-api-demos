@@ -4,7 +4,7 @@ import os
 from pathlib import Path
 from typing import Literal
 
-from hai_agents import Environment_Web
+from hai_agents import AgentSkillsItem, Browser, Skill
 from pydantic import BaseModel
 
 _PROMPTS_DIR = Path(__file__).parent / "prompts"
@@ -21,8 +21,8 @@ class ReviewResult(BaseModel):
     steps_taken: list[str] = []
 
 
-def browser_env(start_url: str) -> Environment_Web:
-    """Build the inline cloud web environment a tool drives.
+def browser_env(start_url: str) -> Browser:
+    """Build the inline cloud browser environment a tool drives.
 
     A catalog-id ``str`` would also be valid in ``Agent.environments`` (the env-agnostic
     seam), but every shipped example today binds to an inline headless browser.
@@ -35,10 +35,11 @@ def browser_env(start_url: str) -> Environment_Web:
         start_url: The URL the browser should navigate to as it boots the session.
 
     Returns:
-        A configured ``Environment_Web`` object ready to slot into ``Agent.environments``.
+        A configured ``Browser`` object ready to slot into ``Agent.environments``.
     """
-    return Environment_Web(
+    return Browser(
         id="browser",
+        kind="web",  # the API's environment union discriminates on this tag; the SDK doesn't default it
         headless=True,
         width=1280,
         height=800,
@@ -57,24 +58,24 @@ def require_api_key() -> str:
     return api_key
 
 
-def load_agent_skills() -> list[dict]:
+def load_agent_skills() -> list[AgentSkillsItem]:
     """Load all skill markdown files from the shared ``agent_skills/`` directory."""
     if not AGENT_SKILLS_DIR.is_dir():
         return []
     return [_parse_skill_file(path) for path in sorted(AGENT_SKILLS_DIR.glob("*.md"))]
 
 
-def _parse_skill_file(path: Path) -> dict:
+def _parse_skill_file(path: Path) -> Skill:
     text = path.read_text()
     if not text.startswith("---\n"):
         raise ValueError(f"{path}: expected YAML frontmatter")
     frontmatter, _, body = text[4:].partition("\n---\n")
-    fields = {}
+    fields: dict[str, str] = {}
     for line in frontmatter.splitlines():
         key, sep, value = line.partition(":")
         if sep:
             fields[key.strip()] = value.strip()
     try:
-        return {"name": fields["name"], "description": fields["description"], "body": body.strip()}
+        return Skill(name=fields["name"], description=fields["description"], body=body.strip())
     except KeyError as exc:
         raise ValueError(f"{path}: missing field {exc.args[0]!r} in frontmatter") from exc

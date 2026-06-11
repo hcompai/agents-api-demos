@@ -64,6 +64,7 @@ class CuaRunner:
             description="Ephemeral mcpify tool session.",
             environments=spec.environments,
             instructions=spec.instructions,
+            answer_format=spec.output_model.model_json_schema(),
         )
         session = await self._create_session(agent, spec)
         # Logged on every session so a failed run is debuggable after the fact.
@@ -91,7 +92,6 @@ class CuaRunner:
                 max_steps=spec.max_steps,
                 max_time_s=spec.max_time_s,
                 idle_timeout_s=None,  # one-shot: terminate when the agent answers
-                answer_format=spec.output_model.model_json_schema(),
                 agent_artifact=self._agent_artifact,
             )
             return session

@@ -15,7 +15,7 @@ import time
 
 import tyro
 from dotenv import load_dotenv
-from hai_agents import Client, run_session
+from hai_agents import Agent, Client, run_session
 
 from examples._shared import (
     REVIEWER_INSTRUCTIONS,
@@ -33,17 +33,17 @@ def review(url: str, instruction: str = "Do a general usability and accessibilit
     started = time.monotonic()
     result = run_session(
         _client(),
-        agent={
-            "name": "ui-reviewer",
-            "description": "Reviews a web UI for usability, accessibility, and obvious bugs.",
-            "instructions": REVIEWER_INSTRUCTIONS,
-            "skills": load_agent_skills(),
-            "environments": [browser_env(url)],
-        },
+        agent=Agent(
+            name="ui-reviewer",
+            description="Reviews a web UI for usability, accessibility, and obvious bugs.",
+            instructions=REVIEWER_INSTRUCTIONS,
+            skills=load_agent_skills(),
+            environments=[browser_env(url)],
+            answer_format=ReviewResult.model_json_schema(),
+        ),
         messages=instruction,
         max_steps=25,
         max_time_s=360.0,
-        answer_format=ReviewResult.model_json_schema(),
     )
     print(f"completed in {time.monotonic() - started:.1f}s (status={result.status})", file=sys.stderr)
     if not isinstance(result.answer, dict):
@@ -56,12 +56,12 @@ def visual(url: str, question: str) -> None:
     started = time.monotonic()
     result = run_session(
         _client(),
-        agent={
-            "name": "visual-checker",
-            "description": "Answers a single visual question about a web page.",
-            "instructions": VISUAL_INSTRUCTIONS,
-            "environments": [browser_env(url)],
-        },
+        agent=Agent(
+            name="visual-checker",
+            description="Answers a single visual question about a web page.",
+            instructions=VISUAL_INSTRUCTIONS,
+            environments=[browser_env(url)],
+        ),
         messages=question,
         max_steps=3,
         max_time_s=120.0,

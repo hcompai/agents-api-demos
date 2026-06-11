@@ -1,0 +1,171 @@
+"""Counterfeit-detection cookbook CLI: one agent, one task, three stages.
+
+Input: the URL of a genuine product page. Output: counterfeit listing URL(s), or null.
+
+    uv run counterfeit-cli simple --genuine-url "https://www.<brand>.com/<product>"
+    uv run counterfeit-cli tooled --genuine-url "https://www.<brand>.com/<product>"
+    uv run counterfeit-cli sweep  --genuine-url "https://www.<brand>.com/<product>" --max-steps 80 --max-time-s 1200
+
+``simple`` is a bare ``run_session`` call. ``tooled`` adds two local custom tools (reference screenshots +
+Holo visual compare). ``sweep`` adds a findings-stream tool and treats the step/time budget as fuel: find as
+many counterfeits as it allows. See this folder's README.md for the full walkthrough.
+"""
+
+import json
+import logging
+import sys
+import time
+from typing import Literal
+
+import tyro
+from dotenv import load_dotenv
+from hai_agents import Agent, Client, run_session
+from openai import OpenAI
+from pydantic import BaseModel
+
+from examples._shared import browser_env, require_api_key
+from examples.counterfeit_detection.local_tools import (
+    MODELS_BASE_URL,
+    FindingsLog,
+    SnapshotStore,
+    build_record_tool,
+    build_visual_tools,
+)
+from examples.counterfeit_detection.prompts import (
+    SIMPLE_INSTRUCTIONS,
+    SIMPLE_TASK,
+    SWEEP_INSTRUCTIONS,
+    SWEEP_TASK,
+    TOOLED_INSTRUCTIONS,
+)
+
+
+class CounterfeitFinding(BaseModel):
+    """Structured answer for the single-hit stages (``simple`` and ``tooled``)."""
+
+    counterfeit_url: str | None
+    confidence: Literal["high", "medium", "low", "none"]
+    red_flags: list[str] = []
+    reasoning: str
+
+
+class SweepSummary(BaseModel):
+    """Structured answer for ``sweep`` — the findings themselves arrive via ``record_counterfeit``."""
+
+    recorded_count: int
+    stopped_reason: Literal["budget_exhausted", "no_more_leads"]
+    summary: str
+
+
+def simple(genuine_url: str) -> None:
+    """Stage 1 — a bare run_session call: find ONE counterfeit listing, or report none.
+
+    Args:
+        genuine_url: URL of the genuine product page the agent uses as its reference.
+    """
+    started = time.monotonic()
+    result = run_session(
+        _client(),
+        agent=Agent(
+            name="counterfeit-spotter",
+            description="Finds one counterfeit listing of a genuine product.",
+            instructions=SIMPLE_INSTRUCTIONS,
+            environments=[browser_env(genuine_url)],
+            answer_format=CounterfeitFinding.model_json_schema(),
+        ),
+        messages=SIMPLE_TASK.format(genuine_url=genuine_url),
+        max_steps=40,
+        max_time_s=600.0,
+    )
+    _print_finding(result, started)
+
+
+def tooled(genuine_url: str) -> None:
+    """Stage 2 — same task, plus local screenshot + visual-compare tools for grounded verdicts.
+
+    Args:
+        genuine_url: URL of the genuine product page the agent snapshots and compares against.
+    """
+    started = time.monotonic()
+    store = SnapshotStore()
+    result = run_session(
+        _client(),
+        agent=Agent(
+            name="counterfeit-spotter",
+            description="Finds one counterfeit listing, visually verified against cached references.",
+            instructions=TOOLED_INSTRUCTIONS,
+            environments=[browser_env(genuine_url)],
+            answer_format=CounterfeitFinding.model_json_schema(),
+        ),
+        messages=SIMPLE_TASK.format(genuine_url=genuine_url),
+        tools=build_visual_tools(store, _models_client()),
+        max_steps=60,
+        max_time_s=900.0,
+    )
+    print(f"reference screenshots saved: {len(store.items)}", file=sys.stderr)
+    _print_finding(result, started)
+
+
+def sweep(genuine_url: str, max_steps: int = 80, max_time_s: float = 1200.0) -> None:
+    """Stage 3 — budget as fuel: record as many distinct counterfeits as max_steps/max_time_s allow.
+
+    Args:
+        genuine_url: URL of the genuine product page.
+        max_steps: Step budget for the session; the agent is told to spend it.
+        max_time_s: Wall-clock budget in seconds for the session.
+    """
+    started = time.monotonic()
+    store = SnapshotStore()
+    log = FindingsLog()
+    result = run_session(
+        _client(),
+        agent=Agent(
+            name="counterfeit-sweeper",
+            description="Enumerates as many counterfeit listings as the budget allows.",
+            instructions=SWEEP_INSTRUCTIONS,
+            environments=[browser_env(genuine_url)],
+            answer_format=SweepSummary.model_json_schema(),
+        ),
+        messages=SWEEP_TASK.format(genuine_url=genuine_url),
+        tools=[*build_visual_tools(store, _models_client()), build_record_tool(log)],
+        max_steps=max_steps,
+        max_time_s=max_time_s,
+    )
+    elapsed = time.monotonic() - started
+    print(f"completed in {elapsed:.1f}s (status={result.status}, findings={len(log.items)})", file=sys.stderr)
+    summary = SweepSummary.model_validate(result.answer).model_dump() if isinstance(result.answer, dict) else None
+    print(json.dumps({"findings": log.items, "agent_summary": summary}, indent=2))
+
+
+def _client() -> Client:
+    return Client(api_key=require_api_key())
+
+
+def _models_client() -> OpenAI:
+    return OpenAI(base_url=MODELS_BASE_URL, api_key=require_api_key())
+
+
+def _print_finding(result: object, started: float) -> None:
+    """Print session status to stderr and the validated ``CounterfeitFinding`` JSON to stdout."""
+    status = getattr(result, "status", "unknown")
+    answer = getattr(result, "answer", None)
+    print(f"completed in {time.monotonic() - started:.1f}s (status={status})", file=sys.stderr)
+    if not isinstance(answer, dict):
+        sys.exit(f"error: agent did not return a structured answer (status={status})")
+    print(json.dumps(CounterfeitFinding.model_validate(answer).model_dump(), indent=2))
+
+
+def main() -> None:
+    """Entry point for the ``counterfeit-cli`` console script."""
+    load_dotenv()
+    logging.basicConfig(
+        level=logging.WARNING, stream=sys.stderr, format="%(asctime)s %(name)s %(levelname)s %(message)s"
+    )
+    try:
+        tyro.extras.subcommand_cli_from_dict({"simple": simple, "tooled": tooled, "sweep": sweep})
+    except RuntimeError as exc:
+        sys.exit(f"error: {exc}")
+
+
+if __name__ == "__main__":
+    main()
