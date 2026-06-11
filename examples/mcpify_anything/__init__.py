@@ -1,1 +1,1 @@
-"""Typed, schema-validated MCP tools over the hai-agents cloud browser CUA."""
+"""One MCP tool that turns any URL + JSON Schema into typed JSON via a cloud browser agent."""

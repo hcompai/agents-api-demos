@@ -91,10 +91,17 @@ def wait_for_code(port: int) -> str:
     # handle_request returns after one request (or timeout); a second request can
     # arrive for /favicon.ico, so loop until we have an outcome.
     deadline = threading.Event()
-    threading.Timer(CALLBACK_TIMEOUT_S, deadline.set).start()
-    while not result and not deadline.is_set():
-        server.handle_request()
-    server.server_close()
+    # daemon=True so the interpreter can exit immediately on success; .cancel()
+    # in finally keeps the timer from staying scheduled longer than needed.
+    timer = threading.Timer(CALLBACK_TIMEOUT_S, deadline.set)
+    timer.daemon = True
+    timer.start()
+    try:
+        while not result and not deadline.is_set():
+            server.handle_request()
+    finally:
+        timer.cancel()
+        server.server_close()
     if "error" in result:
         sys.exit(f"error: OAuth callback returned error={result['error']}")
     if "code" not in result:
@@ -107,7 +114,7 @@ def write_env(env_path: str, key_value: str) -> None:
     if os.path.exists(env_path):
         with open(env_path) as f:
             lines = f.read().splitlines()
-    lines = [l for l in lines if not l.startswith("H_API_KEY=")]
+    lines = [line for line in lines if not line.startswith("H_API_KEY=")]
     lines.append(f"H_API_KEY={key_value}")
     with open(env_path, "w") as f:
         f.write("\n".join(lines) + "\n")
@@ -127,7 +134,7 @@ def main() -> None:
 
     if not args.force and os.path.exists(args.env_file):
         with open(args.env_file) as f:
-            if any(l.startswith("H_API_KEY=") and l.strip() != "H_API_KEY=" for l in f):
+            if any(line.startswith("H_API_KEY=") and line.strip() != "H_API_KEY=" for line in f):
                 print(f"H_API_KEY already set in {args.env_file} — nothing to do (use --force to replace).")
                 return
 
