@@ -2,7 +2,7 @@
 
 A FastMCP server with a **single MCP tool** that turns any URL into typed JSON. The caller supplies a JSON Schema at call time; a cloud browser agent drives the page and returns an answer the platform validates against that schema.
 
-Where [`qa_mcp`](../qa_mcp/) shows wrapping *one fixed task* as one tool, this shows the inverse: one tool, **whatever shape the caller asks for**. Drop in a schema, get back JSON.
+Where [`qa/mcp`](../qa/mcp/) shows wrapping *one fixed task* as one tool, this shows the inverse: one tool, **whatever shape the caller asks for**. Drop in a schema, get back JSON.
 
 ## The tool
 

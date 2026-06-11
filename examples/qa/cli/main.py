@@ -1,6 +1,6 @@
 """Standalone CLI for the hai-agents-powered QA reviewer.
 
-Same SDK calls as ``examples/qa_mcp/server.py``, exposed as a plain shell command instead of an MCP
+Same SDK calls as ``examples/qa/mcp/server.py``, exposed as a plain shell command instead of an MCP
 server. Designed to be invoked from a terminal or from the ``hai-qa-via-cli`` Claude Code skill (see
 ``skills/hai-qa-via-cli/SKILL.md``).
 
@@ -16,15 +16,13 @@ from dotenv import load_dotenv
 from hai_agents import Agent, Client, run_session
 
 from examples._shared import (
-    REVIEWER_INSTRUCTIONS,
-    ReviewResult,
     browser_env,
-    load_agent_skills,
     print_freeform_answer,
     print_structured_answer,
     require_api_key,
     setup_cli_logging,
 )
+from examples.qa.shared import REVIEWER_INSTRUCTIONS, ReviewResult, load_agent_skills
 
 VISUAL_INSTRUCTIONS = "Open the page and answer the user's question in one or two sentences."
 

@@ -1,5 +1,6 @@
 """FastMCP server exposing a single typed-extraction tool over a cloud browser agent."""
 
+from pathlib import Path
 from typing import Any
 
 from fastmcp import FastMCP
@@ -7,11 +8,7 @@ from hai_agents import Agent, Client, run_session
 
 from examples._shared import browser_env, require_api_key, setup_server_logging
 
-_OPERATOR_INSTRUCTIONS = (
-    "You browse websites and follow the caller's natural-language task. "
-    "Report exactly what is shown on the page as JSON matching the requested schema. "
-    "Do not invent fields or values. Do not wrap the answer in markdown or code fences."
-)
+_OPERATOR_INSTRUCTIONS = (Path(__file__).parent / "prompts" / "extractor_instructions.md").read_text()
 
 mcp = FastMCP("hai-agent-demos-mcpify-anything")
 _client_instance: Client | None = None

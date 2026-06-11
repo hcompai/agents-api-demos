@@ -1,6 +1,6 @@
-# `qa_cli` — QA a web UI via a CLI + Claude Code skill
+# `qa/cli` — QA a web UI via a CLI + Claude Code skill
 
-Same SDK calls as [`qa_ui`](../qa_ui/), different interface. Where `qa_ui` exposes the agent as an **MCP server**, this example exposes it as a **shell command** and uses a Claude Code **skill** to teach Claude when to invoke it.
+Same SDK calls as [`qa/mcp`](../mcp/), different interface. Where `qa/mcp` exposes the agent as an **MCP server**, this example exposes it as a **shell command** and uses a Claude Code **skill** to teach Claude when to invoke it.
 
 ## CLI
 
@@ -15,17 +15,17 @@ uv run qa-cli visual --url https://example.com --question "what color is the hea
 
 ## Skill
 
-The skill lives at [`.claude/skills/hai-qa-via-cli/SKILL.md`](../../.claude/skills/hai-qa-via-cli/SKILL.md). Claude Code picks it up automatically and triggers when the user asks to QA a URL or get a quick visual answer about a page.
+The skill lives at [`skills/hai-qa-via-cli/SKILL.md`](../../../skills/hai-qa-via-cli/SKILL.md). Claude Code picks it up automatically and triggers when the user asks to QA a URL or get a quick visual answer about a page.
 
 > *"QA https://example.com for accessibility issues."*
 
 Claude invokes the CLI via Bash, parses stdout, and surfaces findings in chat.
 
-## How it differs from `qa_ui`
+## How it differs from `qa/mcp`
 
-| Aspect | `qa_ui` (MCP) | `qa_cli` (CLI + skill) |
+| Aspect | `qa/mcp` (MCP) | `qa/cli` (CLI + skill) |
 | --- | --- | --- |
-| Wiring | `.mcp.json` registers an MCP server | `.claude/skills/hai-qa-via-cli/SKILL.md` |
+| Wiring | `.mcp.json` registers an MCP server | `skills/hai-qa-via-cli/SKILL.md` |
 | Invocation in Claude | Native `mcp__...` tool call | Bash invocation of `qa-cli` |
 | Result handling | Structured tool return | Claude parses stdout JSON |
 | Runnable outside Claude | Need an MCP client | Just run the CLI |

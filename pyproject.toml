@@ -15,10 +15,10 @@ dependencies = [
 ]
 
 [project.scripts]
-hai-agent-demos-qa = "examples.qa_mcp.server:main"
+hai-agent-demos-qa = "examples.qa.mcp.server:main"
 hai-agent-demos-mcpify-anything = "examples.mcpify_anything.server:main"
-debug-qa = "examples.qa_mcp.debug:main"
-qa-cli = "examples.qa_cli.main:main"
+debug-qa = "examples.qa.mcp.debug:main"
+qa-cli = "examples.qa.cli.main:main"
 counterfeit-cli = "examples.counterfeit_detection.main:main"
 
 [dependency-groups]

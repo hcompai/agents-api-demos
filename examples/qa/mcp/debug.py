@@ -19,15 +19,13 @@ from dotenv import load_dotenv
 from hai_agents import Agent, Client, SessionRunResult, run_session
 
 from examples._shared import (
-    REVIEWER_INSTRUCTIONS,
-    ReviewResult,
     browser_env,
-    load_agent_skills,
     print_freeform_answer,
     print_structured_answer,
     require_api_key,
     setup_cli_logging,
 )
+from examples.qa.shared import REVIEWER_INSTRUCTIONS, ReviewResult, load_agent_skills
 
 TRACES_DIR = Path("traces")
 

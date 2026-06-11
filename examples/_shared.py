@@ -1,29 +1,19 @@
-"""Shared agent definition components and entry-point helpers used across the example servers."""
+"""Generic helpers shared by every example entry point.
+
+QA-specific helpers (the reviewer instructions, ``ReviewResult`` model, agent-skill loader) live in
+``examples.qa.shared`` so the QA recipe stays self-contained.
+"""
 
 import json
 import logging
 import os
 import sys
 import time
-from pathlib import Path
-from typing import Literal
 
-from hai_agents import AgentSkillsItem, Browser, SessionRunResult, Skill
+from hai_agents import Browser, SessionRunResult
 from pydantic import BaseModel
 
-_PROMPTS_DIR = Path(__file__).parent / "prompts"
-AGENT_SKILLS_DIR = Path(__file__).parent / "agent_skills"
 _LOG_FORMAT = "%(asctime)s %(name)s %(levelname)s %(message)s"
-
-REVIEWER_INSTRUCTIONS: str = (_PROMPTS_DIR / "reviewer_instructions.md").read_text()
-
-
-class ReviewResult(BaseModel):
-    verdict: Literal["pass", "warning", "fail"]
-    summary: str
-    findings: list[str] = []
-    """Each item is a human-readable string formatted ``[severity · area] issue. Suggestion: ...``."""
-    steps_taken: list[str] = []
 
 
 def browser_env(start_url: str) -> Browser:
@@ -61,13 +51,6 @@ def require_api_key() -> str:
             "https://platform.hcompany.ai/settings/api-keys, then re-run."
         )
     return api_key
-
-
-def load_agent_skills() -> list[AgentSkillsItem]:
-    """Load all skill markdown files from the shared ``agent_skills/`` directory."""
-    if not AGENT_SKILLS_DIR.is_dir():
-        return []
-    return [_parse_skill_file(path) for path in sorted(AGENT_SKILLS_DIR.glob("*.md"))]
 
 
 def setup_server_logging(level: int = logging.INFO) -> None:
@@ -127,19 +110,3 @@ def print_freeform_answer(result: SessionRunResult, started: float) -> None:
     if result.answer is None:
         sys.exit(f"error: no answer (status={result.status})")
     print(result.answer if isinstance(result.answer, str) else json.dumps(result.answer))
-
-
-def _parse_skill_file(path: Path) -> Skill:
-    text = path.read_text()
-    if not text.startswith("---\n"):
-        raise ValueError(f"{path}: expected YAML frontmatter")
-    frontmatter, _, body = text[4:].partition("\n---\n")
-    fields: dict[str, str] = {}
-    for line in frontmatter.splitlines():
-        key, sep, value = line.partition(":")
-        if sep:
-            fields[key.strip()] = value.strip()
-    try:
-        return Skill(name=fields["name"], description=fields["description"], body=body.strip())
-    except KeyError as exc:
-        raise ValueError(f"{path}: missing field {exc.args[0]!r} in frontmatter") from exc

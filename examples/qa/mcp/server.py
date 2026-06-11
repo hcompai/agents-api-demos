@@ -5,14 +5,8 @@ import json
 from fastmcp import FastMCP
 from hai_agents import Agent, Client, run_session
 
-from examples._shared import (
-    REVIEWER_INSTRUCTIONS,
-    ReviewResult,
-    browser_env,
-    load_agent_skills,
-    require_api_key,
-    setup_server_logging,
-)
+from examples._shared import browser_env, require_api_key, setup_server_logging
+from examples.qa.shared import REVIEWER_INSTRUCTIONS, ReviewResult, load_agent_skills
 
 mcp = FastMCP("hai-agent-demos-qa")
 _client_instance: Client | None = None
