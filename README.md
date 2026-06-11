@@ -76,9 +76,10 @@ The `hcompany-platform` skill ([`skills/hcompany-platform/`](skills/hcompany-pla
 ```
 hai-agent-demos/
 ├── .claude-plugin/marketplace.json # Claude Code plugin marketplace (skills below)
-├── skills/hcompany-platform/          # H Company APIs skill (portal + agp + SDKs)
+├── skills/
+│   ├── hcompany-platform/         # H Company APIs skill (portal + agp + SDKs)
+│   └── qa-via-cli/                # skill for invoking qa-cli
 ├── .mcp.json                      # registers MCP servers with Claude Code
-├── .claude/skills/qa-via-cli/     # repo-local skill for invoking qa-cli
 ├── examples/
 │   ├── _shared.py                 # shared instructions, models, and helpers (qa_*)
 │   ├── agent_skills/              # skill docs passed to the ui-reviewer agent

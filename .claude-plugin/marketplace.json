@@ -15,6 +15,13 @@
       "source": "./",
       "strict": false,
       "skills": ["./skills/hcompany-platform"]
+    },
+    {
+      "name": "qa-via-cli",
+      "description": "Run an autonomous QA review of a web UI by invoking the local qa-cli command via Bash: structured reviews (accessibility, usability, correctness) and quick visual checks on live pages.",
+      "source": "./",
+      "strict": false,
+      "skills": ["./skills/qa-via-cli"]
     }
   ]
 }
