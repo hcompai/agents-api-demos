@@ -23,14 +23,22 @@ from examples._shared import (
     ReviewResult,
     browser_env,
     load_agent_skills,
+    print_freeform_answer,
+    print_structured_answer,
     require_api_key,
+    setup_cli_logging,
 )
 
 TRACES_DIR = Path("traces")
 
 
 def review(url: str, instruction: str = "Review the page for usability and accessibility issues.") -> None:
-    """Run a UI review, print the structured result, and save a full trace to traces/."""
+    """Run a UI review, print the structured result, and save a full trace to traces/.
+
+    Args:
+        url: Page the reviewer should open.
+        instruction: Natural-language brief telling the reviewer what to focus on.
+    """
     started = time.monotonic()
     result = run_session(
         _client(),
@@ -46,19 +54,18 @@ def review(url: str, instruction: str = "Review the page for usability and acces
         max_steps=25,
         max_time_s=360.0,
     )
-    elapsed = time.monotonic() - started
-    print(f"completed in {elapsed:.1f}s (status={result.status})", file=sys.stderr)
-
-    trace_path = _save_trace("review", url, instruction, elapsed, result)
+    trace_path = _save_trace("review", url, instruction, time.monotonic() - started, result)
     print(f"trace → {trace_path}", file=sys.stderr)
-
-    if not isinstance(result.answer, dict):
-        sys.exit(f"error: agent did not return a structured answer (status={result.status})")
-    print(json.dumps(ReviewResult.model_validate(result.answer).model_dump(), indent=2))
+    print_structured_answer(result, ReviewResult, started)
 
 
 def visual(url: str, question: str) -> None:
-    """Run a visual question, print the answer, and save a full trace to traces/."""
+    """Run a visual question, print the answer, and save a full trace to traces/.
+
+    Args:
+        url: Page the agent should open.
+        question: One short question about what is visible on the page.
+    """
     started = time.monotonic()
     result = run_session(
         _client(),
@@ -72,30 +79,25 @@ def visual(url: str, question: str) -> None:
         max_steps=3,
         max_time_s=120.0,
     )
-    elapsed = time.monotonic() - started
-    print(f"completed in {elapsed:.1f}s (status={result.status})", file=sys.stderr)
-
-    trace_path = _save_trace("visual", url, question, elapsed, result)
+    trace_path = _save_trace("visual", url, question, time.monotonic() - started, result)
     print(f"trace → {trace_path}", file=sys.stderr)
+    print_freeform_answer(result, started)
 
-    answer = result.answer
-    if answer is None:
-        sys.exit(f"error: no answer (status={result.status})")
-    print(answer if isinstance(answer, str) else json.dumps(answer))
+
+def _client() -> Client:
+    return Client(api_key=require_api_key())
 
 
 def _save_trace(subcommand: str, url: str, instruction: str, elapsed: float, result: SessionRunResult) -> Path:
     TRACES_DIR.mkdir(exist_ok=True)
     timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
     path = TRACES_DIR / f"{subcommand}_{timestamp}.json"
-
     events = []
-    for e in result.events:
+    for event in result.events:
         try:
-            events.append({"type": e.type, "data": e.data})
+            events.append({"type": event.type, "data": event.data})
         except Exception:
-            events.append({"type": type(e).__name__, "data": repr(e)})
-
+            events.append({"type": type(event).__name__, "data": repr(event)})
     path.write_text(
         json.dumps(
             {
@@ -112,17 +114,10 @@ def _save_trace(subcommand: str, url: str, instruction: str, elapsed: float, res
     return path
 
 
-def _client() -> Client:
-    return Client(api_key=require_api_key())
-
-
 def main() -> None:
+    """Entry point for the ``debug-qa`` console script."""
     load_dotenv()
-    logging.basicConfig(
-        level=logging.DEBUG,
-        stream=sys.stderr,
-        format="%(asctime)s %(name)s %(levelname)s %(message)s",
-    )
+    setup_cli_logging(level=logging.DEBUG, silence_http=False)
     logging.getLogger("httpcore").setLevel(logging.INFO)
     logging.getLogger("httpx").setLevel(logging.INFO)
     try:

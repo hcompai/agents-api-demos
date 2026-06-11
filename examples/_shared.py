@@ -1,14 +1,19 @@
-"""Shared agent definition components used across the example servers."""
+"""Shared agent definition components and entry-point helpers used across the example servers."""
 
+import json
+import logging
 import os
+import sys
+import time
 from pathlib import Path
 from typing import Literal
 
-from hai_agents import AgentSkillsItem, Browser, Skill
+from hai_agents import AgentSkillsItem, Browser, SessionRunResult, Skill
 from pydantic import BaseModel
 
 _PROMPTS_DIR = Path(__file__).parent / "prompts"
 AGENT_SKILLS_DIR = Path(__file__).parent / "agent_skills"
+_LOG_FORMAT = "%(asctime)s %(name)s %(levelname)s %(message)s"
 
 REVIEWER_INSTRUCTIONS: str = (_PROMPTS_DIR / "reviewer_instructions.md").read_text()
 
@@ -63,6 +68,65 @@ def load_agent_skills() -> list[AgentSkillsItem]:
     if not AGENT_SKILLS_DIR.is_dir():
         return []
     return [_parse_skill_file(path) for path in sorted(AGENT_SKILLS_DIR.glob("*.md"))]
+
+
+def setup_server_logging(level: int = logging.INFO) -> None:
+    """Configure logging for an MCP server entry point.
+
+    Logs go to stderr by default (Python's ``StreamHandler`` default), keeping stdout clean
+    for the MCP stdio protocol.
+
+    Args:
+        level: Root logger level; defaults to ``INFO``.
+    """
+    logging.basicConfig(level=level, format=_LOG_FORMAT)
+
+
+def setup_cli_logging(level: int = logging.WARNING, *, silence_http: bool = True) -> None:
+    """Configure logging for a CLI entry point.
+
+    Explicitly pins the stream to ``sys.stderr`` so stdout stays reserved for the JSON answer.
+
+    Args:
+        level: Root logger level; defaults to ``WARNING`` so CLI output stays uncluttered.
+        silence_http: When ``True``, pin ``httpx``/``httpcore`` to ``WARNING`` regardless of
+            the root level, so request-level chatter doesn't drown the JSON answer.
+    """
+    logging.basicConfig(level=level, stream=sys.stderr, format=_LOG_FORMAT)
+    if silence_http:
+        logging.getLogger("httpcore").setLevel(logging.WARNING)
+        logging.getLogger("httpx").setLevel(logging.WARNING)
+
+
+def print_structured_answer(result: SessionRunResult, model: type[BaseModel], started: float) -> None:
+    """Print the session status to stderr and the validated answer JSON to stdout.
+
+    Exits the process with a non-zero status if the session ended without a structured answer.
+
+    Args:
+        result: The completed ``run_session`` result.
+        model: Pydantic model the answer must validate against.
+        started: ``time.monotonic()`` timestamp captured before the session started.
+    """
+    print(f"completed in {time.monotonic() - started:.1f}s (status={result.status})", file=sys.stderr)
+    if not isinstance(result.answer, dict):
+        sys.exit(f"error: agent did not return a structured answer (status={result.status})")
+    print(json.dumps(model.model_validate(result.answer).model_dump(), indent=2))
+
+
+def print_freeform_answer(result: SessionRunResult, started: float) -> None:
+    """Print the session status to stderr and a free-form answer (string or JSON) to stdout.
+
+    Exits the process with a non-zero status if the session produced no answer.
+
+    Args:
+        result: The completed ``run_session`` result.
+        started: ``time.monotonic()`` timestamp captured before the session started.
+    """
+    print(f"completed in {time.monotonic() - started:.1f}s (status={result.status})", file=sys.stderr)
+    if result.answer is None:
+        sys.exit(f"error: no answer (status={result.status})")
+    print(result.answer if isinstance(result.answer, str) else json.dumps(result.answer))
 
 
 def _parse_skill_file(path: Path) -> Skill:

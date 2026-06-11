@@ -1,7 +1,6 @@
 """FastMCP server exposing QA tools backed by the hai-agents SDK."""
 
 import json
-import logging
 
 from fastmcp import FastMCP
 from hai_agents import Agent, Client, run_session
@@ -12,15 +11,21 @@ from examples._shared import (
     browser_env,
     load_agent_skills,
     require_api_key,
+    setup_server_logging,
 )
 
-LOGGER = logging.getLogger("hai-agent-demos-qa")
 mcp = FastMCP("hai-agent-demos-qa")
+_client_instance: Client | None = None
 
 
 @mcp.tool
 def review_web_ui(url: str, instruction: str) -> ReviewResult:
-    """Review a remote web UI and return structured QA findings."""
+    """Review a remote web UI and return structured QA findings.
+
+    Args:
+        url: Page the reviewer agent should open and inspect.
+        instruction: Natural-language brief telling the agent what to look for.
+    """
     result = run_session(
         _client(),
         agent=Agent(
@@ -42,7 +47,12 @@ def review_web_ui(url: str, instruction: str) -> ReviewResult:
 
 @mcp.tool
 def visual_check(url: str, question: str) -> str:
-    """Open a URL and answer a single visual question about the page."""
+    """Open a URL and answer a single visual question about the page.
+
+    Args:
+        url: Page the agent should open.
+        question: One short question about what is visible on the page.
+    """
     result = run_session(
         _client(),
         agent=Agent(
@@ -61,19 +71,17 @@ def visual_check(url: str, question: str) -> str:
     return answer if isinstance(answer, str) else json.dumps(answer)
 
 
-def main() -> None:
-    logging.basicConfig(level=logging.INFO, format="%(asctime)s %(name)s %(levelname)s %(message)s")
-    mcp.run()
-
-
-_client_instance: Client | None = None
-
-
 def _client() -> Client:
     global _client_instance
     if _client_instance is None:
         _client_instance = Client(api_key=require_api_key())
     return _client_instance
+
+
+def main() -> None:
+    """Entry point for the ``hai-agent-demos-qa`` console script."""
+    setup_server_logging()
+    mcp.run()
 
 
 if __name__ == "__main__":

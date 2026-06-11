@@ -12,7 +12,7 @@ The `hai-agents` SDK lets you spin up autonomous agents — web-surfing, code-ru
 Each example also demonstrates a different *recipe* on top of the SDK:
 
 - [`qa_mcp`](examples/qa_mcp/) / [`qa_cli`](examples/qa_cli/): **single-task pattern** — wrap one agent task as one tool/command.
-- [`mcpify_anything`](examples/mcpify_anything/): **typed-toolkit pattern** — declare a family of typed tools with one decorator and a shared runner.
+- [`mcpify_anything`](examples/mcpify_anything/): **bring-your-own-schema pattern** — one MCP tool that takes a URL plus a caller-supplied JSON Schema and returns matching JSON.
 - [`counterfeit_detection`](examples/counterfeit_detection/): **single-agent + custom-tools pattern** — upgrade one agent with local Python tools (Playwright screenshots, Holo visual compare) and a step/time budget, no orchestration.
 
 ## Quickstart
@@ -35,7 +35,7 @@ In Claude Code:
 | --- | --- | --- |
 | [`qa_mcp`](examples/qa_mcp/) | Autonomous browser agent QAs a remote URL and returns structured `{verdict, summary, findings}` | MCP server (`review_web_ui`, `visual_check`) |
 | [`qa_cli`](examples/qa_cli/) | Same QA agent exposed as a shell command, surfaced to Claude Code via the `qa-via-cli` skill | CLI (`qa-cli review / visual`) |
-| [`mcpify_anything`](examples/mcpify_anything/) | Turn any website into typed MCP tools: declare input/output as Pydantic models plus a one-line prompt, and a cloud browser agent fills the contract with schema-validated JSON | MCP server (`get_product_prices`, `add_cart_items`, `extract`) |
+| [`mcpify_anything`](examples/mcpify_anything/) | One MCP tool that takes a URL, a task, and a caller-supplied JSON Schema; a cloud browser agent drives the page and returns JSON matching the schema | MCP server (`extract`) |
 | [`counterfeit_detection`](examples/counterfeit_detection/) | Three-stage cookbook: a bare `run_session` finds one counterfeit of a genuine product; local custom tools add screenshot-grounded visual verdicts; a `max_steps`/`max_time_s` budget turns it into an exhaustive sweep | CLI (`counterfeit-cli simple / tooled / sweep`) |
 
 ## How it works
@@ -71,7 +71,7 @@ hai-agent-demos/
 │   ├── agent_skills/              # skill docs passed to the ui-reviewer agent
 │   ├── qa_mcp/                    # MCP server (review_web_ui + visual_check)
 │   ├── qa_cli/                    # CLI wrapper (qa-cli review / visual)
-│   ├── mcpify_anything/           # typed-toolkit MCP server (3 example tools)
+│   ├── mcpify_anything/           # one MCP tool: URL + JSON Schema -> JSON
 │   └── counterfeit_detection/     # cookbook CLI (counterfeit-cli simple / tooled / sweep)
 ├── AGENTS.md                      # coding rules for contributors
 └── pyproject.toml

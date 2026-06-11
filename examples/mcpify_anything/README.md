@@ -1,67 +1,22 @@
-# `mcpify_anything` — typed-toolkit MCP server
+# `mcpify_anything` — one tool, any website
 
-A FastMCP server demonstrating the **typed-toolkit pattern**: one decorator declares many MCP tools, each with its own typed input + answer schema, all backed by a single shared runner driving a cloud browser CUA.
+A FastMCP server with a **single MCP tool** that turns any URL into typed JSON. The caller supplies a JSON Schema at call time; a cloud browser agent drives the page and returns an answer the platform validates against that schema.
 
-Where [`qa_mcp`](../qa_mcp/) shows wrapping *one* task as *one* tool, this shows building a **family** of typed tools off the same underlying agent — useful when you want a curated set of structured-output operations to expose to Claude Code.
+Where [`qa_mcp`](../qa_mcp/) shows wrapping *one fixed task* as one tool, this shows the inverse: one tool, **whatever shape the caller asks for**. Drop in a schema, get back JSON.
 
-## Tools
-
-| Tool | Shape | What it shows |
-| --- | --- | --- |
-| `extract` | dynamic-schema escape hatch | Caller supplies a JSON Schema at call time — the framework wires it into the platform's `answer_format` per call. Use when no curated tool fits. |
-| `get_product_prices` | typed read + capture metadata | The agent reports only what it can read off the page; the handler stamps a client-side `captured_at` timestamp. |
-| `add_cart_items` | action + read-back proof + client-derived totals | The agent acts (adds to cart) and reads the cart back. The handler derives `cart_total`, `currency`, and a `status` (`added` / `partial` / `noop`) from the read-back lines. |
-
-## Adding a tool
-
-Drop a new module under [`tools/`](tools/) with a `@browser_tool`-decorated async function and append its spec to [`tools/__init__.py:SPECS`](tools/__init__.py).
+## The tool
 
 ```python
-from pydantic import BaseModel, HttpUrl
-from examples.mcpify_anything.tool import browser_tool
-
-
-class JobListingsInput(BaseModel):
-    site: HttpUrl
-    role: str
-
-
-class JobListing(BaseModel):
-    title: str
-    company: str
-    location: str
-    url: HttpUrl
-
-
-@browser_tool(
-    instructions="You operate job-search UIs.",
-    site=lambda a: a.site,
-    prompt=lambda a: f"On {a.site}, find listings for {a.role!r}.",
-)
-async def get_job_listings(args: JobListingsInput, answer: list[JobListing]) -> list[JobListing]:
-    return answer
+extract(url: str, task: str, answer_schema: dict) -> dict
 ```
 
-Three properties of the framework do all the work:
+| Arg | What it is |
+| --- | --- |
+| `url` | Page the browser agent starts on. |
+| `task` | Natural-language instruction (no need to restate the JSON shape — the platform enforces `answer_schema`). |
+| `answer_schema` | JSON Schema describing the desired return shape. Passed to the agent as `answer_format`. |
 
-- **The signature is the contract.** `args: <InputModel>` becomes the MCP tool's input schema; `answer: <T>` becomes the platform's `answer_format`; the return type is what FastMCP exposes to the caller.
-- **`schema_hint(answer_model)` is auto-appended** to the user message so per-tool prompts never restate the JSON shape.
-- **`_OPERATOR_PREAMBLE`** is auto-prepended to every tool's `instructions` so per-tool strings stay pure persona / behavioural heuristics.
-
-## How it works
-
-```mermaid
-flowchart LR
-  user[You in Claude Code] -->|tool call| mcp[FastMCP server<br/>server.py]
-  mcp -->|build RunSpec| reg[register_specs<br/>tool.py]
-  reg -->|run| runner[CuaRunner<br/>runner.py]
-  runner -->|create_session + answer_format| api[H Agent API]
-  api -->|controls| browser[Cloud headless browser]
-  browser -->|screenshots + DOM| api
-  api -->|structured answer| runner
-  runner -->|validated Pydantic| reg
-  reg -->|tool output| user
-```
+The whole tool is ~30 lines in [`server.py`](server.py) — read it top-to-bottom and you've seen the entire pattern: build an `Agent`, call `run_session`, return `result.answer`.
 
 ## Run
 
@@ -74,35 +29,30 @@ hai-agent-demos-mcpify-anything   # MCP server over stdio (Claude Code auto-regi
 
 In Claude Code:
 
-> *"Use `get_product_prices` on https://www.scrapingcourse.com/ecommerce/ — query 'jacket', max 5 results."*
->
-> *"Use `add_cart_items` to add 2× https://www.scrapingcourse.com/ecommerce/product/abominable-hoodie/ — read back the cart."*
->
-> *"Use `extract` on https://news.ycombinator.com to read the top 5 stories with answer_schema {…}."*
+> *"Use `extract` on https://news.ycombinator.com — task: `read the top 3 stories`, answer_schema: `{"type":"object","properties":{"stories":{"type":"array","items":{"type":"object","properties":{"title":{"type":"string"},"url":{"type":"string"}}}}}}`."*
 
 ## Layout
 
 ```
 mcpify_anything/
-├── server.py                   # FastMCP wiring: build_server (DI) + compose_server + main()
-├── config.py                   # env vars -> validated Settings
-├── tool.py                     # @browser_tool decorator + register_specs registrar
-├── runner.py                   # CuaRunner around async_wait_for_session (incl. CuaError)
-├── schema_hint.py              # JSON-schema-to-prompt rendering
-├── types.py                    # shared Price = Annotated[Decimal, WithJsonSchema(...)]
-├── tools/
-│   ├── __init__.py             # explicit SPECS tuple
-│   ├── extract.py              # dynamic-schema escape hatch
-│   ├── get_product_prices.py   # typed read with capture metadata
-│   └── add_cart_items.py       # action + read-back proof + client totals
+├── server.py    # FastMCP wiring + the extract tool
+└── README.md
 ```
 
-Tests live at the repo root in [`tests/mcpify_anything/`](../../tests/mcpify_anything/): a behavioural suite (fake Runner via DI) plus live integration tests under `integration/` (gated behind the `integration` marker).
+## How it works
+
+```mermaid
+flowchart LR
+  user[You in Claude Code] -->|extract(url, task, schema)| mcp[FastMCP server<br/>server.py]
+  mcp -->|run_session<br/>answer_format=schema| api[H Agent API]
+  api -->|controls| browser[Cloud headless browser]
+  browser -->|screenshots + DOM| api
+  api -->|JSON matching schema| mcp
+  mcp -->|dict| user
+```
 
 ## Configuration
 
-| Env var | Required | Default | Source |
-| --- | --- | --- | --- |
-| `H_API_KEY` | yes | — | https://platform.hcompany.ai/settings/api-keys |
-| `H_BASE_URL` | no | `HaiAgentsEnvironment.EU` | override only when targeting a different deployment |
-| `H_AGENT_ARTIFACT` | no | `mcpify-anything-agent` | the published agent build matched to these prompts |
+| Env var | Required | Source |
+| --- | --- | --- |
+| `H_API_KEY` | yes | https://platform.hcompany.ai/settings/api-keys |
