@@ -108,7 +108,7 @@ def write_env(env_path: str, key_value: str) -> None:
     if os.path.exists(env_path):
         with open(env_path) as f:
             lines = f.read().splitlines()
-    lines = [l for l in lines if not l.startswith("H_API_KEY=")]
+    lines = [line for line in lines if not line.startswith("H_API_KEY=")]
     lines.append(f"H_API_KEY={key_value}")
     with open(env_path, "w") as f:
         f.write("\n".join(lines) + "\n")
@@ -128,7 +128,7 @@ def main() -> None:
 
     if not args.force and os.path.exists(args.env_file):
         with open(args.env_file) as f:
-            if any(l.startswith("H_API_KEY=") and l.strip() != "H_API_KEY=" for l in f):
+            if any(line.startswith("H_API_KEY=") and line.strip() != "H_API_KEY=" for line in f):
                 print(f"H_API_KEY already set in {args.env_file} — nothing to do (use --force to replace).")
                 return
 

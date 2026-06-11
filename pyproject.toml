@@ -15,10 +15,10 @@ dependencies = [
 ]
 
 [project.scripts]
-hai-agent-demos-qa = "examples.qa_mcp.server:main"
+hai-agent-demos-qa = "examples.qa.mcp.server:main"
 hai-agent-demos-mcpify-anything = "examples.mcpify_anything.server:main"
-debug-qa = "examples.qa_mcp.debug:main"
-qa-cli = "examples.qa_cli.main:main"
+debug-qa = "examples.qa.mcp.debug:main"
+qa-cli = "examples.qa.cli.main:main"
 counterfeit-cli = "examples.counterfeit_detection.main:main"
 
 [dependency-groups]
@@ -64,21 +64,3 @@ ignore_missing_imports = true
 # code here rather than dodge the public API.
 module = "examples.counterfeit_detection.local_tools"
 disable_error_code = ["untyped-decorator"]
-
-[[tool.mypy.overrides]]
-# Tool decorator lambdas (``site=lambda a: a.field``) legitimately reference fields on the
-# bound ``InputT`` Pydantic model, but Python lambdas can't carry parameter annotations so
-# mypy can't narrow ``a`` through the ``@browser_tool`` factory's TypeVar inference. The
-# inline-DSL style is the value proposition of the framework — the shape of a tool definition
-# matters more here than zero suppressions. Scoped to ``tools/*.py`` only.
-module = "examples.mcpify_anything.tools.*"
-disable_error_code = ["attr-defined"]
-
-[[tool.mypy.overrides]]
-# Tests exercise the same framework boundary that ``tools/*.py`` documents — lambdas whose
-# ``InputT`` only binds at runtime (``attr-defined``/``arg-type``), calls to ``model_validate``
-# on the runtime-synthesised list-wrapper that's statically ``type[list[T]]`` (``attr-defined``,
-# ``no-any-return``), and identity checks between specs and those wrappers (``comparison-
-# overlap``). All four are the same runtime-vs-static gap; not test code smells.
-module = "tests.mcpify_anything.*"
-disable_error_code = ["arg-type", "attr-defined", "comparison-overlap", "no-any-return"]

@@ -12,18 +12,17 @@ many counterfeits as it allows. See this folder's README.md for the full walkthr
 """
 
 import json
-import logging
 import sys
 import time
 from typing import Literal
 
 import tyro
 from dotenv import load_dotenv
-from hai_agents import Agent, Client, run_session
+from hai_agents import Agent, Client, SessionRunResult, run_session
 from openai import OpenAI
 from pydantic import BaseModel
 
-from examples._shared import browser_env, require_api_key
+from examples._shared import browser_env, print_structured_answer, require_api_key, setup_cli_logging
 from examples.counterfeit_detection.local_tools import (
     MODELS_BASE_URL,
     FindingsLog,
@@ -77,7 +76,7 @@ def simple(genuine_url: str) -> None:
         max_steps=40,
         max_time_s=600.0,
     )
-    _print_finding(result, started)
+    print_structured_answer(result, CounterfeitFinding, started)
 
 
 def tooled(genuine_url: str) -> None:
@@ -103,7 +102,7 @@ def tooled(genuine_url: str) -> None:
         max_time_s=900.0,
     )
     print(f"reference screenshots saved: {len(store.items)}", file=sys.stderr)
-    _print_finding(result, started)
+    print_structured_answer(result, CounterfeitFinding, started)
 
 
 def sweep(genuine_url: str, max_steps: int = 80, max_time_s: float = 1200.0) -> None:
@@ -131,10 +130,7 @@ def sweep(genuine_url: str, max_steps: int = 80, max_time_s: float = 1200.0) -> 
         max_steps=max_steps,
         max_time_s=max_time_s,
     )
-    elapsed = time.monotonic() - started
-    print(f"completed in {elapsed:.1f}s (status={result.status}, findings={len(log.items)})", file=sys.stderr)
-    summary = SweepSummary.model_validate(result.answer).model_dump() if isinstance(result.answer, dict) else None
-    print(json.dumps({"findings": log.items, "agent_summary": summary}, indent=2))
+    _print_sweep_result(result, log, started)
 
 
 def _client() -> Client:
@@ -145,22 +141,20 @@ def _models_client() -> OpenAI:
     return OpenAI(base_url=MODELS_BASE_URL, api_key=require_api_key())
 
 
-def _print_finding(result: object, started: float) -> None:
-    """Print session status to stderr and the validated ``CounterfeitFinding`` JSON to stdout."""
-    status = getattr(result, "status", "unknown")
-    answer = getattr(result, "answer", None)
-    print(f"completed in {time.monotonic() - started:.1f}s (status={status})", file=sys.stderr)
-    if not isinstance(answer, dict):
-        sys.exit(f"error: agent did not return a structured answer (status={status})")
-    print(json.dumps(CounterfeitFinding.model_validate(answer).model_dump(), indent=2))
+def _print_sweep_result(result: SessionRunResult, log: FindingsLog, started: float) -> None:
+    """Print sweep telemetry to stderr and the merged findings + agent summary to stdout."""
+    print(
+        f"completed in {time.monotonic() - started:.1f}s (status={result.status}, findings={len(log.items)})",
+        file=sys.stderr,
+    )
+    summary = SweepSummary.model_validate(result.answer).model_dump() if isinstance(result.answer, dict) else None
+    print(json.dumps({"findings": log.items, "agent_summary": summary}, indent=2))
 
 
 def main() -> None:
     """Entry point for the ``counterfeit-cli`` console script."""
     load_dotenv()
-    logging.basicConfig(
-        level=logging.WARNING, stream=sys.stderr, format="%(asctime)s %(name)s %(levelname)s %(message)s"
-    )
+    setup_cli_logging()
     try:
         tyro.extras.subcommand_cli_from_dict({"simple": simple, "tooled": tooled, "sweep": sweep})
     except RuntimeError as exc:
