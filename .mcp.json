@@ -4,9 +4,9 @@
       "command": "uv",
       "args": ["run", "--env-file", ".env", "hai-agent-demos-qa"]
     },
-    "hai-agent-demos-mcpify-anything": {
+    "hai-agent-demos-extract-anything": {
       "command": "uv",
-      "args": ["run", "--env-file", ".env", "hai-agent-demos-mcpify-anything"]
+      "args": ["run", "--env-file", ".env", "hai-agent-demos-extract-anything"]
     }
   }
 }
