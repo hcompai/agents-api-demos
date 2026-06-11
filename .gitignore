@@ -220,3 +220,6 @@ __marimo__/
 trace.json
 trajectory_*.json
 traces/
+
+# counterfeit_detection example: locally rendered screenshots
+examples/counterfeit_detection/snapshots/
