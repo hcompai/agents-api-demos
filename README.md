@@ -65,7 +65,7 @@ Shared components (agent instructions, `ReviewResult` model, helpers) live in [`
 This repo doubles as a Claude Code plugin marketplace ([`.claude-plugin/marketplace.json`](.claude-plugin/marketplace.json)), same layout as [anthropics/skills](https://github.com/anthropics/skills). In any Claude Code session:
 
 ```
-/plugin marketplace add hcompai/agent-sdk-demo      # or a local clone path
+/plugin marketplace add hcompai/hai-agent-demos      # or a local clone path
 /plugin install hcompany-platform@hcompany-skills
 ```
 
