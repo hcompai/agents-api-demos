@@ -91,10 +91,17 @@ def wait_for_code(port: int) -> str:
     # handle_request returns after one request (or timeout); a second request can
     # arrive for /favicon.ico, so loop until we have an outcome.
     deadline = threading.Event()
-    threading.Timer(CALLBACK_TIMEOUT_S, deadline.set).start()
-    while not result and not deadline.is_set():
-        server.handle_request()
-    server.server_close()
+    # daemon=True so the interpreter can exit immediately on success; .cancel()
+    # in finally keeps the timer from staying scheduled longer than needed.
+    timer = threading.Timer(CALLBACK_TIMEOUT_S, deadline.set)
+    timer.daemon = True
+    timer.start()
+    try:
+        while not result and not deadline.is_set():
+            server.handle_request()
+    finally:
+        timer.cancel()
+        server.server_close()
     if "error" in result:
         sys.exit(f"error: OAuth callback returned error={result['error']}")
     if "code" not in result:
