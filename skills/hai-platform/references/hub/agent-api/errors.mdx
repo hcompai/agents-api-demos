@@ -1,0 +1,146 @@
+---
+noindex: true
+title: "Errors"
+description: "How the Computer-Use Agent API reports errors, and what to do about them."
+---
+
+The API uses standard HTTP status codes and a consistent error envelope. When something goes wrong, the response body always has the same shape, so your error-handling code works for every endpoint.
+
+## Error object
+
+Most error responses contain a JSON body with a `detail` field:
+
+```json
+{
+  "detail": "Session not found."
+}
+```
+
+For validation errors (422), `detail` is an array describing each field that failed:
+
+```json
+{
+  "detail": [
+    {
+      "type": "missing",
+      "loc": ["body", "agent"],
+      "msg": "Field required",
+      "input": {}
+    }
+  ]
+}
+```
+
+<Note>
+Requests rejected at the API gateway (for example a missing or invalid key, `401`) return a `{ "message": ... }` body instead of `{ "detail": ... }`. Handle both keys when reading error text.
+</Note>
+
+---
+
+## HTTP status codes
+
+### Success codes
+
+| Code | Meaning | Used by |
+|---|---|---|
+| `200 OK` | Request succeeded. | GET endpoints, updates. |
+| `201 Created` | Resource created. | POST /sessions, POST /agents. |
+| `202 Accepted` | Action accepted, processing asynchronously. | POST /messages, POST /pause, POST /resume. |
+| `204 No Content` | Action succeeded, no response body. | DELETE /sessions, DELETE /agents. |
+
+### Client error codes
+
+| Code | Meaning | Common cause | What to do |
+|---|---|---|---|
+| `400 Bad Request` | Malformed request or invalid parameters. | Sending an event to a session that can't accept it. | Check the request body against the endpoint docs. |
+| `401 Unauthorized` | Missing or invalid API key. | No `Authorization` header, or expired key. | Verify your API key is correct and properly formatted. |
+| `403 Forbidden` | Valid credentials, insufficient permissions. | Trying to modify a reserved `h/` agent. | Check that your role allows this operation. |
+| `404 Not Found` | Resource doesn't exist or isn't visible to you. | Wrong session ID, or querying another team's resource. | Verify the ID and that you have access. |
+| `409 Conflict` | Resource already exists, or an identical idempotent request is still in flight. | Creating an agent with a duplicate name, or retrying a request with the same `Idempotency-Key` before the first one finished. | Use a unique identifier, fetch the existing resource, or wait for the in-flight request to complete. |
+| `422 Unprocessable Entity` | Request body fails validation. | Missing required fields, wrong types. | Check the `detail` array for specific field errors. |
+| `429 Too Many Requests` | Concurrency limit exceeded. | Too many sessions running simultaneously. | Wait for running sessions to complete, or request a quota increase. See [Rate limits](/agent-api/rate-limits). |
+
+### Server error codes
+
+| Code | Meaning | What to do |
+|---|---|---|
+| `502 Bad Gateway` | Upstream service error. | Retry after a brief pause. |
+| `503 Service Unavailable` | Temporary capacity issue. | Check the `Retry-After` header and retry. |
+| `504 Gateway Timeout` | Request took too long to process. | Retry the request. |
+
+---
+
+## Handling errors with the SDK
+
+The SDKs raise a typed error on any non-2xx response (carrying the `status_code` / `statusCode` and parsed `body`) and return the parsed model on success, so you never narrow a `data | error` union by hand:
+
+<CodeGroup>
+```python Python
+from hai_agents.core import ApiError
+
+try:
+    session = client.sessions.create_session(
+        agent="h/web-surfer-flash",
+        messages=[{"type": "user_message", "message": "Top 3 stories on Hacker News?"}],
+    )
+except ApiError as err:
+    print(err.status_code, err.body)
+```
+
+```typescript TypeScript
+import { HaiAgentsError } from "hai-agents";
+
+try {
+  const session = await client.sessions.createSession({
+    body: {
+      agent: "h/web-surfer-flash",
+      messages: [{ type: "user_message", message: "Top 3 stories on Hacker News?" }],
+    },
+  });
+} catch (err) {
+  if (err instanceof HaiAgentsError) {
+    console.error(err.statusCode, err.body);
+  }
+}
+```
+</CodeGroup>
+
+The SDKs also retry transient errors (`429`, `503`, `504`) with backoff automatically, twice by default. Tune it with `max_retries` (Python) / `maxRetries` (TypeScript) on the client, or per call via request options.
+
+## Retry strategy
+
+Without the SDK, retry `429`, `503`, and `504` errors with exponential backoff:
+
+```python
+import time
+import requests
+
+def create_session_with_retry(payload, max_retries=3):
+    for attempt in range(max_retries):
+        response = requests.post(
+            "https://agp.eu.hcompany.ai/api/v2/sessions",
+            headers={"Authorization": f"Bearer {API_KEY}"},
+            json=payload,
+        )
+
+        if response.status_code == 201:
+            return response.json()
+
+        if response.status_code in (429, 503, 504):
+            wait = 2 ** attempt  # 1s, 2s, 4s
+            retry_after = response.headers.get("Retry-After")
+            if retry_after:
+                wait = int(retry_after)
+            print(f"Retrying in {wait}s...")
+            time.sleep(wait)
+            continue
+
+        # Non-retryable error
+        response.raise_for_status()
+
+    raise Exception("Max retries exceeded")
+```
+
+<Warning>
+**Do not retry `400`, `401`, `403`, `404`, or `409` errors.** These indicate a problem with your request that won't be fixed by retrying. Fix the issue in your code first.
+</Warning>

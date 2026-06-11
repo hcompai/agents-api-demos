@@ -1,0 +1,163 @@
+---
+noindex: true
+title: "Send messages"
+sidebarTitle: "Messages"
+description: "Chat with a running agent."
+api: "POST /api/v2/sessions/{id}/messages"
+---
+
+Sends one or more messages to a live agent session. Use this to provide additional instructions, answer agent questions, or redirect the task.
+
+**Returns** `202 Accepted`. The message is delivered asynchronously: the agent processes it on its next reasoning step.
+
+---
+
+## Path parameters
+
+<ParamField path="id" type="string" required>
+  The session ID.
+</ParamField>
+
+---
+
+## Request body
+
+The body is a discriminated union: send either a single message or a batch.
+
+### Single message
+
+<ParamField body="type" type="string" required>
+  Must be `"user_message"`.
+</ParamField>
+
+<ParamField body="message" type="string" required>
+  The message content.
+</ParamField>
+
+<ParamField body="images" type="array">
+  Optional list of base64 data URIs to attach to the message (e.g. `data:image/png;base64,...`).
+</ParamField>
+
+<ParamField body="caller_id" type="string">
+  Identifies the message sender. Defaults to `user`; leave it unset for normal user input.
+</ParamField>
+
+### Batch
+
+<ParamField body="type" type="string" required>
+  Must be `"batch"`.
+</ParamField>
+
+<ParamField body="messages" type="array" required>
+  Array of message objects, each with `type: "user_message"` and `message`. Processed in order.
+</ParamField>
+
+---
+
+## Examples
+
+### Send a single message
+
+<CodeGroup>
+```bash CLI
+hai sessions send "$SESSION_ID" 'Focus on hotels near Kiyomizu-dera temple, under $200/night'
+```
+
+```bash cURL
+curl -X POST https://agp.eu.hcompany.ai/api/v2/sessions/$SESSION_ID/messages \
+  -H "Authorization: Bearer $H_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "type": "user_message",
+    "message": "Focus on hotels near Kiyomizu-dera temple, under $200/night"
+  }'
+```
+
+```python Python
+from hai_agents import Client
+from hai_agents.sessions import SendSessionMessagesRequestBody_UserMessage
+
+client = Client()  # reads H_API_KEY from the environment
+
+client.sessions.send_session_messages(
+    session_id,
+    request=SendSessionMessagesRequestBody_UserMessage(
+        message="Focus on hotels near Kiyomizu-dera temple, under $200/night",
+    ),
+)
+```
+
+```typescript TypeScript
+import { HaiAgentsClient } from "hai-agents";
+
+const client = new HaiAgentsClient(); // reads H_API_KEY from the environment
+
+await client.sessions.sendSessionMessages({
+  id: sessionId,
+  body: {
+    type: "user_message",
+    message: "Focus on hotels near Kiyomizu-dera temple, under $200/night",
+  },
+});
+```
+</CodeGroup>
+
+### Send a batch of messages
+
+<CodeGroup>
+```bash cURL
+curl -X POST https://agp.eu.hcompany.ai/api/v2/sessions/$SESSION_ID/messages \
+  -H "Authorization: Bearer $H_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "type": "batch",
+    "messages": [
+      {"type": "user_message", "message": "Also check availability for June 15-20"},
+      {"type": "user_message", "message": "I prefer traditional ryokans over modern hotels"}
+    ]
+  }'
+```
+
+```python Python
+from hai_agents import Client, UserMessageEvent
+from hai_agents.sessions import SendSessionMessagesRequestBody_Batch
+
+client = Client()  # reads H_API_KEY from the environment
+
+client.sessions.send_session_messages(
+    session_id,
+    request=SendSessionMessagesRequestBody_Batch(
+        messages=[
+            UserMessageEvent(message="Also check availability for June 15-20"),
+            UserMessageEvent(message="I prefer traditional ryokans over modern hotels"),
+        ],
+    ),
+)
+```
+
+```typescript TypeScript
+import { HaiAgentsClient } from "hai-agents";
+
+const client = new HaiAgentsClient(); // reads H_API_KEY from the environment
+
+await client.sessions.sendSessionMessages({
+  id: sessionId,
+  body: {
+    type: "batch",
+    messages: [
+      { type: "user_message", message: "Also check availability for June 15-20" },
+      { type: "user_message", message: "I prefer traditional ryokans over modern hotels" },
+    ],
+  },
+});
+```
+</CodeGroup>
+
+---
+
+## Errors
+
+| Status | Cause |
+|---|---|
+| `404` | Session not found, or you don't have access. |
+| `400` | Invalid message format. |

@@ -1,0 +1,66 @@
+---
+noindex: true
+title: "Retrieve a skill"
+sidebarTitle: "Retrieve"
+description: "Get the full details of a skill."
+api: "GET /api/v2/skills/{name}"
+---
+
+Retrieves the complete [Skill](/agent-api/skills/overview) object.
+
+**Returns** the Skill object if the name is valid and you have access.
+
+---
+
+## Path parameters
+
+<ParamField path="name" type="string" required>
+  The skill's `name` (e.g. `extract-table-data` or `myorg/web-helper`). Slash-containing names are supported.
+</ParamField>
+
+---
+
+## Examples
+
+<CodeGroup>
+```bash cURL
+curl "https://agp.eu.hcompany.ai/api/v2/skills/extract-table-data" \
+  -H "Authorization: Bearer $H_API_KEY"
+```
+
+```python Python
+from hai_agents import Client
+
+client = Client()  # reads H_API_KEY from the environment
+
+skill = client.skills.get_skill(name="extract-table-data")
+print(skill.body)
+```
+
+```typescript TypeScript
+import { HaiAgentsClient } from "hai-agents";
+
+const client = new HaiAgentsClient(); // reads H_API_KEY from the environment
+
+const skill = await client.skills.getSkill({ name: "extract-table-data" });
+console.log(skill.body);
+```
+</CodeGroup>
+
+```json Response
+{
+  "name": "extract-table-data",
+  "description": "Extract structured data from HTML tables into JSON.",
+  "body": "When you encounter an HTML table, extract all rows and columns into a JSON array of objects, using the headers as keys.",
+  "source": null,
+  "url_pattern": null
+}
+```
+
+---
+
+## Errors
+
+| Status | Cause |
+|---|---|
+| `404` | Skill not found or you don't have access. |

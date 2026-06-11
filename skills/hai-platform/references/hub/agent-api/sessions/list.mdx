@@ -1,0 +1,164 @@
+---
+noindex: true
+title: "List sessions"
+sidebarTitle: "List"
+description: "Browse your sessions with filtering, sorting, and pagination."
+api: "GET /api/v2/sessions"
+---
+
+Returns a paginated list of sessions visible to the authenticated user. Results are sorted by creation date (newest first) by default.
+
+**Returns** a [paginated list](/agent-api/pagination) of [Session](/agent-api/sessions/overview) summary objects.
+
+---
+
+## Query parameters
+
+<ParamField query="page" type="integer" default="1">
+  Page number (1-based).
+</ParamField>
+
+<ParamField query="size" type="integer" default="10">
+  Items per page. Maximum: `1000`.
+</ParamField>
+
+<ParamField query="sort" type="string" default="-created_at">
+  Sort order. Options: `created_at`, `-created_at`.
+</ParamField>
+
+<ParamField query="status" type="string[]">
+  Filter by session status. Multi-value. Values: `pending`, `running`, `paused`, `idle`, `completed`, `failed`, `timed_out`, `interrupted`.
+</ParamField>
+
+<ParamField query="agent" type="string[]">
+  Filter by agent identifier. Multi-value. Example: `web-price-finder`.
+</ParamField>
+
+<ParamField query="group_id" type="string">
+  Filter by group ID. Returns all sessions tagged with this group.
+</ParamField>
+
+<ParamField query="parent_session_id" type="string">
+  Filter by parent session ID. Returns only child sessions of the given parent.
+</ParamField>
+
+<ParamField query="owner" type="string" default="me-in-organization">
+  Access scope. Default: `me-in-organization`.
+</ParamField>
+
+---
+
+## Examples
+
+### List your recent sessions
+
+<CodeGroup>
+```bash CLI
+hai sessions list --size 5
+```
+
+```bash cURL
+curl "https://agp.eu.hcompany.ai/api/v2/sessions?size=5" \
+  -H "Authorization: Bearer $H_API_KEY"
+```
+
+```python Python
+from hai_agents import Client
+
+client = Client()  # reads H_API_KEY from the environment
+
+page = client.sessions.list_sessions(size=5)
+for summary in page.items:
+    print(summary.id, summary.status)
+```
+
+```typescript TypeScript
+import { HaiAgentsClient } from "hai-agents";
+
+const client = new HaiAgentsClient(); // reads H_API_KEY from the environment
+
+const page = await client.sessions.listSessions({ size: 5 });
+for (const summary of page.items) {
+  console.log(summary.id, summary.status);
+}
+```
+</CodeGroup>
+
+```json Response
+{
+  "items": [
+    {
+      "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+      "agent": "h/web-surfer-flash",
+      "status": "completed",
+      "first_message": {"type": "user_message", "message": "Top 3 stories on Hacker News?", "images": [], "caller_id": "user"},
+      "created_at": "2026-05-07T14:30:00Z",
+      "started_at": "2026-05-07T14:30:02Z",
+      "finished_at": "2026-05-07T14:31:15Z"
+    },
+    {
+      "id": "b2c3d4e5-f6a7-8901-bcde-f12345678901",
+      "agent": "web-price-finder",
+      "status": "running",
+      "first_message": {"type": "user_message", "message": "Find direct flights CDG to NRT", "images": [], "caller_id": "user"},
+      "created_at": "2026-05-07T14:25:00Z",
+      "started_at": "2026-05-07T14:25:01Z",
+      "finished_at": null
+    }
+  ],
+  "page": 1,
+  "total": 47
+}
+```
+
+### Filter by status and agent
+
+```bash
+curl "https://agp.eu.hcompany.ai/api/v2/sessions?status=running&agent=web-price-finder" \
+  -H "Authorization: Bearer $H_API_KEY"
+```
+
+### List all sessions in a group
+
+```bash
+curl "https://agp.eu.hcompany.ai/api/v2/sessions?group_id=trip-planning-001" \
+  -H "Authorization: Bearer $H_API_KEY"
+```
+
+### Find the subagents a session spawned
+
+Multi-agent runs delegate work to child sessions. The parent's [status](/agent-api/sessions/status) lists their IDs in `subagent_session_ids`; pass the parent's ID to `parent_session_id` to pull the whole roster in one call, each child labeled with the `agent` that ran it. Walk deeper trees by recursing on a child's own ID.
+
+```bash
+curl "https://agp.eu.hcompany.ai/api/v2/sessions?parent_session_id=$PARENT_SESSION_ID" \
+  -H "Authorization: Bearer $H_API_KEY"
+```
+
+```json Response
+{
+  "items": [
+    {
+      "id": "c3d4e5f6-a7b8-9012-cdef-234567890abc",
+      "agent": "fast-searcher",
+      "status": "completed",
+      "first_message": {"type": "user_message", "message": "Search EV market-share figures for 2025", "images": [], "caller_id": "user"},
+      "created_at": "2026-05-07T14:30:05Z",
+      "started_at": "2026-05-07T14:30:06Z",
+      "finished_at": "2026-05-07T14:30:41Z"
+    },
+    {
+      "id": "d4e5f6a7-b8c9-0123-def4-34567890abcd",
+      "agent": "visual-verifier",
+      "status": "running",
+      "first_message": {"type": "user_message", "message": "Verify the 2025 figure on the source page", "images": [], "caller_id": "user"},
+      "created_at": "2026-05-07T14:30:42Z",
+      "started_at": "2026-05-07T14:30:43Z",
+      "finished_at": null
+    }
+  ],
+  "page": 1,
+  "total": 2
+}
+```
+
+Each child is a session like any other: open it by `id` to poll its [status](/agent-api/sessions/status), read its answer from [`/changes`](/agent-api/sessions/changes), or replay its [events](/agent-api/sessions/events).

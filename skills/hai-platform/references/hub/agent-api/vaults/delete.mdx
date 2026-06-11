@@ -1,0 +1,54 @@
+---
+noindex: true
+title: "Delete a vault"
+sidebarTitle: "Delete"
+description: "Remove a vault config."
+api: "DELETE /api/v2/vaults/{vault_id}"
+---
+
+Deletes a vault config. Agents in your organization can no longer read credentials through it in future runs.
+
+**Returns** `204 No Content` on success.
+
+---
+
+## Path parameters
+
+<ParamField path="vault_id" type="string" required>
+  The vault config's `id` (UUID).
+</ParamField>
+
+---
+
+## Examples
+
+<CodeGroup>
+```bash cURL
+curl -X DELETE https://agp.eu.hcompany.ai/api/v2/vaults/f47ac10b-58cc-4372-a567-0e02b2c3d479 \
+  -H "Authorization: Bearer $H_API_KEY"
+```
+
+```python Python
+from hai_agents import Client
+
+client = Client()  # reads H_API_KEY from the environment
+
+client.vaults.delete_vault(vault_id="f47ac10b-58cc-4372-a567-0e02b2c3d479")
+```
+
+```typescript TypeScript
+import { HaiAgentsClient } from "hai-agents";
+
+const client = new HaiAgentsClient(); // reads H_API_KEY from the environment
+
+await client.vaults.deleteVault({ vaultId: "f47ac10b-58cc-4372-a567-0e02b2c3d479" });
+```
+</CodeGroup>
+
+---
+
+## Errors
+
+| Status | Cause |
+|---|---|
+| `404` | Vault not found or you don't have access. |

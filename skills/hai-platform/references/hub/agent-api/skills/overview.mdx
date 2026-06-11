@@ -1,0 +1,132 @@
+---
+noindex: true
+title: "Skills"
+sidebarTitle: "Skill"
+description: "A skill is a reusable instruction fragment an agent can draw on."
+---
+
+A **skill** is a named Markdown fragment (an instruction, workflow, or tool definition) that an agent can load during a session. Use one of H's [built-in skills](/agent-api/skills/catalog) or create your own, then attach it to any agent by `name`.
+
+An agent loads a skill's full `body` only when its `description` looks relevant to the task at hand, so the `description` doubles as the trigger the agent [routes on](#how-an-agent-uses-a-skill). Write it as a precise "use this when…" cue.
+
+## What's in a skill
+
+| Field | Required | Description |
+|---|---|---|
+| `name` | Yes | Identifies the skill in your catalog and is how agents reference it. |
+| `description` | Yes | Tells the agent when to use the skill: the trigger it routes on to decide whether to load the `body`. |
+| `body` | Yes | The Markdown instructions the agent loads when it uses the skill. |
+| `source` | No | Records where the content came from. |
+| `url_pattern` | No | Hints at URLs where the skill applies. Informational, not matched against the live page. |
+
+For exact field constraints, see [Create a skill](/agent-api/skills/create).
+
+## Create custom skills
+
+Create a skill once, then attach it to any agent:
+
+<CodeGroup>
+```bash cURL
+curl -X POST https://agp.eu.hcompany.ai/api/v2/skills \
+  -H "Authorization: Bearer $H_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "extract-table-data",
+    "description": "Extract structured data from HTML tables into JSON.",
+    "body": "When you encounter an HTML table, extract all rows and columns into a JSON array of objects, using the headers as keys."
+  }'
+```
+
+```python Python
+client.skills.create_skill(
+    name="extract-table-data",
+    description="Extract structured data from HTML tables into JSON.",
+    body=(
+        "When you encounter an HTML table, extract all rows and columns into a JSON "
+        "array of objects, using the headers as keys."
+    ),
+)
+```
+
+```typescript TypeScript
+await client.skills.createSkill({
+  name: "extract-table-data",
+  description: "Extract structured data from HTML tables into JSON.",
+  body:
+    "When you encounter an HTML table, extract all rows and columns into a JSON " +
+    "array of objects, using the headers as keys.",
+});
+```
+</CodeGroup>
+
+Reference it by `name` from an agent's `skills` array when you create the agent:
+
+<CodeGroup>
+```bash cURL
+curl -X POST https://agp.eu.hcompany.ai/api/v2/agents \
+  -H "Authorization: Bearer $H_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "table-scraper",
+    "description": "Scrapes structured data from web tables.",
+    "environments": ["h/browser"],
+    "skills": ["extract-table-data"]
+  }'
+```
+
+```python Python
+client.agents.create_agent(
+    name="table-scraper",
+    description="Scrapes structured data from web tables.",
+    environments=["h/browser"],
+    skills=["extract-table-data"],
+)
+```
+
+```typescript TypeScript
+await client.agents.createAgent({
+  name: "table-scraper",
+  description: "Scrapes structured data from web tables.",
+  environments: ["h/browser"],
+  skills: ["extract-table-data"],
+});
+```
+</CodeGroup>
+
+## How an agent uses a skill
+
+An agent doesn't read every attached skill up front. Each one is advertised to it by `name` and `description` in an `<available_skills>` section of the system prompt, with the `body` held back:
+
+```xml
+<available_skills>
+<skill>
+<name>
+extract-table-data
+</name>
+<description>
+Extract structured data from HTML tables into JSON.
+</description>
+</skill>
+</available_skills>
+```
+
+When the agent judges a skill's `description` relevant to the task, it calls a built-in `load_skill` tool with that `name`. The tool returns the full skill, and its `body` enters the conversation as instructions for the steps that follow. If the name doesn't match, the tool replies with the closest available names so the agent can retry. A `url_pattern`, when set, is listed next to the description as an extra hint; it is not matched against the live page.
+
+[Environments](/agent-api/environments/overview) ship with their own skills too, bundled by default and always in context rather than loaded on demand. These are fixed per environment, not something you configure.
+
+## Write effective skills
+
+- **Make the `description` a trigger, not a summary.** It is the only thing the agent sees before loading a skill, so phrase it as "use this when…" and name the situation precisely. Vague descriptions get loaded at the wrong time or not at all.
+- **Keep the `body` self-contained.** The agent reads it cold, mid-task, so write a focused procedure (steps, formats, edge cases) rather than background prose.
+- **Skills vs. instructions.** Put always-on behavior in the agent's [`instructions`](/agent-api/agents/overview); reserve skills for procedures that only apply some of the time, so they stay out of context until they are relevant.
+- **Compose small skills.** Several narrow skills route better than one broad skill, because each `description` can target a distinct situation.
+
+## Endpoints
+
+| Method | Path | Description |
+|---|---|---|
+| `POST` | `/api/v2/skills` | [Create a skill](/agent-api/skills/create) |
+| `GET` | `/api/v2/skills` | [List skills](/agent-api/skills/list) |
+| `GET` | `/api/v2/skills/{name}` | [Retrieve a skill](/agent-api/skills/retrieve) |
+| `PUT` | `/api/v2/skills/{name}` | [Update a skill](/agent-api/skills/update) |
+| `DELETE` | `/api/v2/skills/{name}` | [Delete a skill](/agent-api/skills/delete) |

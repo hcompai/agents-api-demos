@@ -1,0 +1,56 @@
+---
+noindex: true
+title: "Delete an agent"
+sidebarTitle: "Delete"
+description: "Remove an agent from your catalog."
+api: "DELETE /api/v2/agents/{agent_name}"
+---
+
+Removes an agent from your catalog. Sessions already running against it are unaffected; new sessions can no longer reference it by name.
+
+**Returns** `204 No Content` on success.
+
+---
+
+## Path parameters
+
+<ParamField path="agent_name" type="string" required>
+  The agent's `name` (e.g. `my-research-bot` or `myorg/web-helper`). Slash-containing names are supported.
+</ParamField>
+
+---
+
+## Examples
+
+<CodeGroup>
+```bash cURL
+curl -X DELETE https://agp.eu.hcompany.ai/api/v2/agents/my-research-bot \
+  -H "Authorization: Bearer $H_API_KEY"
+```
+
+```python Python
+from hai_agents import Client
+
+client = Client()  # reads H_API_KEY from the environment
+
+client.agents.delete_agent(agent_name="my-research-bot")
+```
+
+```typescript TypeScript
+import { HaiAgentsClient } from "hai-agents";
+
+const client = new HaiAgentsClient(); // reads H_API_KEY from the environment
+
+await client.agents.deleteAgent({ agentName: "my-research-bot" });
+```
+
+</CodeGroup>
+
+---
+
+## Errors
+
+| Status | Cause |
+|---|---|
+| `403` | The agent is reserved (`h/`) and you are not an H employee. |
+| `404` | Agent not found or you don't have access. |

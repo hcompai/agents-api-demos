@@ -1,0 +1,140 @@
+---
+noindex: true
+title: "Integrations"
+sidebarTitle: "Integrations"
+description: "Typed clients, CLI, and a hosted MCP server."
+---
+
+Call the API directly over HTTP, use a typed client, or connect any MCP host. The clients and CLI ship as `hai-agents`.
+
+<CardGroup cols={2}>
+  <Card title="Python" icon="python" href="https://pypi.org/project/hai-agents/">
+    Sync and async clients, typed with Pydantic v2.
+  </Card>
+  <Card title="TypeScript" icon="js" href="https://www.npmjs.com/package/hai-agents">
+    A fully typed client for sessions, agents, skills, and environments.
+  </Card>
+</CardGroup>
+
+## Install
+
+<CodeGroup>
+```bash CLI
+pip install "hai-agents[cli]"
+```
+
+```bash Python
+pip install hai-agents
+```
+
+```bash TypeScript
+npm install hai-agents
+```
+</CodeGroup>
+
+## Authenticate
+
+Pass your H API key when you instantiate the client, or set `H_API_KEY` in your environment and omit the argument. See [Authentication](/agent-api/authentication) for region selection and security notes.
+
+<CodeGroup>
+```bash CLI
+hai login   # browser sign-in; stores the key in ~/.config/hai/.env
+```
+
+```python Python
+from hai_agents import Client
+
+client = Client(api_key="hk-...")
+```
+
+```typescript TypeScript
+import { HaiAgentsClient } from "hai-agents";
+
+const client = new HaiAgentsClient({ apiKey: "hk-..." });
+```
+</CodeGroup>
+
+<Note>
+The interactive playground in the [API reference](/agent-api/sessions/create) sends requests straight from your browser, so its examples show the raw HTTP call rather than SDK code. Use it to explore the wire format; use the SDK snippets here and in the [Quickstart](/agent-api/quickstart) for the code you'd actually ship.
+</Note>
+
+## MCP server
+
+The Agent API also ships an official [Model Context Protocol](https://modelcontextprotocol.io) server, so hosts like Cursor, Claude Code, and VS Code can run and manage H agents as tools, with no HTTP or SDK code. It's a remote, stateless **streamable-HTTP** endpoint at `/mcp` on your [region's host](/agent-api/authentication#region), authenticated with the same H API key (`Authorization: Bearer hk-...`). It works in any client that accepts a bearer header (Cursor, VS Code, Claude Code, the OpenAI API); clients that require OAuth, like Claude.ai web or the ChatGPT app, aren't supported.
+
+### Add to your editor
+
+One click installs the `hai-agents` server, then paste your [API key](/agent-api/authentication) when prompted. The buttons target the EU region (the default):
+
+<CardGroup cols={2}>
+  <Card title="Add to Cursor" icon="https://cdn.simpleicons.org/cursor/6b6b70" href="cursor://anysphere.cursor-deeplink/mcp/install?name=hai-agents&config=eyJ1cmwiOiAiaHR0cHM6Ly9hZ3AuZXUuaGNvbXBhbnkuYWkvbWNwIiwgImhlYWRlcnMiOiB7IkF1dGhvcml6YXRpb24iOiAiQmVhcmVyIGhrLVlPVVJfS0VZIn19">
+    Opens Cursor and prompts to install.
+  </Card>
+  <Card title="Add to VS Code" icon="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/vscode/vscode-original.svg" href="vscode:mcp/install?%7B%22name%22%3A%20%22hai-agents%22%2C%20%22type%22%3A%20%22http%22%2C%20%22url%22%3A%20%22https%3A//agp.eu.hcompany.ai/mcp%22%2C%20%22headers%22%3A%20%7B%22Authorization%22%3A%20%22Bearer%20hk-YOUR_KEY%22%7D%7D">
+    Opens VS Code and prompts to install.
+  </Card>
+</CardGroup>
+
+On the US region, use [Add to Cursor](cursor://anysphere.cursor-deeplink/mcp/install?name=hai-agents&config=eyJ1cmwiOiAiaHR0cHM6Ly9hZ3AuaGNvbXBhbnkuYWkvbWNwIiwgImhlYWRlcnMiOiB7IkF1dGhvcml6YXRpb24iOiAiQmVhcmVyIGhrLVlPVVJfS0VZIn19) or [Add to VS Code](vscode:mcp/install?%7B%22name%22%3A%20%22hai-agents%22%2C%20%22type%22%3A%20%22http%22%2C%20%22url%22%3A%20%22https%3A//agp.hcompany.ai/mcp%22%2C%20%22headers%22%3A%20%7B%22Authorization%22%3A%20%22Bearer%20hk-YOUR_KEY%22%7D%7D) instead. Registry-aware clients can also find it in the [MCP Registry](https://registry.modelcontextprotocol.io) as `io.github.hcompai/hai-agents`.
+
+### Connect manually
+
+Point your client at the `/mcp` URL for your [region](/agent-api/authentication#region) and add the `Authorization` header.
+
+<CodeGroup>
+```json Cursor
+// ~/.cursor/mcp.json
+{
+  "mcpServers": {
+    "hai-agents": {
+      "url": "https://agp.eu.hcompany.ai/mcp",
+      "headers": { "Authorization": "Bearer hk-..." }
+    }
+  }
+}
+```
+
+```bash Claude Code
+claude mcp add --scope user --transport http hai-agents https://agp.eu.hcompany.ai/mcp \
+  --header "Authorization: Bearer hk-..."
+```
+
+```json VS Code
+// user mcp.json (MCP: Open User Configuration)
+{
+  "servers": {
+    "hai-agents": {
+      "type": "http",
+      "url": "https://agp.eu.hcompany.ai/mcp",
+      "headers": { "Authorization": "Bearer hk-..." }
+    }
+  }
+}
+```
+</CodeGroup>
+
+<Warning>
+Your API key is a secret. Keep it in your local client config; never commit it or paste it into a shared workspace file.
+</Warning>
+
+### Tools
+
+| Tool | What it does |
+| --- | --- |
+| `run_agent` | Start an agent on a task. Returns the answer, or a session handle to wait on if the task runs long. |
+| `wait_for_session` | Long-poll a session for its answer, or fetch its current snapshot. |
+| `list_agents` | List the agents you can run: your org's agents plus the public `h/` ones. Pass an agent's `name` as the `agent` for `run_agent`. |
+| `send_message` | Send a follow-up message to a running session. |
+| `cancel_session` | Cancel a session. |
+| `share_session` | Make a session publicly viewable and return a share link. |
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Quickstart" icon="arrow-right" href="/agent-api/quickstart">
+    Run your first session end to end in under 5 minutes.
+  </Card>
+  <Card title="Agents" icon="robot" href="/agent-api/agents/overview">
+    Reusable configurations: pre-built agents and how to create your own.
+  </Card>
+</CardGroup>

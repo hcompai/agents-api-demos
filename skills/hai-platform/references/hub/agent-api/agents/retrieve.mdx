@@ -1,0 +1,101 @@
+---
+noindex: true
+title: "Retrieve an agent"
+sidebarTitle: "Retrieve"
+description: "Get the full specification of a single agent."
+api: "GET /api/v2/agents/{agent_name}"
+---
+
+Retrieves the complete [Agent](/agent-api/agents/overview) object, including its full specification: environments, skills, instructions, and subagent configuration.
+
+**Returns** the [Agent](/agent-api/agents/overview) object if the name is valid and you have access. Returns `404` otherwise.
+
+---
+
+## Path parameters
+
+<ParamField path="agent_name" type="string" required>
+  The agent's `name` (e.g., `h/web` or `my-custom-bot`). Slash-containing names are supported.
+</ParamField>
+
+---
+
+## Query parameters
+
+<ParamField query="resolve" type="boolean" default="false">
+  When `true`, string references in `environments`, `skills`, and `subagents` are expanded into their full specs in the response. When `false` (the default), they are returned as stored, keeping catalog ids as plain strings.
+</ParamField>
+
+---
+
+## Examples
+
+### Retrieve an H catalog agent
+
+<CodeGroup>
+```bash cURL
+curl "https://agp.eu.hcompany.ai/api/v2/agents/h/web-surfer-flash" \
+  -H "Authorization: Bearer $H_API_KEY"
+```
+
+```python Python
+from hai_agents import Client
+
+client = Client()  # reads H_API_KEY from the environment
+
+agent = client.agents.get_agent(agent_name="h/web-surfer-flash")
+print(agent.name)
+```
+
+```typescript TypeScript
+import { HaiAgentsClient } from "hai-agents";
+
+const client = new HaiAgentsClient(); // reads H_API_KEY from the environment
+
+const agent = await client.agents.getAgent({ agentName: "h/web-surfer-flash" });
+console.log(agent.name);
+```
+
+</CodeGroup>
+
+```json Response
+{
+  "name": "h/web-surfer-flash",
+  "description": "General-purpose web browsing agent. Navigates websites, extracts information, fills forms, and completes multi-step web tasks.",
+  "environments": [
+    { "id": "h/browser", "kind": "web", "headless": true, "width": 1280, "height": 720, "start_url": "https://www.bing.com" }
+  ],
+  "model": null,
+  "instructions": null,
+  "skills": ["web-browse", "screenshot", "form-fill", "extract-data"],
+  "subagents": null,
+  "answer_format": null
+}
+```
+
+### Retrieve a custom agent
+
+```bash
+curl "https://agp.eu.hcompany.ai/api/v2/agents/price-checker" \
+  -H "Authorization: Bearer $H_API_KEY"
+```
+
+---
+
+## Use case: inspect before using
+
+Before using an agent in a session, you can inspect its capabilities:
+
+```bash
+curl "https://agp.eu.hcompany.ai/api/v2/agents/$AGENT_NAME" \
+  -H "Authorization: Bearer $H_API_KEY" \
+  | jq '{name, description, environments, skills, subagents}'
+```
+
+---
+
+## Errors
+
+| Status | Cause |
+|---|---|
+| `404` | Agent not found, or you don't have access (e.g., querying another team's custom agent). |

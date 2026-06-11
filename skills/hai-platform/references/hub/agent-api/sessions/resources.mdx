@@ -1,0 +1,63 @@
+---
+noindex: true
+title: "Get resource"
+sidebarTitle: "Resources"
+description: "Access session-owned resources like screenshots and files."
+api: "GET /api/v2/sessions/{id}/resources/{bucket}/{key}"
+---
+
+Returns a redirect to a presigned S3 URL for a session-owned resource (screenshots, downloaded files, etc.).
+
+Auth is optional: supports public shares.
+
+**Returns** `302 Redirect` to the presigned URL.
+
+---
+
+## Path parameters
+
+<ParamField path="id" type="string" required>
+  The session ID.
+</ParamField>
+
+<ParamField path="bucket" type="string" required>
+  The resource bucket (e.g., `screenshots`, `files`).
+</ParamField>
+
+<ParamField path="key" type="string" required>
+  The resource key (path within the bucket).
+</ParamField>
+
+---
+
+## Examples
+
+<CodeGroup>
+```bash cURL
+curl -L https://agp.eu.hcompany.ai/api/v2/sessions/$SESSION_ID/resources/screenshots/step-5.png \
+  -H "Authorization: Bearer $H_API_KEY" \
+  -o screenshot.png
+```
+
+```python Python
+from hai_agents import Client
+
+client = Client()  # reads H_API_KEY from the environment
+
+client.sessions.get_session_resource(session_id, "screenshots", "step-5.png")
+```
+
+```typescript TypeScript
+import { HaiAgentsClient } from "hai-agents";
+
+const client = new HaiAgentsClient(); // reads H_API_KEY from the environment
+
+await client.sessions.getSessionResource({
+  id: sessionId,
+  bucket: "screenshots",
+  key: "step-5.png",
+});
+```
+</CodeGroup>
+
+The cURL `-L` flag follows the `302` redirect to download the file from S3.

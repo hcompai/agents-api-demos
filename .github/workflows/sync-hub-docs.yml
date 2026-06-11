@@ -1,0 +1,54 @@
+name: Sync hub docs into hai-platform skill
+
+on:
+  schedule:
+    - cron: "17 5 * * *" # daily, 05:17 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Generate the GitHub App token
+        id: app-token
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ vars.HAI_ROBOT_APP_ID }}
+          private-key: ${{ secrets.HAI_ROBOT_APP_PRIVATE_KEY }}
+          owner: mathieu-hai
+          repositories: H-Tech-Hub-docs-new
+
+      - name: Checkout docs source (private)
+        uses: actions/checkout@v4
+        with:
+          repository: mathieu-hai/H-Tech-Hub-docs-new
+          token: ${{ steps.app-token.outputs.token }}
+          path: .hub-docs
+
+      - name: Sync agent-api docs into the skill
+        run: |
+          python3 .github/scripts/sync_hub_docs.py \
+            .hub-docs/agent-api \
+            skills/hai-platform/references/hub/agent-api \
+            --route agent-api
+          rm -rf .hub-docs
+
+      - name: Open PR if the docs changed
+        uses: peter-evans/create-pull-request@v6
+        with:
+          branch: bot/sync-hub-docs
+          title: "Sync hub docs (agent-api) into hai-platform skill"
+          commit-message: "Sync hub docs (agent-api) into hai-platform references"
+          body: |
+            Automated sync of the official agent-api docs from
+            `mathieu-hai/H-Tech-Hub-docs-new` into
+            `skills/hai-platform/references/hub/agent-api/`.
+
+            Review the diff to see what changed on the hub, then merge.
+          delete-branch: true

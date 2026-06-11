@@ -1,0 +1,124 @@
+---
+noindex: true
+title: "Create an environment"
+sidebarTitle: "Create"
+description: "Create a reusable environment in your own catalog."
+api: "POST /api/v2/environments"
+---
+
+Creates a new custom environment in your catalog. Once created, reference it by `id` (e.g. `"environments": ["wide-browser"]`) from any agent. Most users define environments inline on the agent instead; reach for this endpoint to reuse one environment across several agents.
+
+**Returns** `201` with the created [Environment](/agent-api/environments/overview) object.
+
+---
+
+## Request body
+
+The body is a [Browser](/agent-api/environments/browser#configuration) spec.
+
+<ParamField body="id" type="string" required>
+  Catalog identifier, kebab-case with an optional single `org/` namespace prefix. The `h/` prefix is reserved for H employees (rejected with `403` otherwise). Immutable after creation.
+</ParamField>
+
+<ParamField body="kind" type="string">
+  Environment type. Currently only `web`. Defaults to `web`.
+</ParamField>
+
+<ParamField body="headless" type="boolean" default="false">
+  Run without a visible window.
+</ParamField>
+
+<ParamField body="width" type="integer" default="1200">
+  Viewport width in pixels. Must be a positive integer.
+</ParamField>
+
+<ParamField body="height" type="integer" default="1200">
+  Viewport height in pixels. Must be a positive integer.
+</ParamField>
+
+<ParamField body="start_url" type="string" default="https://www.bing.com">
+  Initial URL to open.
+</ParamField>
+
+<ParamField body="mode" type="string">
+  How the agent perceives and drives the browser: `visual` (default), `multimodal`, or `text`. See [Modes](/agent-api/environments/browser#modes).
+</ParamField>
+
+<ParamField body="page_chars" type="integer" default="20000">
+  Characters of page text shown per page in `text` mode. Rejected in other modes.
+</ParamField>
+
+---
+
+## Examples
+
+<CodeGroup>
+```bash cURL
+curl -X POST https://agp.eu.hcompany.ai/api/v2/environments \
+  -H "Authorization: Bearer $H_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "id": "wide-browser",
+    "kind": "web",
+    "headless": true,
+    "width": 1920,
+    "height": 1080,
+    "start_url": "https://www.google.com"
+  }'
+```
+
+```python Python
+from hai_agents import Client
+
+client = Client()  # reads H_API_KEY from the environment
+
+environment = client.environments.create_environment(
+    id="wide-browser",
+    headless=True,
+    width=1920,
+    height=1080,
+    start_url="https://www.google.com",
+)
+print(environment.id)
+```
+
+```typescript TypeScript
+import { HaiAgentsClient } from "hai-agents";
+
+const client = new HaiAgentsClient(); // reads H_API_KEY from the environment
+
+const environment = await client.environments.createEnvironment({
+  kind: "web",
+  id: "wide-browser",
+  headless: true,
+  width: 1920,
+  height: 1080,
+  startUrl: "https://www.google.com",
+});
+console.log(environment.id);
+```
+
+</CodeGroup>
+
+```json Response
+{
+  "id": "wide-browser",
+  "kind": "web",
+  "headless": true,
+  "width": 1920,
+  "height": 1080,
+  "start_url": "https://www.google.com",
+  "mode": "visual",
+  "page_chars": 20000
+}
+```
+
+---
+
+## Errors
+
+| Status | Cause |
+|---|---|
+| `403` | Attempted to use the reserved `h/` namespace without H employee privileges. |
+| `409` | An environment with this `id` already exists in your catalog. |
+| `422` | Body fails validation; common cases: invalid `id` shape, missing required field. |

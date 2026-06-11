@@ -1,0 +1,103 @@
+---
+noindex: true
+title: "Update an agent"
+sidebarTitle: "Update"
+description: "Replace the configuration of an agent in your catalog."
+api: "PUT /api/v2/agents/{agent_name}"
+---
+
+Updates an existing agent. This is a **full replacement** of the [Agent](/agent-api/agents/overview) object. The `name` must match the URL identifier: renames are not supported.
+
+**Returns** the updated [Agent](/agent-api/agents/overview) object.
+
+---
+
+## Path parameters
+
+<ParamField path="agent_name" type="string" required>
+  The agent's `name` (e.g. `my-research-bot` or `myorg/web-helper`). Slash-containing names are supported.
+</ParamField>
+
+---
+
+## Request body
+
+A **full replacement** of the [Agent](/agent-api/agents/overview) object. The `name` in the body must equal the URL identifier. Because this replaces the resource, resend a field's current value to keep it unchanged.
+
+---
+
+## Examples
+
+<CodeGroup>
+```bash cURL
+curl -X PUT https://agp.eu.hcompany.ai/api/v2/agents/my-research-bot \
+  -H "Authorization: Bearer $H_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "my-research-bot",
+    "description": "Researches a topic and returns a sourced summary.",
+    "environments": ["h/browser"],
+    "instructions": "Always cite the page you took each claim from.",
+    "skills": ["web-browse", "extract-data"]
+  }'
+```
+
+```python Python
+from hai_agents import Client
+
+client = Client()  # reads H_API_KEY from the environment
+
+agent = client.agents.update_agent(
+    agent_name="my-research-bot",
+    name="my-research-bot",
+    description="Researches a topic and returns a sourced summary.",
+    environments=["h/browser"],
+    instructions="Always cite the page you took each claim from.",
+    skills=["web-browse", "extract-data"],
+)
+print(agent.name)
+```
+
+```typescript TypeScript
+import { HaiAgentsClient } from "hai-agents";
+
+const client = new HaiAgentsClient(); // reads H_API_KEY from the environment
+
+const agent = await client.agents.updateAgent({
+  agentName: "my-research-bot",
+  body: {
+    name: "my-research-bot",
+    description: "Researches a topic and returns a sourced summary.",
+    environments: ["h/browser"],
+    instructions: "Always cite the page you took each claim from.",
+    skills: ["web-browse", "extract-data"],
+  },
+});
+console.log(agent.name);
+```
+
+</CodeGroup>
+
+```json Response
+{
+  "name": "my-research-bot",
+  "description": "Researches a topic and returns a sourced summary.",
+  "environments": ["h/browser"],
+  "model": null,
+  "instructions": "Always cite the page you took each claim from.",
+  "skills": ["web-browse", "extract-data"],
+  "subagents": null,
+  "answer_format": null
+}
+```
+
+---
+
+## Errors
+
+| Status | Cause |
+|---|---|
+| `400` | The `name` in the body does not match the URL identifier (renames are not supported). |
+| `403` | The agent is reserved (`h/`) and you are not an H employee. |
+| `404` | Agent not found or you don't have access. |
+| `422` | Body fails validation; common cases: `environments` empty, invalid `name` shape. |

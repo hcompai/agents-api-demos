@@ -1,0 +1,39 @@
+---
+noindex: true
+title: "Environments"
+sidebarTitle: "Overview"
+description: "The surfaces an agent perceives and acts upon."
+---
+
+An **environment** is the surface an agent perceives and acts upon. H focuses on **visual computer-use**: the agent looks at the screen, reasons, and acts, step after step.
+
+An agent gets its environments from its `environments` list, where each entry is either a catalog name or an inline environment object. At least one is required, with at most one per kind.
+
+<Warning>
+**Beta**: only the [Browser](/agent-api/environments/browser) environment is enabled today. More kinds, including desktop environments for Mac, Windows, and Linux, are in [What's next](/agent-api/whats-next).
+</Warning>
+
+## Toolbox
+
+Attaching an environment equips the agent with a **toolbox**: a fixed **action surface** (the toolset it calls to operate the environment) plus **built-in skills** injected into the system prompt so it knows how to use them. The [Browser](/agent-api/environments/browser), for example, contributes its web actions (navigate, click, type, scroll, read) and the matching operating guidance.
+
+The action surface is fixed per environment; you cannot add or remove individual actions. To shape *how* the agent uses them, set the agent's [`instructions`](/agent-api/agents/overview) or attach your own [skills](/agent-api/skills/overview), which load on demand on top of the built-in ones.
+
+## Built-in environments
+
+H ships ready-to-use browsers in the catalog. Browse them below, or list them anytime with [`GET /api/v2/environments`](/agent-api/environments/list):
+
+import { ENVIRONMENTS } from "/snippets/catalog-data.jsx"
+import { CatalogGallery } from "/snippets/catalog-gallery.jsx"
+
+<CatalogGallery items={ENVIRONMENTS} kind="environment" />
+
+## Endpoints
+
+| Method | Path | Description |
+|---|---|---|
+| `POST` | `/api/v2/environments` | [Create an environment](/agent-api/environments/create) |
+| `GET` | `/api/v2/environments` | [List environments](/agent-api/environments/list) |
+| `GET` | `/api/v2/environments/{id}` | [Retrieve an environment](/agent-api/environments/retrieve) |
+| `PUT` | `/api/v2/environments/{id}` | [Update an environment](/agent-api/environments/update) |
+| `DELETE` | `/api/v2/environments/{id}` | [Delete an environment](/agent-api/environments/delete) |

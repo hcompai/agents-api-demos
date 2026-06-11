@@ -1,0 +1,62 @@
+---
+noindex: true
+title: "Pause a session"
+sidebarTitle: "Pause"
+description: "Halt a running session without losing state."
+api: "POST /api/v2/sessions/{id}/pause"
+---
+
+Pauses a running session. The agent stops processing but its state is fully preserved. You can [resume](/agent-api/sessions/resume) it later to continue from exactly where it left off.
+
+**Returns** `202 Accepted`. The pause command is delivered asynchronously.
+
+---
+
+## Path parameters
+
+<ParamField path="id" type="string" required>
+  The session ID.
+</ParamField>
+
+---
+
+## Examples
+
+<CodeGroup>
+```bash cURL
+curl -X POST https://agp.eu.hcompany.ai/api/v2/sessions/$SESSION_ID/pause \
+  -H "Authorization: Bearer $H_API_KEY"
+```
+
+```python Python
+from hai_agents import Client
+
+client = Client()  # reads H_API_KEY from the environment
+
+client.sessions.pause_session(session_id)
+```
+
+```typescript TypeScript
+import { HaiAgentsClient } from "hai-agents";
+
+const client = new HaiAgentsClient(); // reads H_API_KEY from the environment
+
+await client.sessions.pauseSession({ id: sessionId });
+```
+</CodeGroup>
+
+---
+
+## Use cases
+
+- **Review before continuing.** Pause the agent to inspect its progress, then resume or redirect with a message.
+- **Cost control.** Pause long-running sessions during off-hours and resume when needed.
+- **Human-in-the-loop.** Pause when the agent reaches a decision point, review the options, then resume with guidance.
+
+---
+
+## Errors
+
+| Status | Cause |
+|---|---|
+| `404` | Session not found, or you don't have access. |

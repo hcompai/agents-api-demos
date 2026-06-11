@@ -1,0 +1,61 @@
+---
+noindex: true
+title: "Resume a session"
+sidebarTitle: "Resume"
+description: "Continue a paused session."
+api: "POST /api/v2/sessions/{id}/resume"
+---
+
+Resumes a previously paused session. The agent picks up exactly where it left off.
+
+**Returns** `202 Accepted`. The resume command is delivered asynchronously.
+
+---
+
+## Path parameters
+
+<ParamField path="id" type="string" required>
+  The session ID.
+</ParamField>
+
+---
+
+## Examples
+
+<CodeGroup>
+```bash cURL
+curl -X POST https://agp.eu.hcompany.ai/api/v2/sessions/$SESSION_ID/resume \
+  -H "Authorization: Bearer $H_API_KEY"
+```
+
+```python Python
+from hai_agents import Client
+
+client = Client()  # reads H_API_KEY from the environment
+
+client.sessions.resume_session(session_id)
+```
+
+```typescript TypeScript
+import { HaiAgentsClient } from "hai-agents";
+
+const client = new HaiAgentsClient(); // reads H_API_KEY from the environment
+
+await client.sessions.resumeSession({ id: sessionId });
+```
+</CodeGroup>
+
+---
+
+## Notes
+
+- Resuming a session that is already `running` is a no-op (no error).
+- You can also resume a paused session implicitly by [sending a message](/agent-api/sessions/send-messages): the platform auto-resumes before delivering the message.
+
+---
+
+## Errors
+
+| Status | Cause |
+|---|---|
+| `404` | Session not found, or you don't have access. |

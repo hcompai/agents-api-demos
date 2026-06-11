@@ -1,0 +1,160 @@
+---
+noindex: true
+title: "Observe and steer a session"
+sidebarTitle: "Observe & steer"
+description: "Watch a run, intervene while it works, and keep the conversation going."
+---
+
+Launching a [session](/agent-api/sessions/overview) is just the start. While the agent works you can watch what it is doing, step in to redirect or stop it, and keep the session open for a back-and-forth. All of it is addressed to the session's `id`, and all of it works the same whether the agent runs alone or [delegates to subagents](/agent-api/multi-agent).
+
+This guide ties together the read endpoints and the control endpoints into one mental model. Each links to its reference page for the full request and response shape.
+
+In the Python and TypeScript SDKs, starting a session returns immediately with a lightweight handle bound to its `id`; the snippets below read and steer through that handle. Every operation is equally available as a direct client call keyed by `id`, and as a raw HTTP request, as each reference page shows.
+
+<Tip>
+Prefer a UI? Every session is visible in the [H Platform](https://platform.eu.hcompany.ai/); see [Agent View](/agent-api/agent-view) for the live and replay flows.
+</Tip>
+
+## Watch a run
+
+There are three ways to read a session, from cheapest to most complete. Pick by what you need, not by habit.
+
+- **Liveness, with [`status`](/agent-api/sessions/status).** A small snapshot: current [state](/agent-api/sessions/overview#lifecycle), step count, and token usage. Poll it on an interval to drive a progress indicator or to detect a terminal state.
+- **The answer and live updates, with [`changes`](/agent-api/sessions/changes).** Long-poll from an event index and the call blocks until something new happens, then returns the new events and the final `answer` when it lands. This is how you read the result without hammering `status`.
+- **Full history, with [`events`](/agent-api/sessions/events).** The complete, paginated record of everything the agent observed and did. Use it to replay or audit a run after the fact.
+
+Rule of thumb: long-poll `changes` while a run is active, poll `status` for a lightweight health check, and page through `events` when you need the whole trajectory.
+
+<CodeGroup>
+```python Python
+# start_session(...) returns a handle you can read and steer;
+# run_session(...) instead blocks until the agent finishes.
+session = client.start_session(
+    agent="h/web-surfer-flash",
+    messages=[{"type": "user_message", "message": "Find the top story on Hacker News"}],
+)
+
+session.status()               # cheap liveness snapshot
+session.changes(from_index=0)  # new events + final answer, long-polled
+session.get()                  # the full Session resource
+
+result = session.wait_for_completion()  # block until terminal, then read the answer
+print(result.status, result.answer)
+```
+
+```typescript TypeScript
+// startSession(...) returns a handle you can read and steer;
+// runSession(...) instead blocks until the agent finishes.
+const session = await client.startSession({
+  agent: "h/web-surfer-flash",
+  messages: [{ type: "user_message", message: "Find the top story on Hacker News" }],
+});
+
+await session.status();                  // cheap liveness snapshot
+await session.changes({ fromIndex: 0 }); // new events + final answer, long-polled
+await session.get();                     // the full Session resource
+
+const result = await session.waitForCompletion(); // block until terminal, then read the answer
+console.log(result.status, result.answer);
+```
+</CodeGroup>
+
+## Steer a running agent
+
+As long as the session is not in a [terminal state](/agent-api/sessions/overview#lifecycle), you can intervene:
+
+- **Send a message** to add context or redirect the agent mid-run. The message is picked up on the next step; a message to an `idle` session also wakes it. See [Send a message](/agent-api/sessions/send-messages).
+- **Pause and resume** to halt the agent with its state preserved (for review or cost control), then continue. Sending a message auto-resumes a paused session. See [Pause](/agent-api/sessions/pause) and [Resume](/agent-api/sessions/resume).
+- **Force an answer** to tell the agent to stop exploring and commit to a final answer from what it has so far. See [Force an answer](/agent-api/sessions/force-answer).
+- **Cancel** to stop the session for good; it ends in `interrupted`. See [Cancel](/agent-api/sessions/cancel).
+
+<Note>
+A blocking run-and-wait call never surfaces the session mid-run. Start the session and keep its handle when you need to read or intervene while it works.
+</Note>
+
+Sending a steering message is the most common intervention:
+
+<CodeGroup>
+```bash CLI
+hai sessions send "$SESSION_ID" "Only consider results from the last 24 hours"
+```
+
+```bash cURL
+curl -X POST "https://agp.eu.hcompany.ai/api/v2/sessions/$SESSION_ID/messages" \
+  -H "Authorization: Bearer $H_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"type": "user_message", "message": "Only consider results from the last 24 hours"}'
+```
+
+```python Python
+session.send_message({"type": "user_message", "message": "Only consider results from the last 24 hours"})
+```
+
+```typescript TypeScript
+await session.sendMessage({ type: "user_message", message: "Only consider results from the last 24 hours" });
+```
+</CodeGroup>
+
+The other interventions follow the same shape:
+
+<CodeGroup>
+```python Python
+session.pause()         # halt, state preserved
+session.resume()        # continue where it left off
+session.force_answer()  # stop exploring and commit to a final answer
+session.cancel()        # stop for good; ends in `interrupted`
+```
+
+```typescript TypeScript
+await session.pause();
+await session.resume();
+await session.forceAnswer();
+await session.cancel();
+```
+</CodeGroup>
+
+## Hold an interactive conversation
+
+By default a session ends as soon as the agent answers. Set [`idle_timeout_s`](/agent-api/sessions/create) when you create it to keep it open: after each answer the session enters [`idle`](/agent-api/sessions/overview#lifecycle) and waits that long for your next message before terminating. One session becomes a multi-turn conversation that keeps its full context and environment state across turns.
+
+<CodeGroup>
+```bash cURL
+# Open an interactive session that stays alive for 10 minutes between turns.
+SESSION_ID=$(curl -sX POST https://agp.eu.hcompany.ai/api/v2/sessions \
+  -H "Authorization: Bearer $H_API_KEY" -H "Content-Type: application/json" \
+  -d '{
+    "agent": "h/web-surfer-flash",
+    "idle_timeout_s": 600,
+    "messages": [{"type": "user_message", "message": "Find the top story on Hacker News"}]
+  }' | jq -r .id)
+
+# After it answers and goes idle, ask a follow-up in the same context.
+curl -X POST "https://agp.eu.hcompany.ai/api/v2/sessions/$SESSION_ID/messages" \
+  -H "Authorization: Bearer $H_API_KEY" -H "Content-Type: application/json" \
+  -d '{"type": "user_message", "message": "Now open its comments and summarize the discussion"}'
+```
+
+```python Python
+session = client.start_session(
+    agent="h/web-surfer-flash",
+    idle_timeout_s=600,
+    messages=[{"type": "user_message", "message": "Find the top story on Hacker News"}],
+)
+
+# After it answers and goes idle, ask a follow-up in the same context.
+session.send_message({"type": "user_message", "message": "Now open its comments and summarize the discussion"})
+```
+
+```typescript TypeScript
+const session = await client.startSession({
+  agent: "h/web-surfer-flash",
+  idleTimeoutS: 600,
+  messages: [{ type: "user_message", message: "Find the top story on Hacker News" }],
+});
+
+// After it answers and goes idle, ask a follow-up in the same context.
+await session.sendMessage({ type: "user_message", message: "Now open its comments and summarize the discussion" });
+```
+</CodeGroup>
+
+Watch the session's [`status`](/agent-api/sessions/status) flip to `idle` between turns; it terminates once a turn goes unanswered for `idle_timeout_s`.

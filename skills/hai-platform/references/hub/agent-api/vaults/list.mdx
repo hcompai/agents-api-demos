@@ -1,0 +1,73 @@
+---
+noindex: true
+title: "List vaults"
+sidebarTitle: "List"
+description: "Browse your organization's vault configs."
+api: "GET /api/v2/vaults"
+---
+
+Returns the vault configs owned by your organization, with offset-based pagination.
+
+**Returns** an object with `total`, `limit`, `offset`, and a `vaults` array of [vault objects](/agent-api/vaults/retrieve).
+
+---
+
+## Query parameters
+
+<ParamField query="limit" type="integer" default="50">
+  Maximum number of configs to return. Between `1` and `1000`.
+</ParamField>
+
+<ParamField query="offset" type="integer" default="0">
+  Number of configs to skip before collecting the page.
+</ParamField>
+
+---
+
+## Examples
+
+<CodeGroup>
+```bash cURL
+curl "https://agp.eu.hcompany.ai/api/v2/vaults?limit=50&offset=0" \
+  -H "Authorization: Bearer $H_API_KEY"
+```
+
+```python Python
+from hai_agents import Client
+
+client = Client()  # reads H_API_KEY from the environment
+
+page = client.vaults.list_vaults(limit=50, offset=0)
+for vault in page.vaults:
+    print(vault.id, vault.name)
+```
+
+```typescript TypeScript
+import { HaiAgentsClient } from "hai-agents";
+
+const client = new HaiAgentsClient(); // reads H_API_KEY from the environment
+
+const page = await client.vaults.listVaults({ limit: 50, offset: 0 });
+for (const vault of page.vaults) {
+  console.log(vault.id, vault.name);
+}
+```
+</CodeGroup>
+
+```json Response
+{
+  "total": 1,
+  "limit": 50,
+  "offset": 0,
+  "vaults": [
+    {
+      "id": "f47ac10b-58cc-4372-a567-0e02b2c3d479",
+      "org_id": "org_123",
+      "name": "prod-1password",
+      "provider_config": {"provider": "onepassword", "op_vault_id": "abcd1234efgh5678"},
+      "created_at": "2026-05-07T14:30:00Z",
+      "updated_at": "2026-05-07T14:30:00Z"
+    }
+  ]
+}
+```

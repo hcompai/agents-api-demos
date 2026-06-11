@@ -1,0 +1,107 @@
+---
+noindex: true
+title: "Update a skill"
+sidebarTitle: "Update"
+description: "Edit a skill's content."
+api: "PUT /api/v2/skills/{name}"
+---
+
+Updates an existing skill. This is a **full replacement** of the [Skill](/agent-api/skills/overview) object. The `name` must match the URL identifier: renames are not supported.
+
+**Returns** the updated [Skill](/agent-api/skills/overview) object.
+
+---
+
+## Path parameters
+
+<ParamField path="name" type="string" required>
+  The skill's `name` (e.g. `extract-table-data` or `myorg/web-helper`). Slash-containing names are supported.
+</ParamField>
+
+---
+
+## Request body
+
+A **full replacement** of the [Skill](/agent-api/skills/overview) object. The `name` in the body must equal the URL identifier. Because this replaces the resource, resend a field's current value to keep it unchanged.
+
+```json
+{
+  "name": "extract-table-data",
+  "description": "Extract data from HTML tables, with CSV output support.",
+  "body": "When you encounter an HTML table, extract rows into JSON or CSV based on the user request.",
+  "source": "https://github.com/myorg/skills",
+  "url_pattern": null
+}
+```
+
+---
+
+## Examples
+
+<CodeGroup>
+```bash cURL
+curl -X PUT https://agp.eu.hcompany.ai/api/v2/skills/extract-table-data \
+  -H "Authorization: Bearer $H_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "extract-table-data",
+    "description": "Extract data from HTML tables: updated with CSV output support.",
+    "body": "When you encounter an HTML table, extract all rows into JSON or CSV format based on the user request."
+  }'
+```
+
+```python Python
+from hai_agents import Client
+
+client = Client()  # reads H_API_KEY from the environment
+
+skill = client.skills.update_skill(
+    name_="extract-table-data",
+    name="extract-table-data",
+    description="Extract data from HTML tables: updated with CSV output support.",
+    body="When you encounter an HTML table, extract all rows into JSON or CSV format based on the user request.",
+)
+print(skill.description)
+```
+
+```typescript TypeScript
+import { HaiAgentsClient } from "hai-agents";
+
+const client = new HaiAgentsClient(); // reads H_API_KEY from the environment
+
+const skill = await client.skills.updateSkill({
+  name: "extract-table-data",
+  body: {
+    name: "extract-table-data",
+    description: "Extract data from HTML tables: updated with CSV output support.",
+    body: "When you encounter an HTML table, extract all rows into JSON or CSV format based on the user request.",
+  },
+});
+console.log(skill.description);
+```
+</CodeGroup>
+
+<Warning>
+PUT is a **full replacement**. Omitting a required field (`name`, `description`, `body`) returns `422`. To leave a field unchanged, pass the existing value.
+</Warning>
+
+```json Response
+{
+  "name": "extract-table-data",
+  "description": "Extract data from HTML tables: updated with CSV output support.",
+  "body": "When you encounter an HTML table, extract all rows into JSON or CSV format based on the user request.",
+  "source": null,
+  "url_pattern": null
+}
+```
+
+---
+
+## Errors
+
+| Status | Cause |
+|---|---|
+| `400` | The `name` in the body does not match the URL identifier (renames are not supported). |
+| `403` | The skill is reserved (`h/`) and you are not an H employee. |
+| `404` | Skill not found or you don't have access. |
+| `422` | Body fails validation; common cases: empty `body`. |

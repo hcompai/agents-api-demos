@@ -1,0 +1,39 @@
+---
+noindex: true
+title: "Skill Catalog"
+sidebarTitle: "Catalog"
+description: "Browse computer-use skills maintained by H Company."
+---
+
+import { SKILLS } from "/snippets/catalog-data.jsx"
+import { CatalogGallery } from "/snippets/catalog-gallery.jsx"
+
+<CatalogGallery items={SKILLS} kind="skill" />
+
+List them by filtering on the `h/` prefix, or fetch one by name:
+
+<CodeGroup>
+```bash cURL
+# List H-maintained skills
+curl "https://agp.eu.hcompany.ai/api/v2/skills?name=h/" -H "Authorization: Bearer $H_API_KEY"
+
+# Fetch one by name
+curl "https://agp.eu.hcompany.ai/api/v2/skills/h/{skill_name}" -H "Authorization: Bearer $H_API_KEY"
+```
+
+```python Python
+# List H-maintained skills
+skills = client.skills.list_skills(name="h/")
+
+# Fetch one by name
+skill = client.skills.get_skill("h/{skill_name}")
+```
+
+```typescript TypeScript
+// List H-maintained skills
+const skills = await client.skills.listSkills({ name: "h/" });
+
+// Fetch one by name
+const skill = await client.skills.getSkill({ name: "h/{skill_name}" });
+```
+</CodeGroup>

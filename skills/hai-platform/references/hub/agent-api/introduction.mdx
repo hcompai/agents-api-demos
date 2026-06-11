@@ -1,0 +1,114 @@
+---
+noindex: true
+title: "Computer-Use Agent API"
+sidebarTitle: "Introduction"
+description: "Run Computer-Use AI agents. Best when there's no API to call."
+---
+
+A **Computer-Use Agent** sees the screen and decides what to click, type, and scroll. Use it when the work lives behind a user interface with no API to call. See it as a visual agent that directly interprets and acts on the UI.
+
+The Computer-Use Agent API gives you programmatic control over agents built on top of H's [Holo family of Vision Language Models](https://hcompany.ai/holo3). You describe a task in plain language; H provisions the environment, runs the agent, and returns the result through a [lifecycle](/agent-api/sessions/overview#lifecycle) your app can monitor, steer, and stop along the way.
+
+V1 ships with the **Browser** environment; **Desktop** is in [What's next](/agent-api/whats-next). One call to start a session:
+
+<CodeGroup>
+```bash CLI
+# `hai run` creates the session and blocks until the agent answers
+hai run "On Google Flights, find the cheapest direct flight from Paris (CDG) to Tokyo (NRT) this Saturday. Return the airline and the price."
+```
+
+```bash cURL
+curl -X POST https://agp.eu.hcompany.ai/api/v2/sessions \
+  -H "Authorization: Bearer $H_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"agent": "h/web-surfer-flash", "messages": [{"type": "user_message", "message": "On Google Flights, find the cheapest direct flight from Paris (CDG) to Tokyo (NRT) this Saturday. Return the airline and the price."}]}'
+```
+
+```python Python
+# pip install hai-agents
+from hai_agents import Client
+
+client = Client()  # reads H_API_KEY from the environment
+
+session = client.sessions.create_session(
+    agent="h/web-surfer-flash",
+    messages=[
+        {
+            "type": "user_message",
+            "message": (
+                "On Google Flights, find the cheapest direct flight from Paris (CDG) "
+                "to Tokyo (NRT) this Saturday. Return the airline and the price."
+            ),
+        }
+    ],
+)
+```
+
+```typescript TypeScript
+// npm install hai-agents
+import { HaiAgentsClient } from "hai-agents";
+
+const client = new HaiAgentsClient(); // reads H_API_KEY from the environment
+
+const session = await client.sessions.createSession({
+  body: {
+    agent: "h/web-surfer-flash",
+    messages: [
+      {
+        type: "user_message",
+        message:
+          "On Google Flights, find the cheapest direct flight from Paris (CDG) to Tokyo " +
+          "(NRT) this Saturday. Return the airline and the price.",
+      },
+    ],
+  },
+});
+```
+</CodeGroup>
+
+That one call spins up the environment, hands it to the built-in `h/web-surfer-flash` agent, and runs until there's an answer. The [Quickstart](/agent-api/quickstart) takes it from there.
+
+## How it fits together
+
+The building blocks, each with a dedicated page:
+
+| Concept | What it is |
+|---|---|
+| [Agent](/agent-api/agents/overview) | A reusable configuration: environments, skills, model, and instructions. Reference a [pre-built agent](/agent-api/agents/pre-built) or create your own. |
+| [Environment](/agent-api/environments/overview) | The surface the agent acts on and observes. A browser today; desktop in [What's next](/agent-api/whats-next). |
+| [Session](/agent-api/sessions/overview) | A single run of an agent against a task, with a lifecycle you can steer. |
+| [Skill](/agent-api/skills/overview) | A reusable instruction fragment an agent loads on demand. Optional. |
+
+<Note>
+**Beta**: this API is still evolving. Send questions or bug reports to feedback@hcompany.ai.
+</Note>
+
+## Get started
+
+<CardGroup cols={2}>
+  <Card title="Quickstart" icon="arrow-right" href="/agent-api/quickstart">
+    Create your first agent session in under 5 minutes. **Start here.**
+  </Card>
+  <Card title="Integrations" icon="code" href="/agent-api/integrations">
+    Install the Python or TypeScript client and skip the polling boilerplate.
+  </Card>
+  <Card title="Session lifecycle" icon="diagram-project" href="/agent-api/sessions/overview#lifecycle">
+    See agent, environment, and session come together at runtime.
+  </Card>
+  <Card title="Agent View" icon="display" href="/agent-api/agent-view">
+    Watch a session live or replay it afterward to debug, monitor, and follow your agents.
+  </Card>
+</CardGroup>
+
+## Integrations
+
+Call the API directly over HTTP, or use a typed client. Both ship as `hai-agents` — see the [Integrations page](/agent-api/integrations) for install, auth, and the helpers we recommend in production.
+
+<CardGroup cols={2}>
+  <Card title="Python" icon="python" href="https://pypi.org/project/hai-agents/">
+    Sync and async clients, typed with Pydantic v2.
+  </Card>
+  <Card title="TypeScript" icon="js" href="https://www.npmjs.com/package/hai-agents">
+    A fully typed client for sessions, agents, skills, and environments.
+  </Card>
+</CardGroup>

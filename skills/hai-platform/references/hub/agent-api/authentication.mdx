@@ -1,0 +1,87 @@
+---
+noindex: true
+title: "Authentication"
+description: "How to authenticate requests to the Computer-Use Agent API."
+---
+
+Every request authenticates with an **H API key** sent as a bearer token. A key is scoped to your **organization**: the agents, skills, and environments it creates are private to that org, and the reserved `h/` namespace holds H's public ones.
+
+The API is served from `https://agp.eu.hcompany.ai`, and every route lives under `/api/v2`.
+
+## Get an API key
+
+Create a key at [platform.eu.hcompany.ai/settings/api-keys](https://platform.eu.hcompany.ai/settings/api-keys): click **Create key** and give it a name. The key is shown once, so store it securely and keep it server-side. Never commit it to source control or ship it in client code.
+
+## Authenticate a request
+
+Send the key in the `Authorization` header as `Bearer $H_API_KEY`. Configure the client once and it attaches the key to every call.
+
+<CodeGroup>
+```bash CLI
+# pip install "hai-agents[cli]"
+hai login            # opens your browser; stores the key in ~/.config/hai/.env
+
+# Or use an existing key directly:
+export H_API_KEY="hk-..."
+hai whoami           # show the resolved endpoint and auth status
+```
+
+```bash cURL
+export H_API_KEY="hk-..."
+
+curl https://agp.eu.hcompany.ai/api/v2/sessions/quota \
+  -H "Authorization: Bearer $H_API_KEY"
+```
+
+```python Python
+# pip install hai-agents
+from hai_agents import Client
+
+client = Client(api_key="hk-...")
+# Or set H_API_KEY in your environment and call Client() with no argument.
+```
+
+```typescript TypeScript
+// npm install hai-agents
+import { HaiAgentsClient } from "hai-agents";
+
+const client = new HaiAgentsClient({ apiKey: "hk-..." });
+// Or set H_API_KEY in your environment and call new HaiAgentsClient() with no argument.
+```
+</CodeGroup>
+
+## Region
+
+H runs isolated EU and US regions. Requests stay in-region, so an EU key only ever reaches EU infrastructure (data residency). The REST API lives under `/api/v2` and the [MCP server](/agent-api/integrations#mcp-server) under `/mcp` on each region's host:
+
+| Region | Host |
+| --- | --- |
+| EU (default) | `https://agp.eu.hcompany.ai` |
+| US | `https://agp.hcompany.ai` |
+
+The client defaults to the EU host. To target another region, pass it explicitly:
+
+<CodeGroup>
+```python Python
+from hai_agents import Client, HaiAgentsEnvironment
+
+client = Client(api_key="hk-...", environment=HaiAgentsEnvironment.US)
+```
+
+```typescript TypeScript
+import { HaiAgentsClient, HaiAgentsEnvironment } from "hai-agents";
+
+const client = new HaiAgentsClient({
+  apiKey: "hk-...",
+  environment: HaiAgentsEnvironment.Us,
+});
+```
+</CodeGroup>
+
+## Organization scoping
+
+A key acts as its organization. Resources you create are visible only within that org, and you reference them by the `id` or `name` you assign. Names under the `h/` prefix are reserved: they are H-maintained, read-only, and available to every organization.
+
+<Note>
+A missing or invalid key returns `401`, and a valid key without permission for an operation (such as modifying a reserved `h/` resource) returns `403`. See [Errors](/agent-api/errors#client-error-codes) for the full list.
+</Note>

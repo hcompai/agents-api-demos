@@ -1,0 +1,56 @@
+---
+noindex: true
+title: "Force an answer"
+sidebarTitle: "Force answer"
+description: "Ask the agent to emit a final answer on its next step."
+api: "POST /api/v2/sessions/{id}/force_answer"
+---
+
+Injects a `force_answer` flow-control event into the session. The agent stops exploring and produces a final answer on its next step, using whatever context it has gathered so far. Mirrors [pause](/agent-api/sessions/pause) and [resume](/agent-api/sessions/resume): no body, authenticated, fire-and-forget.
+
+If the session has [subagents](/agent-api/multi-agent) still running, `force_answer` propagates down to them: each in-flight subagent is asked to wrap up, gets a short grace window to finalize, and any that don't finish in time are cancelled. Their partial results are folded into the parent's answer. The same cascade repeats through any deeper subagents.
+
+**Returns** `202 Accepted`. The command is delivered asynchronously.
+
+---
+
+## Path parameters
+
+<ParamField path="id" type="string" required>
+  The session ID.
+</ParamField>
+
+---
+
+## Examples
+
+<CodeGroup>
+```bash cURL
+curl -X POST https://agp.eu.hcompany.ai/api/v2/sessions/$SESSION_ID/force_answer \
+  -H "Authorization: Bearer $H_API_KEY"
+```
+
+```python Python
+from hai_agents import Client
+
+client = Client()  # reads H_API_KEY from the environment
+
+client.sessions.force_session_answer(session_id)
+```
+
+```typescript TypeScript
+import { HaiAgentsClient } from "hai-agents";
+
+const client = new HaiAgentsClient(); // reads H_API_KEY from the environment
+
+await client.sessions.forceSessionAnswer({ id: sessionId });
+```
+</CodeGroup>
+
+---
+
+## Errors
+
+| Status | Cause |
+|---|---|
+| `404` | Session not found, or you don't have access. |

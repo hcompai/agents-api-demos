@@ -1,0 +1,125 @@
+---
+noindex: true
+title: "Session feedback"
+sidebarTitle: "Feedback"
+description: "Submit feedback on a session or individual event."
+api: "POST /api/v2/sessions/{id}/feedback"
+---
+
+Submit feedback on a completed session. Use this to report whether the agent completed its task successfully.
+
+**Returns** `204 No Content`.
+
+---
+
+## Path parameters
+
+<ParamField path="id" type="string" required>
+  The session ID.
+</ParamField>
+
+---
+
+## Request body: `Feedback`
+
+<ParamField body="success" type="boolean" required>
+  Whether the session completed its task successfully.
+</ParamField>
+
+<ParamField body="message" type="string">
+  Optional feedback message with details.
+</ParamField>
+
+---
+
+## Examples
+
+### Session feedback
+
+<CodeGroup>
+```bash cURL
+curl -X POST https://agp.eu.hcompany.ai/api/v2/sessions/$SESSION_ID/feedback \
+  -H "Authorization: Bearer $H_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "success": true,
+    "message": "Task completed correctly"
+  }'
+```
+
+```python Python
+from hai_agents import Client
+
+client = Client()  # reads H_API_KEY from the environment
+
+client.sessions.submit_session_feedback(
+    session_id,
+    success=True,
+    message="Task completed correctly",
+)
+```
+
+```typescript TypeScript
+import { HaiAgentsClient } from "hai-agents";
+
+const client = new HaiAgentsClient(); // reads H_API_KEY from the environment
+
+await client.sessions.submitSessionFeedback({
+  id: sessionId,
+  body: {
+    success: true,
+    message: "Task completed correctly",
+  },
+});
+```
+</CodeGroup>
+
+### Event feedback
+
+You can also submit feedback on a specific event within the session:
+
+```
+PUT /api/v2/sessions/{id}/events/{event_index}/feedback
+```
+
+Same `Feedback` body. **Returns** `204 No Content`.
+
+<CodeGroup>
+```bash cURL
+curl -X PUT https://agp.eu.hcompany.ai/api/v2/sessions/$SESSION_ID/events/5/feedback \
+  -H "Authorization: Bearer $H_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "success": false,
+    "message": "Agent clicked the wrong button at this step"
+  }'
+```
+
+```python Python
+from hai_agents import Client
+
+client = Client()  # reads H_API_KEY from the environment
+
+client.sessions.submit_event_feedback(
+    session_id,
+    5,
+    success=False,
+    message="Agent clicked the wrong button at this step",
+)
+```
+
+```typescript TypeScript
+import { HaiAgentsClient } from "hai-agents";
+
+const client = new HaiAgentsClient(); // reads H_API_KEY from the environment
+
+await client.sessions.submitEventFeedback({
+  id: sessionId,
+  eventIndex: 5,
+  body: {
+    success: false,
+    message: "Agent clicked the wrong button at this step",
+  },
+});
+```
+</CodeGroup>

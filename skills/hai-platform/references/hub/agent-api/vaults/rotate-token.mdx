@@ -1,0 +1,75 @@
+---
+noindex: true
+title: "Rotate the token"
+sidebarTitle: "Rotate token"
+description: "Replace a vault's stored service account token."
+api: "PUT /api/v2/vaults/{vault_id}/token"
+---
+
+Replaces the service account token stored for a vault config. The new token is health-checked against the provider before it is written, so a token that cannot reach `op_vault_id` is rejected and the old one stays in place.
+
+**Returns** `204 No Content` on success.
+
+<Warning>
+The request body carries a plaintext service account token. Send it only over HTTPS, never log it, and note that rotation is **not idempotent**: a retry after a 5xx may apply twice.
+</Warning>
+
+---
+
+## Path parameters
+
+<ParamField path="vault_id" type="string" required>
+  The vault config's `id` (UUID).
+</ParamField>
+
+---
+
+## Request body
+
+<ParamField body="token" type="string" required>
+  The new 1Password service account token. Write-only and never returned.
+</ParamField>
+
+---
+
+## Examples
+
+<CodeGroup>
+```bash cURL
+curl -X PUT https://agp.eu.hcompany.ai/api/v2/vaults/f47ac10b-58cc-4372-a567-0e02b2c3d479/token \
+  -H "Authorization: Bearer $H_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"token": "ops_newtoken..."}'
+```
+
+```python Python
+from hai_agents import Client
+
+client = Client()  # reads H_API_KEY from the environment
+
+client.vaults.rotate_vault_token(
+    vault_id="f47ac10b-58cc-4372-a567-0e02b2c3d479",
+    token="ops_newtoken...",
+)
+```
+
+```typescript TypeScript
+import { HaiAgentsClient } from "hai-agents";
+
+const client = new HaiAgentsClient(); // reads H_API_KEY from the environment
+
+await client.vaults.rotateVaultToken({
+  vaultId: "f47ac10b-58cc-4372-a567-0e02b2c3d479",
+  token: "ops_newtoken...",
+});
+```
+</CodeGroup>
+
+---
+
+## Errors
+
+| Status | Cause |
+|---|---|
+| `404` | Vault not found or you don't have access. |
+| `422` | The provider rejected the new token. The stored token is unchanged. |

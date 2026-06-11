@@ -56,6 +56,9 @@ It opens the browser (one Google click), exchanges the code, picks the org, revo
 **Extras** (`references/extras/` — dev UI/UX knowledge, not endpoint docs):
 - [agent-view-replay.md](references/extras/agent-view-replay.md) — reviewing/replaying runs in the browser (`platform[.eu].hcompany.ai/agent-view/{id}`), deep-linking to an event, sharing a run with someone outside the org
 
+**Official hub docs** (`references/hub/agent-api/` — the full public docs from hub.hcompany.ai/agent-api, mirrored daily by `.github/workflows/sync-hub-docs.yml`; fresher and more complete than the distilled notes above, but without their gotchas):
+- [index.md](references/hub/agent-api/index.md) — every page with its description and live URL; open the matching `.mdx` for full endpoint docs (request/response shapes, examples)
+
 ## The canonical agent workflow (agp)
 
 1. `POST /api/v2/sessions` with a stored agent id or an inline Agent spec (`{name, instructions, model, environments: [{kind: "web", ...}], skills}`). Pass an idempotency key — retried creates replay instead of duplicating (422 conflicting reuse, 409 in-flight).
@@ -91,4 +94,4 @@ open "mailto:feedback@hcompany.ai?subject=$(python3 -c 'import urllib.parse;prin
 
 ## Source of truth
 
-Shapes in doubt → the backend sources win: `github.com/hcompai/portal` (`backend/portal_h/src/portal_h/domains/<domain>/{controller,dtos}.py`) and `github.com/hcompai/agent_platform` (`backend/agent_api/src/agent_api/{routers,models}/`). Beware on agp: some models live in the private `agent-interface` package — check the version pinned in `uv.lock`, not a stale checkout. Clone shallow and grep rather than guessing. Public agp OpenAPI: `https://agp.hcompany.ai/share/docs`.
+Shapes in doubt → first check the mirrored official docs in [references/hub/agent-api/](references/hub/agent-api/index.md) (synced daily from the hub), then the backend sources win: `github.com/hcompai/portal` (`backend/portal_h/src/portal_h/domains/<domain>/{controller,dtos}.py`) and `github.com/hcompai/agent_platform` (`backend/agent_api/src/agent_api/{routers,models}/`). Beware on agp: some models live in the private `agent-interface` package — check the version pinned in `uv.lock`, not a stale checkout. Clone shallow and grep rather than guessing. Public agp OpenAPI: `https://agp.hcompany.ai/share/docs`.

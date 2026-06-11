@@ -1,0 +1,111 @@
+---
+noindex: true
+title: "Agents"
+sidebarTitle: "Agent"
+description: "An agent is a reusable configuration that defines what an AI agent can do."
+---
+
+An **agent** packages everything a run needs: the environment it acts in, the model that drives it, and the optional skills and instructions that shape how it behaves. Start with a pre-built agent from H, or create your own.
+
+## Configure an agent
+
+| Field | Required | Description |
+|---|---|---|
+| `name` | Yes | Identifies the agent in your catalog and is the value you pass as `agent` when creating a session. |
+| `environments` | Conditional | The surfaces it acts on, like a [browser](/agent-api/environments/browser). Required unless the agent is a pure [manager](/agent-api/multi-agent) that only delegates to `subagents`. |
+| `description` | No | What the agent does. Only comes into play when the agent can be delegated to: a parent agent reads it to decide whether to hand a task off. |
+| `model` | No | The Holo model that runs the agent. Defaults to `holo3-122b-a10b`; pass any Holo model id (for example `holo3-1-35b-a3b` for the faster Holo3.1) from the [Models API](/about-the-models-api). The choice also fixes the agent's runtime profile (reasoning effort, concurrency, context window), which is not separately tunable. |
+| `instructions` | No | Appended to the system prompt to steer behavior. |
+| `skills` | No | Reusable [instruction fragments](/agent-api/skills/overview) the agent loads on demand. |
+| `subagents` | No | Specialist agents this one can delegate to. Each runs as its own child session, in parallel, and returns a single answer the manager folds into its own. See [Multi-agent](/agent-api/multi-agent). |
+| `answer_format` | No | A [JSON Schema](https://json-schema.org/) the final answer must conform to. When set, the agent returns [structured output](/agent-api/sessions/overview#structured-output) matching the schema instead of free-form text. Leave it unset for free-form text; override it per run with session [`overrides`](/agent-api/sessions/create). |
+
+Each `environments`, `skills`, or `subagents` entry is either a string catalog id or an inline object: references keep definitions central and reusable; inline is convenient for one-offs. For exact field constraints, see [Create an agent](/agent-api/agents/create).
+
+## Create your own
+
+Create an agent once, then reference it by `name` in every session:
+
+<CodeGroup>
+```bash cURL
+curl -X POST https://agp.eu.hcompany.ai/api/v2/agents \
+  -H "Authorization: Bearer $H_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "web-price-finder",
+    "description": "Finds and reports prices for products, flights, or services on the public web.",
+    "instructions": "When the user asks for a price, return a single concise line with the amount, currency, and key context (vendor or airline, date, link). Prefer the cheapest matching option. If the price is not visible without login or payment, say so explicitly rather than guessing.",
+    "model": "holo3-122b-a10b",
+    "environments": [
+      {
+        "id": "price-browser",
+        "kind": "web",
+        "headless": false,
+        "width": 1280,
+        "height": 800,
+        "start_url": "https://www.google.com/travel/flights"
+      }
+    ],
+    "skills": ["extract-data"]
+  }'
+```
+
+```python Python
+client.agents.create_agent(
+    name="web-price-finder",
+    description="Finds and reports prices for products, flights, or services on the public web.",
+    instructions=(
+        "When the user asks for a price, return a single concise line with the amount, "
+        "currency, and key context (vendor or airline, date, link). Prefer the cheapest "
+        "matching option. If the price is not visible without login or payment, say so "
+        "explicitly rather than guessing."
+    ),
+    model="holo3-122b-a10b",
+    environments=[
+        {
+            "id": "price-browser",
+            "kind": "web",
+            "headless": False,
+            "width": 1280,
+            "height": 800,
+            "start_url": "https://www.google.com/travel/flights",
+        }
+    ],
+    skills=["extract-data"],
+)
+```
+
+```typescript TypeScript
+await client.agents.createAgent({
+  name: "web-price-finder",
+  description: "Finds and reports prices for products, flights, or services on the public web.",
+  instructions:
+    "When the user asks for a price, return a single concise line with the amount, " +
+    "currency, and key context (vendor or airline, date, link). Prefer the cheapest " +
+    "matching option. If the price is not visible without login or payment, say so " +
+    "explicitly rather than guessing.",
+  model: "holo3-122b-a10b",
+  environments: [
+    {
+      id: "price-browser",
+      kind: "web",
+      headless: false,
+      width: 1280,
+      height: 800,
+      startUrl: "https://www.google.com/travel/flights",
+    },
+  ],
+  skills: ["extract-data"],
+});
+```
+</CodeGroup>
+
+## Endpoints
+
+| Method | Path | Description |
+|---|---|---|
+| `POST` | `/api/v2/agents` | [Create an agent](/agent-api/agents/create) |
+| `GET` | `/api/v2/agents` | [List agents](/agent-api/agents/list) |
+| `GET` | `/api/v2/agents/{name}` | [Retrieve an agent](/agent-api/agents/retrieve) |
+| `PUT` | `/api/v2/agents/{name}` | [Update an agent](/agent-api/agents/update) |
+| `DELETE` | `/api/v2/agents/{name}` | [Delete an agent](/agent-api/agents/delete) |

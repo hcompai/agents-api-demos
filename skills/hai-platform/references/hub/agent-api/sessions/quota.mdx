@@ -1,0 +1,67 @@
+---
+noindex: true
+title: "Get quota"
+sidebarTitle: "Quota"
+description: "Check your concurrent session quota."
+api: "GET /api/v2/sessions/quota"
+---
+
+Returns the quota status for the authenticated user's concurrent-session limit.
+
+---
+
+## Response
+
+<ResponseField name="scope" type="string" required>
+  Quota scope. Indicates the level the limits apply at (e.g. `user`).
+</ResponseField>
+
+<ResponseField name="limit" type="integer" required>
+  Maximum number of concurrent sessions allowed.
+</ResponseField>
+
+<ResponseField name="active" type="integer" required>
+  Number of sessions currently active (not in a terminal state).
+</ResponseField>
+
+<ResponseField name="available" type="integer" required>
+  Remaining concurrent slots (`limit - active`).
+</ResponseField>
+
+---
+
+## Examples
+
+<CodeGroup>
+```bash cURL
+curl https://agp.eu.hcompany.ai/api/v2/sessions/quota \
+  -H "Authorization: Bearer $H_API_KEY"
+```
+
+```python Python
+from hai_agents import Client
+
+client = Client()  # reads H_API_KEY from the environment
+
+quota = client.sessions.get_session_quota()
+print(quota.available)
+```
+
+```typescript TypeScript
+import { HaiAgentsClient } from "hai-agents";
+
+const client = new HaiAgentsClient(); // reads H_API_KEY from the environment
+
+const quota = await client.sessions.getSessionQuota();
+console.log(quota.available);
+```
+</CodeGroup>
+
+```json Response
+{
+  "scope": "user",
+  "limit": 10000,
+  "active": 0,
+  "available": 10000
+}
+```

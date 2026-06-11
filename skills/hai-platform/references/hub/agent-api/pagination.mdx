@@ -1,0 +1,138 @@
+---
+noindex: true
+title: "Pagination and filtering"
+sidebarTitle: "Pagination"
+description: "How to navigate lists of sessions, agents, and skills."
+---
+
+Most list endpoints return page-based results with consistent parameters. [Vaults](/agent-api/vaults/list) are the exception: they use offset-based pagination (`limit` / `offset`) and a `total` / `limit` / `offset` / `vaults` envelope.
+
+## Pagination parameters
+
+| Parameter | Type | Default | Constraints |
+|---|---|---|---|
+| `page` | integer | `1` | >= 1 |
+| `size` | integer | `10` | 1–1000 |
+| `sort` | list[string] | varies | Endpoint-specific fields, prefix `-` for descending |
+
+<Note>
+Two endpoints cap `size` lower: `GET /sessions` caps it at `100`, and the session [event stream](/agent-api/sessions/events) (`GET /sessions/{id}/events`) defaults `size` to `50` and caps it at `200`.
+</Note>
+
+## Response shape
+
+Every paginated response has the same envelope:
+
+```json
+{
+  "items": [
+    { "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890", "..." : "..." },
+    { "id": "b2c3d4e5-f6a7-8901-bcde-f12345678901", "..." : "..." }
+  ],
+  "page": 1,
+  "total": 142
+}
+```
+
+| Field | Type | Description |
+|---|---|---|
+| `items` | array | The resources on this page. |
+| `page` | integer | Current page number. |
+| `total` | integer | Total number of matching resources across all pages. |
+
+Responses don't echo back the `size` you sent, so track it yourself. There are more pages while `page * size < total`.
+
+## Example: iterate through all sessions
+
+```python
+import requests
+
+page = 1
+all_sessions = []
+
+while True:
+    response = requests.get(
+        "https://agp.eu.hcompany.ai/api/v2/sessions",
+        headers={"Authorization": f"Bearer {API_KEY}"},
+        params={"page": page, "size": 50},
+    ).json()
+
+    all_sessions.extend(response["items"])
+
+    if page * 50 >= response["total"]:
+        break
+    page += 1
+
+print(f"Fetched {len(all_sessions)} sessions")
+```
+
+---
+
+## Sorting
+
+List endpoints support sorting via the `sort` parameter. Prefix with `-` for descending order.
+
+### Sessions
+
+| Sort value | Description |
+|---|---|
+| `created_at` | Oldest first. |
+| `-created_at` | Newest first (default). |
+
+### Agents
+
+| Sort value | Description |
+|---|---|
+| `created_at` / `-created_at` | By creation date. |
+| `agent_name` / `-agent_name` | Alphabetical by name. |
+
+### Skills
+
+| Sort value | Description |
+|---|---|
+| `created_at` / `-created_at` | By creation date. |
+| `name` / `-name` | Alphabetical by name. |
+
+```bash
+# Get the 10 most recent sessions
+curl "https://agp.eu.hcompany.ai/api/v2/sessions?sort=-created_at&size=10" \
+  -H "Authorization: Bearer $H_API_KEY"
+```
+
+---
+
+## Filtering sessions
+
+The `GET /api/v2/sessions` endpoint supports several filters that can be combined:
+
+| Filter | Type | Description |
+|---|---|---|
+| `status[]` | string (multi-value) | Filter by session status (e.g., `running`, `completed`). |
+| `agent[]` | string (multi-value) | Filter by agent identifier (e.g., `web-price-finder`). |
+| `group_id` | string | Filter by group: useful for multi-session workflows. |
+| `parent_session_id` | string | Find child sessions of a parent. |
+| `owner` | string | Access scope. Default: `me-in-organization`. |
+
+### Example: find all running sessions for a specific agent
+
+```bash
+curl "https://agp.eu.hcompany.ai/api/v2/sessions?status=running&agent=web-price-finder" \
+  -H "Authorization: Bearer $H_API_KEY"
+```
+
+### Example: find child sessions of a parent
+
+```bash
+curl "https://agp.eu.hcompany.ai/api/v2/sessions?parent_session_id=$SESSION_ID" \
+  -H "Authorization: Bearer $H_API_KEY"
+```
+
+---
+
+## Filtering skills
+
+The `GET /api/v2/skills` endpoint supports:
+
+| Filter | Type | Description |
+|---|---|---|
+| `name` | string | Name prefix filter. |

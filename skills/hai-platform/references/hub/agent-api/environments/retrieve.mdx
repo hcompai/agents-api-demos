@@ -1,0 +1,68 @@
+---
+noindex: true
+title: "Retrieve an environment"
+sidebarTitle: "Retrieve"
+description: "Get the full specification of an environment."
+api: "GET /api/v2/environments/{id}"
+---
+
+Retrieves the complete [Environment](/agent-api/environments/overview) object.
+
+**Returns** the Environment object if the identifier is valid and you have access.
+
+---
+
+## Path parameters
+
+<ParamField path="id" type="string" required>
+  The environment's `id` (e.g., `h/browser` or `my-browser`). Slash-containing identifiers are supported.
+</ParamField>
+
+---
+
+## Examples
+
+<CodeGroup>
+```bash cURL
+curl "https://agp.eu.hcompany.ai/api/v2/environments/h/browser" \
+  -H "Authorization: Bearer $H_API_KEY"
+```
+
+```python Python
+from hai_agents import Client
+
+client = Client()  # reads H_API_KEY from the environment
+
+environment = client.environments.get_environment("h/browser")
+print(environment)
+```
+
+```typescript TypeScript
+import { HaiAgentsClient } from "hai-agents";
+
+const client = new HaiAgentsClient(); // reads H_API_KEY from the environment
+
+const environment = await client.environments.getEnvironment({ id: "h/browser" });
+console.log(environment);
+```
+</CodeGroup>
+
+```json Response
+{
+  "id": "h/browser",
+  "kind": "web",
+  "headless": false,
+  "width": 1200,
+  "height": 1200,
+  "start_url": "https://www.bing.com",
+  "mode": "visual"
+}
+```
+
+---
+
+## Errors
+
+| Status | Cause |
+|---|---|
+| `404` | Environment not found or you don't have access. |
