@@ -100,12 +100,12 @@ class CuaRunner:
 
 
 def agent_view_url(base_url: str, trajectory_id: str) -> str:
-    """``https://agp.<region>.…`` + id  →  ``https://dashboard.<region>.…/agent-view/<id>``."""
+    """``https://agp.<region>.…`` + id  →  ``https://platform.<region>.…/agent-view/<id>``."""
     if not trajectory_id:
         raise ValueError("trajectory_id must be non-empty")
     parts = urlsplit(base_url)
     if not parts.scheme or parts.hostname is None:
         raise ValueError(f"url missing scheme/host: {base_url!r}")
     host = parts.hostname
-    dashboard_host = "dashboard." + host[len("agp.") :] if host.startswith("agp.") else host
-    return urlunsplit((parts.scheme, dashboard_host, f"/agent-view/{trajectory_id}", "", ""))
+    platform_host = "platform." + host[len("agp.") :] if host.startswith("agp.") else host
+    return urlunsplit((parts.scheme, platform_host, f"/agent-view/{trajectory_id}", "", ""))

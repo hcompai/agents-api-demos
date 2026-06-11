@@ -2,7 +2,7 @@
 
 Gated behind ``RUN_SLOW_TESTS=1`` + ``H_API_KEY`` so the default ``pytest`` run never spends
 real platform budget. ``_RecordingRunner`` captures the session id even when the run later
-fails so ``_LinkBoard`` can print a dashboard URL for every case at module teardown.
+fails so ``_LinkBoard`` can print a platform URL for every case at module teardown.
 """
 
 import os
@@ -73,7 +73,7 @@ _LIVE_AGENT_ARTIFACT = os.environ.get("H_AGENT_ARTIFACT", "mcpify-anything-agent
 class _RecordingRunner(CuaRunner):
     """A real ``CuaRunner`` that remembers the created session id (and its own base URL).
 
-    Lets ``_LinkBoard`` build a dashboard agent-view link for every run even when the run
+    Lets ``_LinkBoard`` build a platform agent-view link for every run even when the run
     later times out or fails. Stashes ``base_url`` locally so the runner itself stays
     minimal (no public ``base_url`` accessor on production ``CuaRunner``).
     """
