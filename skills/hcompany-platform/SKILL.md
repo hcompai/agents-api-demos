@@ -1,5 +1,5 @@
 ---
-name: hcompany-apis
+name: hcompany-platform
 description: Expert knowledge of the two H Company backends — the portal (portal, API at portal.api.eu.hcompany.ai / portal.production.hcompany.ai — auth, organizations, API keys, invitations, billing) and the agent platform v2 API (agp.hcompany.ai — sessions, agents, skills, environments, vaults, long-polling, the hai-agents SDK). Use this skill whenever the user mentions portal, agent_platform, platform.hcompany.ai, agp.hcompany.ai, H_API_KEY or hk-... keys, hai-agents / hai_agents, run_session, agent sessions or trajectories, agent-view or replaying/reviewing a run, /api/v2 endpoints, browser agent environments, vaults for agent secrets, organizations or invitations on the H platform, the desktop OAuth/PKCE login flow, or wants to call, integrate with, debug, or automate anything against an H Company API — even without naming it (e.g. "get me an API key", "set up my .env", "launch a web agent", "why is my session stuck", "show me what the agent did", "why am I getting 401 from the platform?").
 ---
 
