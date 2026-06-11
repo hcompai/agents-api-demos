@@ -1,0 +1,20 @@
+{
+  "name": "hcompany-skills",
+  "owner": {
+    "name": "Mathieu Diaz",
+    "email": "mathieudiaz@hcompany.ai"
+  },
+  "metadata": {
+    "description": "H Company API skills (portal + agent platform + hai-agents SDKs)",
+    "version": "1.0.0"
+  },
+  "plugins": [
+    {
+      "name": "hcompany-apis",
+      "description": "Expert knowledge of the H Company APIs: portal (auth, orgs, API keys), agent platform v2 (sessions, agents, skills, environments, vaults), hai-agents Python/TS SDKs, automated H_API_KEY setup, and agent-view run replay.",
+      "source": "./",
+      "strict": false,
+      "skills": ["./skills/hcompany-apis"]
+    }
+  ]
+}

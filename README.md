@@ -58,14 +58,27 @@ Shared components (agent instructions, `ReviewResult` model, helpers) live in [`
 
 | Env var | Required | Source |
 | --- | --- | --- |
-| `H_API_KEY` | yes | https://platform.hcompany.ai/settings/api-keys |
+| `H_API_KEY` | yes | auto-setup via `python3 skills/hcompany-apis/scripts/h_login.py`, or manually from https://platform.hcompany.ai/settings/api-keys |
+
+## Install the skills (Claude Code plugin marketplace)
+
+This repo doubles as a Claude Code plugin marketplace ([`.claude-plugin/marketplace.json`](.claude-plugin/marketplace.json)), same layout as [anthropics/skills](https://github.com/anthropics/skills). In any Claude Code session:
+
+```
+/plugin marketplace add hcompai/agent-sdk-demo      # or a local clone path
+/plugin install hcompany-apis@hcompany-skills
+```
+
+The `hcompany-apis` skill ([`skills/hcompany-apis/`](skills/hcompany-apis/)) gives Claude expert knowledge of the H Company APIs: portal (auth, orgs, API keys + the automated `H_API_KEY` → `.env` login script), agent platform v2 (sessions, agents, environments, vaults, long-polling), the hai-agents Python/TS SDKs, and the agent-view run-replay workflow. On claude.ai, upload the `skills/hcompany-apis/` folder via Settings → Skills.
 
 ## Project layout
 
 ```
 hai-agent-demos/
+├── .claude-plugin/marketplace.json # Claude Code plugin marketplace (skills below)
+├── skills/hcompany-apis/          # H Company APIs skill (portal + agp + SDKs)
 ├── .mcp.json                      # registers MCP servers with Claude Code
-├── .claude/skills/qa-via-cli/     # Claude Code skill for invoking qa-cli
+├── .claude/skills/qa-via-cli/     # repo-local skill for invoking qa-cli
 ├── examples/
 │   ├── _shared.py                 # shared instructions, models, and helpers (qa_*)
 │   ├── agent_skills/              # skill docs passed to the ui-reviewer agent

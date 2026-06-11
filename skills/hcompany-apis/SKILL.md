@@ -62,7 +62,7 @@ It opens the browser (one Google click), exchanges the code, picks the org, revo
 2. Long-poll `GET /api/v2/sessions/{id}/changes?from_index=N&wait_for_seconds=30` (cap 60 s). Empty window → **204 + `ETag: <from_index>`**, not an error: keep the cursor, re-poll. Advance by `from_index += len(events)` — never reset.
 3. React to events (`AgentEvent.kind` ∈ policy_event / tool_result / answer_event / observation_event / message_event / error_event, plus AgentStarted/Completion/Error, MetricsUpdate, LiveViewUrl, ChatMessage). Interact via `POST .../messages`, `pause`/`resume`, `force_answer`.
 4. In Python this is just `hai_agents.run_session(...)`, in TypeScript `client.runSession(...)` — read [references/sdk/python.md](references/sdk/python.md) or [references/sdk/typescript.md](references/sdk/typescript.md) before hand-rolling HTTP.
-5. **Always hand the user the replay link**: `https://platform.hcompany.ai/agent-view/{session_id}` (EU sessions → `platform.eu.hcompany.ai`; match the region of the API you called). That's how they review what the agent actually did, live or after the fact — see [references/extras/agent-view-replay.md](references/extras/agent-view-replay.md).
+5. **Always hand the user the replay link AND offer to open it**: `https://platform.hcompany.ai/agent-view/{session_id}` (EU sessions → `platform.eu.hcompany.ai`; match the region of the API you called). The moment a run starts, ask the user whether to open it in their browser, and on yes run `open "<agent-view-url>"` (macOS; `xdg-open` on Linux) — watching the agent live beats reading your summary. Details: [references/extras/agent-view-replay.md](references/extras/agent-view-replay.md).
 
 ## Gotchas that bite
 
@@ -74,6 +74,20 @@ It opens the browser (one Google click), exchanges the code, picks the org, revo
 - **Reserved `h/` namespace** on agp is read-only for org users; org rows shadow same-id reserved rows.
 - **Vault create/rotate is not idempotent** — list before retrying a timed-out create; vault↔session attachment is platform-managed (no public `vault_id` field on `SessionRequest`).
 - **Quota**: check `GET /api/v2/sessions/quota` before mass-launching sessions.
+
+## Something broken? Report it to feedback@hcompany.ai
+
+If you hit what looks like a **platform-side problem** — an endpoint behaving differently than documented here, an unexplained 5xx, a session stuck with no events, a key that AgP rejects right after creation — don't leave the user stranded: write the report for them and offer to send it to **feedback@hcompany.ai**.
+
+Write the full report yourself (that's the point — the user has nothing to do): one-line summary, region + host called, exact endpoint and method, full response (status, `detail`/`title`, headers like `Retry-After`/`ETag`), timestamp (UTC), session/trajectory id and the agent-view link if relevant, what was expected vs observed, and minimal reproduction steps. Never include `hk-` keys or tokens in the report.
+
+Then **offer to open the user's default email app, pre-filled** via a `mailto:` link — the user only has to hit Send. Write the report to a temp file, then:
+
+```bash
+open "mailto:feedback@hcompany.ai?subject=$(python3 -c 'import urllib.parse;print(urllib.parse.quote("[agp] 504 on /v2/sessions/{id}/changes"))')&body=$(python3 -c 'import urllib.parse;print(urllib.parse.quote(open("/tmp/h-feedback.txt").read()))')"
+```
+
+(`open` is macOS; use `xdg-open` on Linux. Keep the body to a few KB — `mailto:` has length limits — and paste everything inline, no attachments.) If a mail tool is connected (e.g. Gmail MCP), a draft there is a fine alternative. Either way, show the user the report before anything is sent — they press Send, not you.
 
 ## Source of truth
 

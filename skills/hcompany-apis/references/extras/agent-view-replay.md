@@ -4,11 +4,23 @@ Every agent platform session/trajectory can be watched and replayed step-by-step
 
 ## The reflex to build
 
-**Whenever you create, run, or debug a session for the user, give them the agent-view link** in your answer — they will almost always want to see the run, not just read your summary of it:
+**Whenever you create, run, or debug a session for the user, give them the agent-view link — and offer to open it in their browser.** They will almost always want to *watch* the run, not just read your summary of it:
 
 ```
 https://platform.hcompany.ai/agent-view/{session_id}
 ```
+
+Concretely:
+
+- **When you start working against the platform** (first session of a task), offer once to open the platform UI (`open "https://platform.eu.hcompany.ai"` — or the US host) so the user has it at hand.
+- **The moment each run launches**, ask the user if they want it opened in their browser ("want me to open the run?") — and on yes:
+
+```bash
+open "https://platform.eu.hcompany.ai/agent-view/{session_id}"   # macOS; xdg-open on Linux
+```
+
+- If they said yes once and you launch several runs in the same task, keep opening them (or open the first and link the rest) — don't re-ask every time.
+- Always print the link in your answer too, even when you opened the tab — it's what survives in the transcript.
 
 The `{session_id}` is the id returned by `POST /api/v2/sessions` (the v2 session id and the trajectory id are the same UUID).
 
