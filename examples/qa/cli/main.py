@@ -13,13 +13,14 @@ import time
 
 import tyro
 from dotenv import load_dotenv
-from hai_agents import Agent, Client, run_session
+from hai_agents import Agent, Client
 
 from examples._shared import (
     browser_env,
     print_freeform_answer,
     print_structured_answer,
     require_api_key,
+    run_session_streaming,
     setup_cli_logging,
 )
 from examples.qa.shared import REVIEWER_INSTRUCTIONS, ReviewResult, load_agent_skills
@@ -35,8 +36,10 @@ def review(url: str, instruction: str = "Do a general usability and accessibilit
         instruction: Natural-language brief telling the reviewer what to focus on.
     """
     started = time.monotonic()
-    result = run_session(
+    print(f"reviewing {url}…", file=sys.stderr)
+    result = run_session_streaming(
         _client(),
+        started=started,
         agent=Agent(
             name="ui-reviewer",
             description="Reviews a web UI for usability, accessibility, and obvious bugs.",
@@ -60,8 +63,10 @@ def visual(url: str, question: str) -> None:
         question: One short question about what is visible on the page.
     """
     started = time.monotonic()
-    result = run_session(
+    print(f"opening {url}…", file=sys.stderr)
+    result = run_session_streaming(
         _client(),
+        started=started,
         agent=Agent(
             name="visual-checker",
             description="Answers a single visual question about a web page.",

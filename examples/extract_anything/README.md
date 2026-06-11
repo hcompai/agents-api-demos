@@ -1,8 +1,10 @@
-# `mcpify_anything` — one tool, any website
+# `extract_anything` — one tool, any website
 
 A FastMCP server with a **single MCP tool** that turns any URL into typed JSON. The caller supplies a JSON Schema at call time; a cloud browser agent drives the page and returns an answer the platform validates against that schema.
 
 Where [`qa/mcp`](../qa/mcp/) shows wrapping *one fixed task* as one tool, this shows the inverse: one tool, **whatever shape the caller asks for**. Drop in a schema, get back JSON.
+
+Best showcased on pages where the answer lives **only in pixels** — and on a cloud headless browser (no GPU), that means static raster images. The example below points the tool at Wikipedia's *Picture of the Day* and describes what is in the image by actually looking at it.
 
 ## The tool
 
@@ -24,18 +26,25 @@ The whole tool is ~30 lines in [`server.py`](server.py) — read it top-to-botto
 cd hai-agent-demos
 uv sync
 cp .env.example .env  # add H_API_KEY
-hai-agent-demos-mcpify-anything   # MCP server over stdio (Claude Code auto-registers via .mcp.json)
+hai-agent-demos-extract-anything   # MCP server over stdio (Claude Code auto-registers via .mcp.json)
 ```
 
 In Claude Code:
 
-> *"Use `extract` on https://news.ycombinator.com — task: `read the top 3 stories`, answer_schema: `{"type":"object","properties":{"stories":{"type":"array","items":{"type":"object","properties":{"title":{"type":"string"},"url":{"type":"string"}}}}}}`."*
+> *"Use `extract` on https://en.wikipedia.org/wiki/Main_Page — task: `find the Picture of the Day section, look at the image, and describe what is in it in your own words; also transcribe any text inside the image and read the credit`, answer_schema: `{"type":"object","properties":{"title":{"type":"string"},"image_description":{"type":"string"},"visible_text_in_image":{"type":"string"},"credit":{"type":"string"}},"required":["title","image_description","credit"]}`."*
+
+Prefer a shell? The same extraction is wired up as a CLI:
+
+```bash
+uv run extract-cli picture
+```
 
 ## Layout
 
 ```
-mcpify_anything/
+extract_anything/
 ├── server.py    # FastMCP wiring + the extract tool
+├── cli.py       # `extract-cli picture` — Wikipedia Picture-of-the-Day demo
 └── README.md
 ```
 

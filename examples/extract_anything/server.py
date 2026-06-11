@@ -10,7 +10,7 @@ from examples._shared import browser_env, require_api_key, setup_server_logging
 
 _OPERATOR_INSTRUCTIONS = (Path(__file__).parent / "prompts" / "extractor_instructions.md").read_text()
 
-mcp = FastMCP("hai-agent-demos-mcpify-anything")
+mcp = FastMCP("hai-agent-demos-extract-anything")
 _client_instance: Client | None = None
 
 
@@ -49,7 +49,7 @@ def _client() -> Client:
 
 
 def main() -> None:
-    """Entry point for the ``hai-agent-demos-mcpify-anything`` console script."""
+    """Entry point for the ``hai-agent-demos-extract-anything`` console script."""
     setup_server_logging()
     mcp.run()
 

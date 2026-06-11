@@ -12,7 +12,7 @@ The `hai-agents` SDK lets you spin up autonomous agents — web-surfing, code-ru
 Each example also demonstrates a different *recipe* on top of the SDK:
 
 - [`qa`](examples/qa/) ([`mcp`](examples/qa/mcp/) / [`cli`](examples/qa/cli/)): **single-task pattern** — wrap one agent task as one tool/command, exposed both as an MCP server and a CLI.
-- [`mcpify_anything`](examples/mcpify_anything/): **bring-your-own-schema pattern** — one MCP tool that takes a URL plus a caller-supplied JSON Schema and returns matching JSON.
+- [`extract_anything`](examples/extract_anything/): **bring-your-own-schema pattern** — one MCP tool (and matching CLI) that takes a URL plus a caller-supplied JSON Schema and returns matching JSON.
 - [`counterfeit_detection`](examples/counterfeit_detection/): **single-agent + custom-tools pattern** — upgrade one agent with local Python tools (Playwright screenshots, Holo visual compare) and a step/time budget, no orchestration.
 
 ## Quickstart
@@ -56,7 +56,7 @@ The `.mcp.json` registration assumes `uv run` is available — if you go the pip
 | --- | --- | --- |
 | [`qa/mcp`](examples/qa/mcp/) | Autonomous browser agent QAs a remote URL and returns structured `{verdict, summary, findings}` | MCP server (`review_web_ui`, `visual_check`) |
 | [`qa/cli`](examples/qa/cli/) | Same QA agent exposed as a shell command, surfaced to Claude Code via the `hai-qa-via-cli` skill | CLI (`qa-cli review / visual`) |
-| [`mcpify_anything`](examples/mcpify_anything/) | One MCP tool that takes a URL, a task, and a caller-supplied JSON Schema; a cloud browser agent drives the page and returns JSON matching the schema | MCP server (`extract`) |
+| [`extract_anything`](examples/extract_anything/) | One MCP tool (and matching CLI) that takes a URL, a task, and a caller-supplied JSON Schema; a cloud browser agent drives the page and returns JSON matching the schema. Demoed against Wikipedia's Picture of the Day — describing the featured image by actually looking at the pixels, which no scraper can do | MCP server (`extract`) + CLI (`extract-cli picture`) |
 | [`counterfeit_detection`](examples/counterfeit_detection/) | Three-stage cookbook: a bare `run_session` finds one counterfeit of a genuine product; local custom tools add screenshot-grounded visual verdicts; a `max_steps`/`max_time_s` budget turns it into an exhaustive sweep | CLI (`counterfeit-cli simple / tooled / sweep`) |
 
 ## How it works
@@ -134,7 +134,7 @@ hai-agent-demos/
 │   │   ├── agent_skills/          # skill docs passed to the ui-reviewer agent
 │   │   ├── mcp/                   # MCP server (review_web_ui + visual_check)
 │   │   └── cli/                   # CLI wrapper (qa-cli review / visual)
-│   ├── mcpify_anything/           # one MCP tool: URL + JSON Schema -> JSON
+│   ├── extract_anything/          # one tool, two surfaces: MCP `extract` + `extract-cli picture`
 │   │   └── prompts/               # extractor_instructions.md
 │   └── counterfeit_detection/     # cookbook CLI (counterfeit-cli simple / tooled / sweep)
 │       └── prompts/               # ground_rules.md + simple.md / tooled.md / sweep.md
