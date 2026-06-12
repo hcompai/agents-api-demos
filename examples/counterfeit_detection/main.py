@@ -39,6 +39,17 @@ from examples.counterfeit_detection.prompts import (
 )
 
 
+class ProductInfo(BaseModel):
+    """Genuine-product details extracted in Step 0 — grounds the queries, the price math, and the report."""
+
+    model_name: str
+    reference: str | None = None
+    color: str | None = None
+    material: str | None = None
+    retail_price: str
+    specifications: list[str] = []
+
+
 class CounterfeitFinding(BaseModel):
     """Structured answer for the single-hit stages (``simple`` and ``tooled``)."""
 
@@ -46,6 +57,7 @@ class CounterfeitFinding(BaseModel):
     confidence: Literal["high", "medium", "low", "none"]
     red_flags: list[str] = []
     reasoning: str
+    product_info: ProductInfo | None = None
 
 
 class SweepSummary(BaseModel):

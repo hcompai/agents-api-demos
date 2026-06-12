@@ -32,7 +32,7 @@ result = run_session(
         name="counterfeit-spotter",
         instructions=SIMPLE_INSTRUCTIONS,                      # persona + rules + safety
         environments=[browser_env(genuine_url)],               # browser starts on the genuine page
-        answer_format=CounterfeitFinding.model_json_schema(),  # {counterfeit_url, confidence, red_flags, reasoning}
+        answer_format=CounterfeitFinding.model_json_schema(),  # {counterfeit_url, confidence, red_flags, reasoning, product_info}
     ),
     messages=f"Find one counterfeit listing of the genuine product at {genuine_url}.",
 )
