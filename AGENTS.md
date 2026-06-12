@@ -72,8 +72,10 @@ class MyClass:
 
 ### CLI scripts
 
-- **File order**: shebang → module docstring → Pydantic config model → `tyro.cli()` → `logging` setup
 - **Parsers**: `tyro` is preferred over `click`; never use `argparse`
+- **Two valid shapes**:
+  - **Function-based** (preferred for short demo CLIs) — pass plain functions to `tyro.extras.subcommand_cli_from_dict({"name": fn, ...})`. Each subcommand is one top-level function; tyro derives the parser from its signature and docstring. Used by every CLI in this repo.
+  - **Pydantic-config** (use when a CLI has many options, sub-configs, or composes with non-CLI callers) — define a `BaseModel` config, parse with `tyro.cli(Config)`, hand the config to the runtime class via `.make()`. File order in that case: module docstring → config model → `tyro.cli()` → `logging` setup.
 - **Output**: use `logging` for operational messages and `print` only to display results to the user
 
 ## Useful Commands

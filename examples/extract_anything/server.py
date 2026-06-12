@@ -1,14 +1,13 @@
 """FastMCP server exposing a single typed-extraction tool over a cloud browser agent."""
 
-from pathlib import Path
 from typing import Any
 
+from dotenv import load_dotenv
 from fastmcp import FastMCP
 from hai_agents import Agent, Client, run_session
 
 from examples._shared import browser_env, require_api_key, setup_server_logging
-
-_OPERATOR_INSTRUCTIONS = (Path(__file__).parent / "prompts" / "extractor_instructions.md").read_text()
+from examples.extract_anything.prompts import OPERATOR_INSTRUCTIONS
 
 mcp = FastMCP("hai-agent-demos-extract-anything")
 _client_instance: Client | None = None
@@ -28,7 +27,7 @@ def extract(url: str, task: str, answer_schema: dict[str, Any]) -> dict[str, Any
         agent=Agent(
             name="extractor",
             description="Reads structured data off a web page.",
-            instructions=_OPERATOR_INSTRUCTIONS,
+            instructions=OPERATOR_INSTRUCTIONS,
             environments=[browser_env(url)],
             answer_format=answer_schema,
         ),
@@ -50,6 +49,7 @@ def _client() -> Client:
 
 def main() -> None:
     """Entry point for the ``hai-agent-demos-extract-anything`` console script."""
+    load_dotenv()
     setup_server_logging()
     mcp.run()
 

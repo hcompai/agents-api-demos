@@ -2,11 +2,12 @@
 
 import json
 
+from dotenv import load_dotenv
 from fastmcp import FastMCP
-from hai_agents import Agent, Client, run_session
+from hai_agents import Client, run_session
 
-from examples._shared import browser_env, require_api_key, setup_server_logging
-from examples.qa.shared import REVIEWER_INSTRUCTIONS, ReviewResult, load_agent_skills
+from examples._shared import require_api_key, setup_server_logging
+from examples.qa.shared import ReviewResult, build_reviewer_agent, build_visual_checker_agent
 
 mcp = FastMCP("hai-agent-demos-qa")
 _client_instance: Client | None = None
@@ -22,14 +23,7 @@ def review_web_ui(url: str, instruction: str) -> ReviewResult:
     """
     result = run_session(
         _client(),
-        agent=Agent(
-            name="ui-reviewer",
-            description="Reviews a web UI for usability, accessibility, and obvious bugs.",
-            instructions=REVIEWER_INSTRUCTIONS,
-            skills=load_agent_skills(),
-            environments=[browser_env(url)],
-            answer_format=ReviewResult.model_json_schema(),
-        ),
+        agent=build_reviewer_agent(url),
         messages=instruction,
         max_steps=25,
         max_time_s=360.0,
@@ -49,12 +43,7 @@ def visual_check(url: str, question: str) -> str:
     """
     result = run_session(
         _client(),
-        agent=Agent(
-            name="visual-checker",
-            description="Answers a single visual question about a web page.",
-            instructions="Open the page and answer the user's question in one or two sentences.",
-            environments=[browser_env(url)],
-        ),
+        agent=build_visual_checker_agent(url),
         messages=question,
         max_steps=3,
         max_time_s=120.0,
@@ -74,6 +63,7 @@ def _client() -> Client:
 
 def main() -> None:
     """Entry point for the ``hai-agent-demos-qa`` console script."""
+    load_dotenv()
     setup_server_logging()
     mcp.run()
 
