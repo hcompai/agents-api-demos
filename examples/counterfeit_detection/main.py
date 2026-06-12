@@ -14,11 +14,12 @@ many counterfeits as it allows. See this folder's README.md for the full walkthr
 import json
 import sys
 import time
+import typing
 from typing import Literal
 
 import tyro
 from dotenv import load_dotenv
-from hai_agents import Agent, Client, SessionRunResult, run_session
+from hai_agents import Agent, Client, SessionRunResult, Tool
 from openai import OpenAI
 from pydantic import BaseModel
 
@@ -75,7 +76,7 @@ def simple(genuine_url: str) -> None:
         genuine_url: URL of the genuine product page the agent uses as its reference.
     """
     started = time.monotonic()
-    result = run_session(
+    result = _run_watched(
         _client(),
         agent=Agent(
             name="counterfeit-spotter",
@@ -99,7 +100,7 @@ def tooled(genuine_url: str) -> None:
     """
     started = time.monotonic()
     store = SnapshotStore()
-    result = run_session(
+    result = _run_watched(
         _client(),
         agent=Agent(
             name="counterfeit-spotter",
@@ -128,7 +129,7 @@ def sweep(genuine_url: str, max_steps: int = 80, max_time_s: float = 1200.0) -> 
     started = time.monotonic()
     store = SnapshotStore()
     log = FindingsLog()
-    result = run_session(
+    result = _run_watched(
         _client(),
         agent=Agent(
             name="counterfeit-sweeper",
@@ -151,6 +152,22 @@ def _client() -> Client:
 
 def _models_client() -> OpenAI:
     return OpenAI(base_url=MODELS_BASE_URL, api_key=require_api_key())
+
+
+def _run_watched(
+    client: Client, *, tools: typing.Sequence[Tool] | None = None, **create_params: typing.Any
+) -> SessionRunResult:
+    """``run_session`` split open so the session id is printed the moment it exists.
+
+    The platform link is the same for watching the agent act live and replaying the
+    finished trajectory, so it is printed once at start and once after completion.
+    """
+    handle = client.start_session(tools=tools, **create_params)
+    url = f"https://platform.hcompany.ai/agent-view/{handle.id}"
+    print(f"session {handle.id}\nwatch live: {url}", file=sys.stderr, flush=True)
+    result = handle.wait_for_completion()
+    print(f"replay: {url}", file=sys.stderr)
+    return result
 
 
 def _print_sweep_result(result: SessionRunResult, log: FindingsLog, started: float) -> None:
