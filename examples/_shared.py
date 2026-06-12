@@ -68,20 +68,39 @@ def setup_server_logging(level: int = logging.INFO) -> None:
     logging.basicConfig(level=level, format=_LOG_FORMAT)
 
 
-def setup_cli_logging(level: int = logging.WARNING, *, silence_http: bool = True) -> None:
+def setup_cli_logging(level: int = logging.WARNING, *, http_level: int | None = logging.WARNING) -> None:
     """Configure logging for a CLI entry point.
 
     Explicitly pins the stream to ``sys.stderr`` so stdout stays reserved for the JSON answer.
 
     Args:
         level: Root logger level; defaults to ``WARNING`` so CLI output stays uncluttered.
-        silence_http: When ``True``, pin ``httpx``/``httpcore`` to ``WARNING`` regardless of
-            the root level, so request-level chatter doesn't drown the JSON answer.
+        http_level: Level to pin ``httpx``/``httpcore`` at, independent of the root level
+            (request-level chatter is noisy at ``INFO`` and below). ``None`` leaves them at
+            whatever the root level resolves to.
     """
     logging.basicConfig(level=level, stream=sys.stderr, format=_LOG_FORMAT)
-    if silence_http:
-        logging.getLogger("httpcore").setLevel(logging.WARNING)
-        logging.getLogger("httpx").setLevel(logging.WARNING)
+    if http_level is not None:
+        logging.getLogger("httpcore").setLevel(http_level)
+        logging.getLogger("httpx").setLevel(http_level)
+
+
+def run_session_streaming(client: Client, *, started: float, **create_params: object) -> SessionRunResult:
+    """Like ``run_session``, but tails the trajectory and prints each event to stderr as it arrives.
+
+    Splits ``run_session`` into ``create_session`` + ``wait_for_session`` so a daemon thread can
+    print events live. No custom-tool support (the CLI demos that stream don't use ``tools=``);
+    use ``run_session`` directly for that.
+
+    Args:
+        client: Authenticated SDK client.
+        started: ``time.monotonic()`` captured before the call, used to label each event line.
+        **create_params: Forwarded to ``client.sessions.create_session`` (agent, messages, etc.).
+    """
+    session = client.sessions.create_session(**create_params)
+    print(f"session {session.id} started", file=sys.stderr, flush=True)
+    with _event_tailer(client, session.id, started=started):
+        return wait_for_session(client, session.id)
 
 
 def print_structured_answer(result: SessionRunResult, model: type[BaseModel], started: float) -> None:
@@ -98,6 +117,21 @@ def print_structured_answer(result: SessionRunResult, model: type[BaseModel], st
     if not isinstance(result.answer, dict):
         sys.exit(f"error: agent did not return a structured answer (status={result.status})")
     print(json.dumps(model.model_validate(result.answer).model_dump(), indent=2))
+
+
+def print_freeform_answer(result: SessionRunResult, started: float) -> None:
+    """Print the session status to stderr and a free-form answer (string or JSON) to stdout.
+
+    Exits the process with a non-zero status if the session produced no answer.
+
+    Args:
+        result: The completed ``run_session`` result.
+        started: ``time.monotonic()`` timestamp captured before the session started.
+    """
+    print(f"completed in {time.monotonic() - started:.1f}s (status={result.status})", file=sys.stderr)
+    if result.answer is None:
+        sys.exit(f"error: no answer (status={result.status})")
+    print(result.answer if isinstance(result.answer, str) else json.dumps(result.answer))
 
 
 def _summarize_event(ev: TrajectoryEvent) -> str:
@@ -242,87 +276,3 @@ def _event_tailer(
         if is_tty:
             stream.write("\r\033[K")
             stream.flush()
-
-
-def run_session_streaming(client: Client, *, started: float, **create_params: object) -> SessionRunResult:
-    """Like ``run_session``, but tails the trajectory and prints each event to stderr as it arrives.
-
-    Splits ``run_session`` into ``create_session`` + ``wait_for_session`` so a daemon thread can
-    print events live. No custom-tool support (the CLI demos that stream don't use ``tools=``);
-    use ``run_session`` directly for that.
-
-    Args:
-        client: Authenticated SDK client.
-        started: ``time.monotonic()`` captured before the call, used to label each event line.
-        **create_params: Forwarded to ``client.sessions.create_session`` (agent, messages, etc.).
-    """
-    session = client.sessions.create_session(**create_params)  # type: ignore[arg-type]
-    print(f"session {session.id} started", file=sys.stderr, flush=True)
-    with _event_tailer(client, session.id, started=started):
-        return wait_for_session(client, session.id)
-
-
-@contextlib.contextmanager
-def progress_spinner(
-    label: str,
-    *,
-    budget_s: float | None = None,
-    stream: IO[str] = sys.stderr,
-) -> Iterator[None]:
-    """Background heartbeat for long-running blocking calls like ``run_session``.
-
-    On a TTY: animates a braille frame + elapsed seconds on a single line that the spinner
-    rewrites in place. When ``stream`` is piped or redirected, falls back to a heartbeat line
-    every 10s so logs still show the call is alive.
-
-    Args:
-        label: Short description shown next to the spinner (e.g. ``"flight-extractor running"``).
-        budget_s: Optional total wall-clock budget; surfaced as ``"12s / 300s"`` so the user knows
-            how much headroom is left.
-        stream: Where to write progress; defaults to stderr so stdout stays clean for JSON output.
-    """
-    frames = "⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏"
-    stop = threading.Event()
-    started = time.monotonic()
-    is_tty = hasattr(stream, "isatty") and stream.isatty()
-
-    def _tick() -> None:
-        i = 0
-        next_heartbeat = 10.0
-        while not stop.wait(0.15 if is_tty else 1.0):
-            elapsed = time.monotonic() - started
-            budget = f" / {budget_s:.0f}s" if budget_s else ""
-            if is_tty:
-                stream.write(f"\r{frames[i % len(frames)]} {label} {elapsed:.0f}s{budget}")
-                stream.flush()
-                i += 1
-            elif elapsed >= next_heartbeat:
-                stream.write(f"{label} ... {elapsed:.0f}s{budget}\n")
-                stream.flush()
-                next_heartbeat += 10.0
-
-    worker = threading.Thread(target=_tick, daemon=True)
-    worker.start()
-    try:
-        yield
-    finally:
-        stop.set()
-        worker.join(timeout=0.5)
-        if is_tty:
-            stream.write("\r\033[K")  # erase the spinner line so it doesn't bleed into the next output
-            stream.flush()
-
-
-def print_freeform_answer(result: SessionRunResult, started: float) -> None:
-    """Print the session status to stderr and a free-form answer (string or JSON) to stdout.
-
-    Exits the process with a non-zero status if the session produced no answer.
-
-    Args:
-        result: The completed ``run_session`` result.
-        started: ``time.monotonic()`` timestamp captured before the session started.
-    """
-    print(f"completed in {time.monotonic() - started:.1f}s (status={result.status})", file=sys.stderr)
-    if result.answer is None:
-        sys.exit(f"error: no answer (status={result.status})")
-    print(result.answer if isinstance(result.answer, str) else json.dumps(result.answer))
