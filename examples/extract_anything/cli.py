@@ -10,7 +10,6 @@ caption gives a hint, but the actual image description has to come from looking 
 
 import sys
 import time
-from pathlib import Path
 
 import tyro
 from dotenv import load_dotenv
@@ -24,8 +23,7 @@ from examples._shared import (
     run_session_streaming,
     setup_cli_logging,
 )
-
-_OPERATOR_INSTRUCTIONS = (Path(__file__).parent / "prompts" / "extractor_instructions.md").read_text()
+from examples.extract_anything.prompts import OPERATOR_INSTRUCTIONS
 
 
 class FeaturedPicture(BaseModel):
@@ -54,7 +52,7 @@ def picture() -> None:
         agent=Agent(
             name="picture-describer",
             description="Describes Wikipedia's Picture of the Day by reading the image.",
-            instructions=_OPERATOR_INSTRUCTIONS,
+            instructions=OPERATOR_INSTRUCTIONS,
             environments=[browser_env("https://en.wikipedia.org/wiki/Main_Page")],
             answer_format=FeaturedPicture.model_json_schema(),
         ),

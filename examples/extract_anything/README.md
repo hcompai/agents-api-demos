@@ -23,10 +23,10 @@ The whole tool is ~30 lines in [`server.py`](server.py) — read it top-to-botto
 ## Run
 
 ```bash
-cd hai-agent-demos
 uv sync
-cp .env.example .env  # add H_API_KEY
-hai-agent-demos-extract-anything   # MCP server over stdio (Claude Code auto-registers via .mcp.json)
+cp .env.example .env                            # add H_API_KEY
+
+uv run hai-agent-demos-extract-anything         # MCP server over stdio (Claude Code auto-registers via .mcp.json)
 ```
 
 In Claude Code:
