@@ -142,9 +142,8 @@ hai-agent-demos/
 │   │   └── cli/                     # CLI wrapper (qa-cli review / visual)
 │   ├── extract_anything/            # one tool, two surfaces: MCP `extract` + `extract-cli picture`
 │   │   └── prompts/                 # extractor_instructions.md
-│   ├── counterfeit_detection/       # cookbook CLI (counterfeit-cli simple / tooled / sweep)
-│   │   └── prompts/                 # ground_rules.md + simple.md / tooled.md / sweep.md
-│   └── broken_ui/                   # deliberately-buggy static site, useful as a QA target
+│   └── counterfeit_detection/       # cookbook CLI (counterfeit-cli simple / tooled / sweep)
+│       └── prompts/                 # ground_rules.md + simple.md / tooled.md / sweep.md
 ├── AGENTS.md                        # coding rules for contributors
 └── pyproject.toml
 ```
