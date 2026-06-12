@@ -81,6 +81,12 @@ Generic helpers (browser env, API-key check, logging/printing utilities) live in
 | --- | --- | --- |
 | `H_API_KEY` | yes | auto-setup via `python3 skills/hai-platform/scripts/h_login.py`, or manually from https://platform.hcompany.ai/settings/api-keys |
 
+The [`counterfeit_detection`](examples/counterfeit_detection/) example additionally renders pages locally with Playwright; one-time setup:
+
+```bash
+uv run playwright install chromium
+```
+
 ## Skills & plugin marketplace
 
 [Agent Skills](https://docs.claude.com/en/docs/agents-and-tools/agent-skills/overview) are folders of instructions, scripts, and resources that Claude loads dynamically to improve performance on specialized tasks. Each skill is a directory under [`skills/`](skills/) containing a `SKILL.md` with YAML frontmatter (`name`, `description`) followed by the instructions Claude follows when the skill is active — same layout as [anthropics/skills](https://github.com/anthropics/skills).
@@ -121,24 +127,25 @@ Once installed, the skills trigger automatically when a conversation matches the
 
 ```
 hai-agent-demos/
-├── .claude-plugin/marketplace.json # Claude Code plugin marketplace (skills below)
+├── .claude-plugin/marketplace.json  # Claude Code plugin marketplace (skills below)
+├── .mcp.json                        # registers MCP servers with Claude Code
 ├── skills/
-│   ├── hai-platform/         # H Company APIs skill (portal + agp + SDKs)
-│   └── hai-qa-via-cli/                # skill for invoking qa-cli
-├── .mcp.json                      # registers MCP servers with Claude Code
+│   ├── hai-platform/                # H Company APIs skill (portal + agp + SDKs)
+│   └── hai-qa-via-cli/              # skill for invoking qa-cli
 ├── examples/
-│   ├── _shared.py                 # generic helpers (browser_env, logging, print_*)
+│   ├── _shared.py                   # generic helpers (browser_env, logging, print_*)
 │   ├── qa/
-│   │   ├── shared.py              # ReviewResult model + reviewer instructions loader
-│   │   ├── prompts/               # reviewer_instructions.md
-│   │   ├── agent_skills/          # skill docs passed to the ui-reviewer agent
-│   │   ├── mcp/                   # MCP server (review_web_ui + visual_check)
-│   │   └── cli/                   # CLI wrapper (qa-cli review / visual)
-│   ├── extract_anything/          # one tool, two surfaces: MCP `extract` + `extract-cli picture`
-│   │   └── prompts/               # extractor_instructions.md
-│   └── counterfeit_detection/     # cookbook CLI (counterfeit-cli simple / tooled / sweep)
-│       └── prompts/               # ground_rules.md + simple.md / tooled.md / sweep.md
-├── AGENTS.md                      # coding rules for contributors
+│   │   ├── shared.py                # ReviewResult model + reviewer instructions
+│   │   ├── prompts/                 # reviewer_instructions.md
+│   │   ├── agent_skills/            # skill docs passed to the ui-reviewer agent
+│   │   ├── mcp/                     # MCP server (review_web_ui + visual_check)
+│   │   └── cli/                     # CLI wrapper (qa-cli review / visual)
+│   ├── extract_anything/            # one tool, two surfaces: MCP `extract` + `extract-cli picture`
+│   │   └── prompts/                 # extractor_instructions.md
+│   ├── counterfeit_detection/       # cookbook CLI (counterfeit-cli simple / tooled / sweep)
+│   │   └── prompts/                 # ground_rules.md + simple.md / tooled.md / sweep.md
+│   └── broken_ui/                   # deliberately-buggy static site, useful as a QA target
+├── AGENTS.md                        # coding rules for contributors
 └── pyproject.toml
 ```
 
