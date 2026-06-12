@@ -8,7 +8,6 @@ from pydantic import BaseModel, Field, HttpUrl
 
 from examples._shared import browser_env
 from examples.extract_anything.functions._common import (
-    OPERATOR_PREAMBLE,
     Price,
     get_client,
     mcp,
@@ -16,6 +15,7 @@ from examples.extract_anything.functions._common import (
     run_cli,
     url,
 )
+from examples.extract_anything.prompts import OPERATOR_INSTRUCTIONS
 
 
 # Agent-facing schema: only fields the CUA can read off the page.
@@ -57,7 +57,7 @@ def get_product_prices(
         agent=Agent(
             name="product-prices-reader",
             description="Reads product prices off a shopping search UI.",
-            instructions=f"You read shopping result pages.\n\n{OPERATOR_PREAMBLE}",
+            instructions=f"You read shopping result pages.\n\n{OPERATOR_INSTRUCTIONS}",
             environments=[browser_env(str(site))],
             answer_format=_ProductsAgentAnswer.model_json_schema(),
         ),

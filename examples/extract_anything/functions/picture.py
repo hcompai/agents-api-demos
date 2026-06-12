@@ -12,12 +12,8 @@ from hai_agents import Agent, Client
 from pydantic import BaseModel, Field
 
 from examples._shared import browser_env, print_structured_answer, run_session_streaming
-from examples.extract_anything.functions._common import (
-    OPERATOR_PREAMBLE,
-    get_client,
-    mcp,
-    run_extraction,
-)
+from examples.extract_anything.functions._common import get_client, mcp, run_extraction
+from examples.extract_anything.prompts import OPERATOR_INSTRUCTIONS
 
 
 class FeaturedPicture(BaseModel):
@@ -76,7 +72,7 @@ def _cli() -> None:
         agent=Agent(
             name="picture-describer",
             description="Describes Wikipedia's Picture of the Day by reading the image.",
-            instructions=f"You describe images by looking at them.\n\n{OPERATOR_PREAMBLE}",
+            instructions=f"You describe images by looking at them.\n\n{OPERATOR_INSTRUCTIONS}",
             environments=[browser_env("https://en.wikipedia.org/wiki/Main_Page")],
             answer_format=FeaturedPicture.model_json_schema(),
         ),

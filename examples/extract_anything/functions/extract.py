@@ -12,13 +12,8 @@ from hai_agents import Agent, Client, run_session
 from pydantic import Field, HttpUrl
 
 from examples._shared import browser_env
-from examples.extract_anything.functions._common import (
-    OPERATOR_PREAMBLE,
-    get_client,
-    mcp,
-    run_dict_cli,
-    url,
-)
+from examples.extract_anything.functions._common import get_client, mcp, run_dict_cli, url
+from examples.extract_anything.prompts import OPERATOR_INSTRUCTIONS
 
 
 def extract(
@@ -37,7 +32,7 @@ def extract(
         agent=Agent(
             name="extractor",
             description="Reads structured data off a web page.",
-            instructions=f"You browse websites and follow the caller's natural-language task.\n\n{OPERATOR_PREAMBLE}",
+            instructions=f"You browse websites and follow the caller's natural-language task.\n\n{OPERATOR_INSTRUCTIONS}",
             environments=[browser_env(str(site))],
             answer_format=answer_schema,
         ),

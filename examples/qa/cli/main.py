@@ -13,19 +13,16 @@ import time
 
 import tyro
 from dotenv import load_dotenv
-from hai_agents import Agent, Client
+from hai_agents import Client
 
 from examples._shared import (
-    browser_env,
     print_freeform_answer,
     print_structured_answer,
     require_api_key,
     run_session_streaming,
     setup_cli_logging,
 )
-from examples.qa.shared import REVIEWER_INSTRUCTIONS, ReviewResult, load_agent_skills
-
-VISUAL_INSTRUCTIONS = "Open the page and answer the user's question in one or two sentences."
+from examples.qa.shared import ReviewResult, build_reviewer_agent, build_visual_checker_agent
 
 
 def review(url: str, instruction: str = "Do a general usability and accessibility review.") -> None:
@@ -40,14 +37,7 @@ def review(url: str, instruction: str = "Do a general usability and accessibilit
     result = run_session_streaming(
         _client(),
         started=started,
-        agent=Agent(
-            name="ui-reviewer",
-            description="Reviews a web UI for usability, accessibility, and obvious bugs.",
-            instructions=REVIEWER_INSTRUCTIONS,
-            skills=load_agent_skills(),
-            environments=[browser_env(url)],
-            answer_format=ReviewResult.model_json_schema(),
-        ),
+        agent=build_reviewer_agent(url),
         messages=instruction,
         max_steps=25,
         max_time_s=360.0,
@@ -67,12 +57,7 @@ def visual(url: str, question: str) -> None:
     result = run_session_streaming(
         _client(),
         started=started,
-        agent=Agent(
-            name="visual-checker",
-            description="Answers a single visual question about a web page.",
-            instructions=VISUAL_INSTRUCTIONS,
-            environments=[browser_env(url)],
-        ),
+        agent=build_visual_checker_agent(url),
         messages=question,
         max_steps=3,
         max_time_s=120.0,

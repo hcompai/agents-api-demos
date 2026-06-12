@@ -34,10 +34,10 @@ Two categories from the OG mcpify-anything are deliberately excluded here: tools
 ## Run
 
 ```bash
-cd hai-agent-demos
 uv sync
-cp .env.example .env  # add H_API_KEY
-hai-agent-demos-extract-anything   # MCP server over stdio (Claude Code auto-registers via .mcp.json)
+cp .env.example .env                            # add H_API_KEY
+
+uv run hai-agent-demos-extract-anything         # MCP server over stdio (Claude Code auto-registers via .mcp.json)
 ```
 
 In Claude Code, any of the curated tools works:

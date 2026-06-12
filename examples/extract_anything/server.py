@@ -5,6 +5,8 @@ registration. Importing the ``functions`` package triggers those registrations a
 side effect; this file just configures logging and runs the server.
 """
 
+from dotenv import load_dotenv
+
 from examples._shared import setup_server_logging
 from examples.extract_anything.functions._common import mcp
 
@@ -16,6 +18,7 @@ __import__("examples.extract_anything.functions")
 
 def main() -> None:
     """Entry point for the ``hai-agent-demos-extract-anything`` console script."""
+    load_dotenv()
     setup_server_logging()
     mcp.run()
 

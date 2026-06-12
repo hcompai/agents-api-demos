@@ -10,9 +10,15 @@ import base64
 import logging
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Protocol
 
 from hai_agents import Tool, tool
+from openai import OpenAI
+from openai.types.chat import (
+    ChatCompletionContentPartImageParam,
+    ChatCompletionContentPartParam,
+    ChatCompletionContentPartTextParam,
+    ChatCompletionUserMessageParam,
+)
 from playwright.sync_api import sync_playwright
 
 SNAPSHOT_DIR = Path(__file__).parent / "snapshots"
@@ -22,13 +28,6 @@ MODELS_BASE_URL = "https://api.hcompany.ai/v1/"
 COMPARE_VERDICTS = ("VERY_LIKELY_COUNTERFEIT", "LIKELY_COUNTERFEIT", "INCONCLUSIVE", "LIKELY_AUTHENTIC")
 
 logger = logging.getLogger(__name__)
-
-
-class ChatCompletionsClient(Protocol):
-    """Minimal protocol for the OpenAI-compatible client used by ``compare_to_genuine``."""
-
-    @property
-    def chat(self) -> Any: ...
 
 
 @dataclass
@@ -61,7 +60,7 @@ class FindingsLog:
         return any(item["url"] == url for item in self.items)
 
 
-def build_visual_tools(store: SnapshotStore, models_client: ChatCompletionsClient) -> list[Tool]:
+def build_visual_tools(store: SnapshotStore, models_client: OpenAI) -> list[Tool]:
     """Build the snapshot + compare tools bound to one run's state.
 
     Args:
@@ -163,7 +162,7 @@ def _capture(url: str, destination: Path) -> None:
             browser.close()
 
 
-def _holo_verdict(models_client: ChatCompletionsClient, store: SnapshotStore, suspect_path: Path, note: str) -> str:
+def _holo_verdict(models_client: OpenAI, store: SnapshotStore, suspect_path: Path, note: str) -> str:
     """Ask Holo for a one-line verdict comparing the suspect screenshot to the genuine references."""
     instruction = (
         "You are comparing product photos. The first images show the GENUINE product. The last image is a "
@@ -174,16 +173,16 @@ def _holo_verdict(models_client: ChatCompletionsClient, store: SnapshotStore, su
         "listing, respond exactly: INCONCLUSIVE: suspect page blocked the local render; judge this suspect "
         "from your own browser observations instead."
     )
-    content: list[dict[str, object]] = [{"type": "text", "text": instruction}]
+    text_part: ChatCompletionContentPartTextParam = {"type": "text", "text": instruction}
+    content: list[ChatCompletionContentPartParam] = [text_part]
     for reference in store.items:
         content.append(_image_part(Path(reference["path"])))
     content.append(_image_part(suspect_path))
-    response = models_client.chat.completions.create(
-        model=HOLO_MODEL, messages=[{"role": "user", "content": content}], max_tokens=160
-    )
+    message: ChatCompletionUserMessageParam = {"role": "user", "content": content}
+    response = models_client.chat.completions.create(model=HOLO_MODEL, messages=[message], max_tokens=160)
     return str(response.choices[0].message.content).strip()
 
 
-def _image_part(path: Path) -> dict[str, object]:
+def _image_part(path: Path) -> ChatCompletionContentPartImageParam:
     encoded = base64.b64encode(path.read_bytes()).decode("ascii")
     return {"type": "image_url", "image_url": {"url": f"data:image/png;base64,{encoded}"}}
