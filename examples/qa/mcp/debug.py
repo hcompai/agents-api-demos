@@ -16,16 +16,15 @@ from pathlib import Path
 
 import tyro
 from dotenv import load_dotenv
-from hai_agents import Agent, Client, SessionRunResult, run_session
+from hai_agents import Client, SessionRunResult, run_session
 
 from examples._shared import (
-    browser_env,
     print_freeform_answer,
     print_structured_answer,
     require_api_key,
     setup_cli_logging,
 )
-from examples.qa.shared import REVIEWER_INSTRUCTIONS, ReviewResult, load_agent_skills
+from examples.qa.shared import ReviewResult, build_reviewer_agent, build_visual_checker_agent
 
 TRACES_DIR = Path("traces")
 
@@ -40,14 +39,7 @@ def review(url: str, instruction: str = "Review the page for usability and acces
     started = time.monotonic()
     result = run_session(
         _client(),
-        agent=Agent(
-            name="ui-reviewer",
-            description="Reviews a web UI for usability, accessibility, and obvious bugs.",
-            instructions=REVIEWER_INSTRUCTIONS,
-            skills=load_agent_skills(),
-            environments=[browser_env(url)],
-            answer_format=ReviewResult.model_json_schema(),
-        ),
+        agent=build_reviewer_agent(url),
         messages=instruction,
         max_steps=25,
         max_time_s=360.0,
@@ -67,12 +59,7 @@ def visual(url: str, question: str) -> None:
     started = time.monotonic()
     result = run_session(
         _client(),
-        agent=Agent(
-            name="visual-checker",
-            description="Answers a single visual question about a web page.",
-            instructions="Open the page and answer the user's question in one or two sentences.",
-            environments=[browser_env(url)],
-        ),
+        agent=build_visual_checker_agent(url),
         messages=question,
         max_steps=3,
         max_time_s=120.0,
@@ -115,9 +102,7 @@ def _save_trace(subcommand: str, url: str, instruction: str, elapsed: float, res
 def main() -> None:
     """Entry point for the ``debug-qa`` console script."""
     load_dotenv()
-    setup_cli_logging(level=logging.DEBUG, silence_http=False)
-    logging.getLogger("httpcore").setLevel(logging.INFO)
-    logging.getLogger("httpx").setLevel(logging.INFO)
+    setup_cli_logging(level=logging.DEBUG, http_level=logging.INFO)
     try:
         tyro.extras.subcommand_cli_from_dict({"review": review, "visual": visual})
     except RuntimeError as exc:
