@@ -1,4 +1,13 @@
-"""FastMCP server exposing a single typed-extraction tool over a cloud browser agent."""
+"""FastMCP server exposing typed-extraction tools over a cloud browser agent.
+
+Two tools coexist on purpose — they show the same idea at two levels of abstraction:
+
+- ``extract`` is the *generic* shape — the caller supplies the schema at call time. Useful
+  when the answer shape is the caller's business.
+- ``describe_picture_of_the_day`` is the *specific* shape — fixed prompt, fixed schema,
+  no args. The deterministic function lives in ``functions.py``; this is just its MCP
+  surface. The same function is also wired up as a CLI subcommand in ``cli.py``.
+"""
 
 from pathlib import Path
 from typing import Any
@@ -7,6 +16,7 @@ from fastmcp import FastMCP
 from hai_agents import Agent, Client, run_session
 
 from examples._shared import browser_env, require_api_key, setup_server_logging
+from examples.extract_anything.functions import describe_picture_of_the_day as _describe_picture_of_the_day
 
 _OPERATOR_INSTRUCTIONS = (Path(__file__).parent / "prompts" / "extractor_instructions.md").read_text()
 
@@ -39,6 +49,16 @@ def extract(url: str, task: str, answer_schema: dict[str, Any]) -> dict[str, Any
     if isinstance(result.answer, dict):
         return result.answer
     raise RuntimeError(f"extractor did not return a structured answer (status={result.status})")
+
+
+@mcp.tool
+def describe_picture_of_the_day() -> dict[str, Any]:
+    """Describe today's Wikipedia *Picture of the Day* by looking at the image.
+
+    Zero-arg deterministic tool — same prompt, same schema, every call. Wraps the Python
+    function in ``functions.py``; ``cli.py`` exposes the same function as a subcommand.
+    """
+    return _describe_picture_of_the_day(_client())
 
 
 def _client() -> Client:

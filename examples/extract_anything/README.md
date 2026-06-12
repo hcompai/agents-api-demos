@@ -1,24 +1,26 @@
-# `extract_anything` — one tool, any website
+# `extract_anything` — agent calls as deterministic functions
 
-A FastMCP server with a **single MCP tool** that turns any URL into typed JSON. The caller supplies a JSON Schema at call time; a cloud browser agent drives the page and returns an answer the platform validates against that schema.
+This example shows the abstraction the SDK doesn't ship on its own: **wrap an agent call in a typed Python function** with fixed prompt, fixed inputs, and fixed output schema — then call it like any other function, 1 time or 1000, without re-prompting. MCP is one optional surface; plain Python imports work just as well.
 
-Where [`qa/mcp`](../qa/mcp/) shows wrapping *one fixed task* as one tool, this shows the inverse: one tool, **whatever shape the caller asks for**. Drop in a schema, get back JSON.
+Two shapes ship in this folder:
 
-Best showcased on pages where the answer lives **only in pixels** — and on a cloud headless browser (no GPU), that means static raster images. The example below points the tool at Wikipedia's *Picture of the Day* and describes what is in the image by actually looking at it.
+Two shapes ship in this folder, and the MCP server exposes both:
 
-## The tool
+- **Generic** — `extract(url, task, answer_schema)` lets the caller hand the schema in at call time. Useful when the shape is the caller's business (and the same primitive QA/agent platforms expose).
+- **Specific** — `describe_picture_of_the_day()` is a zero-arg deterministic tool: fixed prompt, fixed schema, every call returns a `FeaturedPicture`. This is the shape most production code wants — `get_flights(date, origin, dest) -> FlightList`, `fill_form(name, age, ...) -> Receipt`, `describe_picture_of_the_day() -> FeaturedPicture`.
+
+The deterministic function itself lives in [`functions.py`](functions.py) and is imported by both `server.py` (MCP tool surface) and `cli.py` (CLI subcommand surface) — same function, two surfaces. Where [`qa/mcp`](../qa/mcp/) shows wrapping *one fixed task* as one tool, this shows the pattern that turns any agent call into a function, generic or specific, MCP or in-process.
+
+## The tools
 
 ```python
-extract(url: str, task: str, answer_schema: dict) -> dict
+extract(url: str, task: str, answer_schema: dict) -> dict   # generic
+describe_picture_of_the_day() -> FeaturedPicture            # specific
 ```
 
-| Arg | What it is |
-| --- | --- |
-| `url` | Page the browser agent starts on. |
-| `task` | Natural-language instruction (no need to restate the JSON shape — the platform enforces `answer_schema`). |
-| `answer_schema` | JSON Schema describing the desired return shape. Passed to the agent as `answer_format`. |
+`extract` is the generic primitive — read [`server.py`](server.py) for the ~20 lines that wire an `Agent`, call `run_session`, and return `result.answer`.
 
-The whole tool is ~30 lines in [`server.py`](server.py) — read it top-to-bottom and you've seen the entire pattern: build an `Agent`, call `run_session`, return `result.answer`.
+`describe_picture_of_the_day` is the specific primitive: zero args, fixed schema. Its body in `server.py` is two lines — it delegates to the Python function in [`functions.py`](functions.py). The same function is the engine behind `uv run extract-cli picture`, so the CLI and MCP surfaces stay in sync without copy-pasting prompts or schemas.
 
 ## Run
 
@@ -29,22 +31,31 @@ cp .env.example .env  # add H_API_KEY
 hai-agent-demos-extract-anything   # MCP server over stdio (Claude Code auto-registers via .mcp.json)
 ```
 
-In Claude Code:
+In Claude Code, either tool works:
+
+> *"Call `describe_picture_of_the_day` — no args."*
+
+…or, for the generic shape:
 
 > *"Use `extract` on https://en.wikipedia.org/wiki/Main_Page — task: `find the Picture of the Day section, look at the image, and describe what is in it in your own words; also transcribe any text inside the image and read the credit`, answer_schema: `{"type":"object","properties":{"title":{"type":"string"},"image_description":{"type":"string"},"visible_text_in_image":{"type":"string"},"credit":{"type":"string"}},"required":["title","image_description","credit"]}`."*
 
-Prefer a shell? The same extraction is wired up as a CLI:
+Prefer a shell? The deterministic function is also wired up as a CLI:
 
 ```bash
 uv run extract-cli picture
 ```
 
+`cli.py` is the place to look for what the function shape looks like when the agent is fully hidden behind a typed signature — the showcase here is Wikipedia's *Picture of the Day* (the answer lives in pixels, not the DOM).
+
 ## Layout
 
 ```
 extract_anything/
-├── server.py    # FastMCP wiring + the extract tool
-├── cli.py       # `extract-cli picture` — Wikipedia Picture-of-the-Day demo
+├── functions.py # the deterministic function: `describe_picture_of_the_day(client) -> dict`
+├── server.py    # MCP surface: generic `extract` tool + thin `describe_picture_of_the_day` wrapper
+├── cli.py       # CLI surface: `picture` subcommand calling the same function with a live event tail
+├── prompts/
+│   └── extractor_instructions.md   # operator instructions shared by every variant
 └── README.md
 ```
 
@@ -52,12 +63,16 @@ extract_anything/
 
 ```mermaid
 flowchart LR
-  user[You in Claude Code] -->|extract(url, task, schema)| mcp[FastMCP server<br/>server.py]
-  mcp -->|run_session<br/>answer_format=schema| api[H Agent API]
-  api -->|controls| browser[Cloud headless browser]
-  browser -->|screenshots + DOM| api
-  api -->|JSON matching schema| mcp
-  mcp -->|dict| user
+  cc["You in Claude Code"] -->|"extract(url, task, schema)"| mcp["FastMCP server<br/>server.py"]
+  cc -->|"describe_picture_of_the_day()"| mcp
+  cli["uv run extract-cli picture"] --> fns["functions.py<br/>describe_picture_of_the_day"]
+  mcp --> fns
+  fns -->|"run_session<br/>answer_format=FeaturedPicture"| api["H Agent API"]
+  api -->|controls| browser["Cloud headless browser"]
+  browser -->|"screenshots + DOM"| api
+  api -->|"JSON matching schema"| fns
+  fns -->|dict| mcp
+  fns -->|dict| cli
 ```
 
 ## Configuration

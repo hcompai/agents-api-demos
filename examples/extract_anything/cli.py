@@ -1,66 +1,50 @@
-"""Standalone CLI for the extract_anything extractor, demoed on Wikipedia's Picture of the Day.
+"""Standalone CLI showing the deterministic-function-over-an-agent pattern.
 
-Same SDK call as ``examples/extract_anything/server.py``, exposed as a shell command. The
-``picture`` subcommand is a vision-only showcase: Wikipedia's daily featured picture is just
-a PNG/JPEG embedded in the page — the *visual* content lives in pixels, not the DOM. The
-caption gives a hint, but the actual image description has to come from looking at the image.
+The ``picture`` subcommand is a typed Python function — fixed prompt, fixed schema —
+that internally runs a browser agent. The function itself lives in ``functions.py`` and
+is shared with ``server.py``, which exposes it as an MCP tool. Same function, two
+surfaces.
 
-    uv run extract-cli picture
+    uv run extract-cli picture          # vision-only: describe Wikipedia's Picture of the Day
 """
 
 import sys
 import time
-from pathlib import Path
 
 import tyro
 from dotenv import load_dotenv
-from hai_agents import Agent, Client
-from pydantic import BaseModel
+from hai_agents import Client
 
 from examples._shared import (
-    browser_env,
     print_structured_answer,
     require_api_key,
     run_session_streaming,
     setup_cli_logging,
 )
-
-_OPERATOR_INSTRUCTIONS = (Path(__file__).parent / "prompts" / "extractor_instructions.md").read_text()
-
-
-class FeaturedPicture(BaseModel):
-    """Structured answer for the ``picture`` subcommand."""
-
-    title: str  # Wikipedia's title for the picture
-    image_description: str  # the agent's own visual description of what is in the image
-    visible_text_in_image: str  # any text that appears inside the image itself (often empty)
-    credit: str  # photographer / source attribution as shown on the page
+from examples.extract_anything.functions import (
+    PICTURE_MAX_STEPS,
+    PICTURE_MAX_TIME_S,
+    PICTURE_TASK,
+    FeaturedPicture,
+    picture_agent,
+)
 
 
 def picture() -> None:
-    """Describe Wikipedia's Picture of the Day by actually looking at the image."""
+    """Describe Wikipedia's Picture of the Day by actually looking at the image.
+
+    Uses the streaming runner so the user sees a live tail of agent events. The MCP twin
+    in ``server.py`` calls the same deterministic function with the one-shot runner.
+    """
     started = time.monotonic()
-    task = (
-        "Open the Wikipedia main page and find the 'Picture of the day' section. "
-        "Look at the image itself and describe what is visible in your own words — subject, "
-        "setting, notable details, dominant colours. Transcribe any text rendered inside the "
-        "image (leave empty if none). Read the title and the credit/attribution off the page. "
-        "Return JSON matching the schema."
-    )
     print("opening Wikipedia main page…", file=sys.stderr)
     result = run_session_streaming(
         _client(),
         started=started,
-        agent=Agent(
-            name="picture-describer",
-            description="Describes Wikipedia's Picture of the Day by reading the image.",
-            instructions=_OPERATOR_INSTRUCTIONS,
-            environments=[browser_env("https://en.wikipedia.org/wiki/Main_Page")],
-            answer_format=FeaturedPicture.model_json_schema(),
-        ),
-        messages=task,
-        max_steps=20,
-        max_time_s=240.0,
+        agent=picture_agent(),
+        messages=PICTURE_TASK,
+        max_steps=PICTURE_MAX_STEPS,
+        max_time_s=PICTURE_MAX_TIME_S,
     )
     print_structured_answer(result, FeaturedPicture, started)
 
