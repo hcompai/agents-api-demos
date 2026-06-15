@@ -12,11 +12,11 @@ https://platform.hcompany.ai/agent-view/{session_id}
 
 Concretely:
 
-- **When you start working against the platform** (first session of a task), offer once to open the platform UI (`open "https://platform.eu.hcompany.ai"` — or the US host) so the user has it at hand.
+- **When you start working against the platform** (first session of a task), offer once to open the platform UI (`open "https://platform.hcompany.ai"` — or the US host) so the user has it at hand.
 - **The moment each run launches**, ask the user if they want it opened in their browser ("want me to open the run?") — and on yes:
 
 ```bash
-open "https://platform.eu.hcompany.ai/agent-view/{session_id}"   # macOS; xdg-open on Linux
+open "https://platform.hcompany.ai/agent-view/{session_id}"   # macOS; xdg-open on Linux
 ```
 
 - If they said yes once and you launch several runs in the same task, keep opening them (or open the first and link the rest) — don't re-ask every time.
@@ -24,12 +24,12 @@ open "https://platform.eu.hcompany.ai/agent-view/{session_id}"   # macOS; xdg-op
 
 The `{session_id}` is the id returned by `POST /api/v2/sessions` (the v2 session id and the trajectory id are the same UUID).
 
-**Match the region of the link to the region of the API you called**: a session created on `agp.eu.hcompany.ai` is viewable at `platform.eu.hcompany.ai`, not on the US host. Remember the hai-agents SDK defaults to EU — if the user ran through the SDK with defaults, the EU link is probably the right one.
+**Match the region of the link to the region of the API you called**: a session created on `agp.eu.hcompany.ai` is viewable at `platform.hcompany.ai`, not on the US host. Remember the hai-agents SDK defaults to EU — if the user ran through the SDK with defaults, the EU link is probably the right one.
 
 | API host used | agent-view link |
 |---|---|
 | `agp.hcompany.ai` (US) | `https://platform.hcompany.ai/agent-view/{id}` |
-| `agp.eu.hcompany.ai` (EU) | `https://platform.eu.hcompany.ai/agent-view/{id}` |
+| `agp.eu.hcompany.ai` (EU) | `https://platform.hcompany.ai/agent-view/{id}` |
 | `agp.<env>.sandboxh.ai` (staging/dev) | `https://platform.<env>.hcompany.ai/agent-view/{id}` |
 
 ## Jumping to a specific moment
