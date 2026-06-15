@@ -6,8 +6,8 @@ body:
   - type: markdown
     attributes:
       value: |
-        Thanks for the idea! This repo is a collection of recipes for the `hai-agents` SDK —
-        new examples and skills are very welcome.
+        Thanks for the suggestion. This repo collects recipes for the `hai-agents` SDK,
+        and new examples and skills are welcome.
   - type: checkboxes
     id: checks
     attributes:

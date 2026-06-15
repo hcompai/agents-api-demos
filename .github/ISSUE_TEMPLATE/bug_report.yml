@@ -6,8 +6,8 @@ body:
   - type: markdown
     attributes:
       value: |
-        Thanks for taking the time to file a bug! These are demo recipes for the `hai-agents` SDK,
-        so the more we can reproduce locally, the faster we can fix it.
+        Thanks for filing a bug. These are demo recipes for the `hai-agents` SDK,
+        so anything that helps us reproduce the problem locally helps us fix it sooner.
 
         Before opening, please search [existing issues](https://github.com/hcompai/hai-agent-demos/issues)
         to avoid duplicates.
@@ -32,8 +32,8 @@ body:
         - qa/cli
         - extract_anything
         - counterfeit_detection
-        - skill — hai-platform
-        - skill — hai-qa-via-cli
+        - skill: hai-platform
+        - skill: hai-qa-via-cli
         - Setup / install (uv, .env, .mcp.json)
         - Other / not sure
     validations:
@@ -62,7 +62,7 @@ body:
     id: logs
     attributes:
       label: Relevant logs or output
-      description: Paste any error output or a link to an agent-view run replay. This is auto-formatted as code — no backticks needed.
+      description: Paste any error output, or a link to an agent-view run replay. This box formats as code, so you don't need backticks.
       render: shell
     validations:
       required: false
