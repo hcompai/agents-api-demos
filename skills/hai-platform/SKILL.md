@@ -10,7 +10,7 @@ H Company runs two backends that work together. Pick the right one first:
 | You're touching… | Product | Base URL | Read |
 |---|---|---|---|
 | Login, users, organizations, invitations, **API key management**, billing, STT tokens | **Portal** (portal) | EU: `https://portal.api.eu.hcompany.ai/api` · US: `https://portal.production.hcompany.ai/api` | [references/portal/](references/portal/) |
-| **Running agents**: sessions, stored agents, skills, environments, vaults, events/long-polling, hai-agents SDK, MCP server | **Agent platform** (agp) | `https://agp.hcompany.ai/api` (EU: `agp.eu.hcompany.ai`) | [references/agp/](references/agp/) |
+| **Running agents**: sessions, stored agents, skills, environments, vaults, events/long-polling, hai-agents SDK, MCP server | **Agent platform** (agp) | EU (default): `https://agp.eu.hcompany.ai/api` · US: `https://agp.hcompany.ai/api` | [references/agp/](references/agp/) |
 
 ⚠️ `https://platform.hcompany.ai` is the **product frontend** (the API-keys UI lives at `/settings/api-keys`), not the portal API — its `/api/*` paths return the HTML app shell, except a server-side `/api/portal/[...path]` proxy.
 
@@ -43,28 +43,28 @@ It opens the browser (one Google click), exchanges the code, picks the org, revo
 - [api-keys.md](references/portal/api-keys.md) — key create/list/revoke, `/api/api-keys/me`, how `hk-` auth works
 - [apps-billing-stt.md](references/portal/apps-billing-stt.md) — applications, Stripe credits, STT, error/health conventions, environments
 
-**Agent platform** (`references/agp/`):
-- [sessions.md](references/agp/sessions.md) — the 17 session routes: create/run/cancel, `/changes` long-poll + cursor, event kinds, pause/force_answer, quota, sharing
-- [agents-skills.md](references/agp/agents-skills.md) — stored agent specs, skill docs, the reserved `h/` namespace
-- [environments-vaults.md](references/agp/environments-vaults.md) — the `web` (Browser) environment kind; vaults (1Password, env-manager proxy)
-- [conventions-and-sdk.md](references/agp/conventions-and-sdk.md) — base URLs/regions, gateway auth detail, errors, hai-agents↔HTTP mapping, MCP tools
+**Agent platform** (agp):
+- For exact request/response **shapes** — every endpoint, param, body, status code — the swagger is the source of truth: `https://agp.hcompany.ai/share/docs` (raw spec at `/share/openapi.json`).
+- [agp/api-notes.md](references/agp/api-notes.md) — the **behavior** the swagger can't express: session lifecycle, the `/changes` 204+ETag long-poll + cursor rule, idempotency semantics, event kinds, the reserved `h/` namespace, the `web` environment, vault/proxy gotchas, the MCP server, gateway auth.
 
-**SDKs** (`references/sdk/` — read the matching one BEFORE writing SDK code; don't hand-roll HTTP when the SDK fits):
-- [python.md](references/sdk/python.md) — `hai-agents` on PyPI: `run_session`/`start_session`→`SessionHandle`, Client↔route mapping, events/polling, exceptions, EU-default gotchas
-- [typescript.md](references/sdk/typescript.md) — `hai-agents` on npm: `runSession`/`SessionHandle`, client surface, error classes, ESM/CJS, EU-default gotchas
+**SDKs** (`hai-agents` — prefer the SDK over hand-rolled HTTP when it fits; check the package page for the current surface, versions, and examples):
+- Python: [pypi.org/project/hai-agents](https://pypi.org/project/hai-agents/) — `run_session`/`start_session` → `SessionHandle`, events/polling, exceptions (defaults to the EU endpoint; set `base_url` for US)
+- TypeScript: [npmjs.com/package/hai-agents](https://www.npmjs.com/package/hai-agents) — `runSession` → `SessionHandle`, error classes, ESM/CJS (same EU-default gotcha)
 
 **Extras** (`references/extras/` — dev UI/UX knowledge, not endpoint docs):
 - [agent-view-replay.md](references/extras/agent-view-replay.md) — reviewing/replaying runs in the browser (`platform[.eu].hcompany.ai/agent-view/{id}`), deep-linking to an event, sharing a run with someone outside the org
 
-**Official hub docs** (`references/hub/agent-api/` — the full public docs from hub.hcompany.ai/agent-api, mirrored daily by `.github/workflows/sync-hub-docs.yml`; fresher and more complete than the distilled notes above, but without their gotchas):
-- [index.md](references/hub/agent-api/index.md) — every page with its description and live URL; open the matching `.mdx` for full endpoint docs (request/response shapes, examples)
+**Official hub docs** ([references/llms.txt](references/llms.txt) — the index of the full public docs on hub.hcompany.ai; more complete than the distilled notes above, but without their gotchas):
+- The public hub brands agp as the **"Computer-Use Agent API"** (URLs are `hub.hcompany.ai/computer-use-agent/…`) — same product as the "agent platform"/agp here, just a different name.
+- Every entry has a one-line description and a live URL. Fetch the matching page (the URLs already end in `.md`) for full endpoint docs — request/response shapes and examples.
+- If a hub page is unreachable or moved (these are fetched live, not bundled), fall back to the agp OpenAPI for shapes: `https://agp.hcompany.ai/share/openapi.json` (`/share/docs` for the rendered swagger) — it's unauthenticated and always current.
 
 ## The canonical agent workflow (agp)
 
 1. `POST /api/v2/sessions` with a stored agent id or an inline Agent spec (`{name, instructions, model, environments: [{kind: "web", ...}], skills}`). Pass an idempotency key — retried creates replay instead of duplicating (422 conflicting reuse, 409 in-flight).
 2. Long-poll `GET /api/v2/sessions/{id}/changes?from_index=N&wait_for_seconds=30` (cap 60 s). Empty window → **204 + `ETag: <from_index>`**, not an error: keep the cursor, re-poll. Advance by `from_index += len(events)` — never reset.
 3. React to events (`AgentEvent.kind` ∈ policy_event / tool_result / answer_event / observation_event / message_event / error_event, plus AgentStarted/Completion/Error, MetricsUpdate, LiveViewUrl, ChatMessage). Interact via `POST .../messages`, `pause`/`resume`, `force_answer`.
-4. In Python this is just `hai_agents.run_session(...)`, in TypeScript `client.runSession(...)` — read [references/sdk/python.md](references/sdk/python.md) or [references/sdk/typescript.md](references/sdk/typescript.md) before hand-rolling HTTP.
+4. In Python this is just `hai_agents.run_session(...)`, in TypeScript `client.runSession(...)` — check the SDK package page ([PyPI](https://pypi.org/project/hai-agents/) / [npm](https://www.npmjs.com/package/hai-agents)) before hand-rolling HTTP.
 5. **Always hand the user the replay link AND offer to open it**: `https://platform.hcompany.ai/agent-view/{session_id}` (EU sessions → `platform.eu.hcompany.ai`; match the region of the API you called). The moment a run starts, ask the user whether to open it in their browser, and on yes run `open "<agent-view-url>"` (macOS; `xdg-open` on Linux) — watching the agent live beats reading your summary. Details: [references/extras/agent-view-replay.md](references/extras/agent-view-replay.md).
 
 ## Gotchas that bite
@@ -94,4 +94,4 @@ open "mailto:feedback@hcompany.ai?subject=$(python3 -c 'import urllib.parse;prin
 
 ## Source of truth
 
-Shapes in doubt → first check the mirrored official docs in [references/hub/agent-api/](references/hub/agent-api/index.md) (synced daily from the hub), then the backend sources win: `github.com/hcompai/portal` (`backend/portal_h/src/portal_h/domains/<domain>/{controller,dtos}.py`) and `github.com/hcompai/agent_platform` (`backend/agent_api/src/agent_api/{routers,models}/`). Beware on agp: some models live in the private `agent-interface` package — check the version pinned in `uv.lock`, not a stale checkout. Clone shallow and grep rather than guessing. Public agp OpenAPI: `https://agp.hcompany.ai/share/docs`.
+Shapes in doubt → start from the docs index in [references/llms.txt](references/llms.txt) and fetch the matching live page on hub.hcompany.ai. For the exact request/response shapes, the public agp OpenAPI is authoritative: `https://agp.hcompany.ai/share/docs`.
