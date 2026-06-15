@@ -89,8 +89,6 @@ uv run playwright install chromium
 
 ## Skills & plugin marketplace
 
-[Agent Skills](https://docs.claude.com/en/docs/agents-and-tools/agent-skills/overview) are folders of instructions, scripts, and resources that Claude loads dynamically to improve performance on specialized tasks. Each skill is a directory under [`skills/`](skills/) containing a `SKILL.md` with YAML frontmatter (`name`, `description`) followed by the instructions Claude follows when the skill is active — same layout as [anthropics/skills](https://github.com/anthropics/skills).
-
 This repo doubles as a **Claude Code plugin marketplace** ([`.claude-plugin/marketplace.json`](.claude-plugin/marketplace.json)): each skill is published as a plugin under the `hai-skills` marketplace, so anyone can install them into their own Claude Code without cloning the repo.
 
 ### Available skills
