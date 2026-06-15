@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: H Company Platform docs
+    url: https://platform.hcompany.ai
+    about: Questions about the platform, API keys, or your account.
+  - name: hai-agents SDK on PyPI
+    url: https://pypi.org/project/hai-agents/
+    about: Reference for the underlying SDK that these examples wrap.
+  - name: Model Context Protocol
+    url: https://modelcontextprotocol.io
+    about: Background on MCP, the protocol the MCP-server examples implement.

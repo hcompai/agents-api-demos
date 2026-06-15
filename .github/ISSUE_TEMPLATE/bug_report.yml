@@ -1,0 +1,80 @@
+name: Bug report
+description: Report something that isn't working as documented in one of the examples or skills.
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for filing a bug. These are demo recipes for the `hai-agents` SDK,
+        so anything that helps us reproduce the problem locally helps us fix it sooner.
+
+        Before opening, please search [existing issues](https://github.com/hcompai/hai-agent-demos/issues)
+        to avoid duplicates.
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Preflight checklist
+      options:
+        - label: I searched existing issues and this isn't a duplicate.
+          required: true
+        - label: This is a single bug report (I'll file separate reports for different bugs).
+          required: true
+        - label: My `H_API_KEY` is set and I'm not pasting any secrets into this issue.
+          required: true
+  - type: dropdown
+    id: example
+    attributes:
+      label: Which example or skill?
+      description: Where did you hit the bug?
+      options:
+        - qa/mcp
+        - qa/cli
+        - extract_anything
+        - counterfeit_detection
+        - skill: hai-platform
+        - skill: hai-qa-via-cli
+        - Setup / install (uv, .env, .mcp.json)
+        - Other / not sure
+    validations:
+      required: true
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: A clear description of the bug and what you expected instead.
+      placeholder: I ran `qa-cli review --url ...` and it ...
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      description: The exact commands or Claude Code prompts you used.
+      placeholder: |
+        1. uv sync
+        2. claude
+        3. Prompt: "Use review_web_ui to check ..."
+      render: shell
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant logs or output
+      description: Paste any error output, or a link to an agent-view run replay. This box formats as code, so you don't need backticks.
+      render: shell
+    validations:
+      required: false
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: OS, Python version, `uv --version`, and how you installed (uv vs pip).
+      placeholder: |
+        - OS: macOS 15.5
+        - Python: 3.12.4
+        - uv: 0.9.18
+        - Install: uv sync
+    validations:
+      required: true
