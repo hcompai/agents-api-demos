@@ -51,4 +51,4 @@ Same URL for both: while the session runs, the view follows it live; once it fin
 ## Who can open it, and sharing
 
 - A **logged-in platform user of the same org** can open the link directly — no sharing step needed.
-- To show the run to someone **outside the org** (or unauthenticated), make it public first: `POST /api/v2/sessions/{id}/share` → returns a public share path; `DELETE .../share` revokes it. Shapes and ownership rules: [../agp/sessions.md](../agp/sessions.md) (§ share routes).
+- To show the run to someone **outside the org** (or unauthenticated), make it public first: `POST /api/v2/sessions/{id}/share` → returns a public share path; `DELETE .../share` revokes it. Behavior and ownership rules: [../agp/api-notes.md](../agp/api-notes.md).

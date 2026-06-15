@@ -35,7 +35,7 @@ Two categories from the OG mcpify-anything are deliberately excluded here: tools
 
 ```bash
 uv sync
-cp .env.example .env                            # add H_API_KEY
+cp .env.example .env                            # add HAI_API_KEY
 
 uv run hai-agent-demos-extract-anything         # MCP server over stdio (Claude Code auto-registers via .mcp.json)
 ```
@@ -120,4 +120,4 @@ flowchart LR
 
 | Env var | Required | Source |
 | --- | --- | --- |
-| `H_API_KEY` | yes | https://platform.hcompany.ai/settings/api-keys |
+| `HAI_API_KEY` | yes | https://platform.hcompany.ai/settings/api-keys |

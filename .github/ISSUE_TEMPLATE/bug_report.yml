@@ -20,7 +20,7 @@ body:
           required: true
         - label: This is a single bug report (I'll file separate reports for different bugs).
           required: true
-        - label: My `H_API_KEY` is set and I'm not pasting any secrets into this issue.
+        - label: My `HAI_API_KEY` is set and I'm not pasting any secrets into this issue.
           required: true
   - type: dropdown
     id: example

@@ -42,7 +42,7 @@ _client_instance: Client | None = None
 
 
 def get_client() -> Client:
-    """Return a cached SDK client, building it lazily from ``H_API_KEY`` on first use."""
+    """Return a cached SDK client, building it lazily from ``HAI_API_KEY`` on first use."""
     global _client_instance
     if _client_instance is None:
         _client_instance = Client(api_key=require_api_key())

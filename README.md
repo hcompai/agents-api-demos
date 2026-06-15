@@ -21,7 +21,7 @@ Each example also demonstrates a different *recipe* on top of the SDK:
 git clone <this-repo>
 cd hai-agent-demos
 uv sync                                          # or: pip install -e . (see below)
-cp .env.example .env  # add your H_API_KEY from https://platform.hcompany.ai/settings/api-keys
+cp .env.example .env  # add your HAI_API_KEY from https://platform.hcompany.ai/settings/api-keys
 claude                 # opens Claude Code in the repo; the MCP server is auto-registered
 ```
 
@@ -79,7 +79,7 @@ Generic helpers (browser env, API-key check, logging/printing utilities) live in
 
 | Env var | Required | Source |
 | --- | --- | --- |
-| `H_API_KEY` | yes | auto-setup via `python3 skills/hai-platform/scripts/h_login.py`, or manually from https://platform.hcompany.ai/settings/api-keys |
+| `HAI_API_KEY` | yes | auto-setup via `python3 skills/hai-platform/scripts/h_login.py`, or manually from https://platform.hcompany.ai/settings/api-keys |
 
 The [`counterfeit_detection`](examples/counterfeit_detection/) example additionally renders pages locally with Playwright; one-time setup:
 
@@ -97,7 +97,7 @@ This repo doubles as a **Claude Code plugin marketplace** ([`.claude-plugin/mark
 
 | Skill | What Claude learns | Pairs with |
 | --- | --- | --- |
-| [`hai-platform`](skills/hai-platform/) | The H Company APIs end-to-end: portal (auth, orgs, API keys + the automated `H_API_KEY` → `.env` login script), agent platform v2 (sessions, agents, environments, vaults, long-polling), the hai-agents Python/TS SDKs, and the agent-view run-replay workflow | any project calling the H Company platform |
+| [`hai-platform`](skills/hai-platform/) | The H Company APIs end-to-end: portal (auth, orgs, API keys + the automated `HAI_API_KEY` → `.env` login script), agent platform v2 (sessions, agents, environments, vaults, long-polling), the hai-agents Python/TS SDKs, and the agent-view run-replay workflow | any project calling the H Company platform |
 | [`hai-qa-via-cli`](skills/hai-qa-via-cli/) | When and how to invoke `qa-cli review` / `qa-cli visual` to QA a live web page and surface the structured findings | the [`qa/cli`](examples/qa/cli/) example in this repo |
 
 ### Install in Claude Code

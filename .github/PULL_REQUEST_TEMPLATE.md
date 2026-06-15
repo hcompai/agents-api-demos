@@ -42,4 +42,4 @@ Show it works. For example:
 - [ ] `ruff check .`, `ruff format .`, and `mypy` pass locally (`pre-commit run --all-files`).
 - [ ] New examples/skills are documented in the README table and project layout.
 - [ ] New skills are registered in `.claude-plugin/marketplace.json`.
-- [ ] No secrets (`H_API_KEY`, `.env` contents) are included in the diff.
+- [ ] No secrets (`HAI_API_KEY`, `.env` contents) are included in the diff.
