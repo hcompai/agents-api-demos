@@ -2,26 +2,18 @@
 
 Recipes for the [`hai-agents`](https://pypi.org/project/hai-agents/) Python SDK, wired up as **MCP servers and CLI tools for Claude Code**, and runnable in [Hermes Agent](hermes/) too. Each example shows one way to use the SDK in a real workflow.
 
-## What is this?
+The SDK lets you spin up autonomous agents — web-surfing, code-running, vision-capable — and drive them from Python. This repo wraps that SDK into two interface patterns so you can call the agents from inside Claude Code while you work:
 
-The `hai-agents` SDK lets you spin up autonomous agents — web-surfing, code-running, vision-capable — and drive them from Python. This repo wraps that SDK into two interface patterns so you can call the agents from inside Claude Code while you work:
-
-- **MCP server** — Claude Code calls the agent like any other MCP tool
-- **CLI + Claude Code skill** — Claude Code runs a shell command that the `hai-qa-via-cli` skill knows how to invoke
-
-Each example also demonstrates a different *recipe* on top of the SDK:
-
-- [`qa`](examples/qa/) ([`mcp`](examples/qa/mcp/) / [`cli`](examples/qa/cli/)): **single-task pattern** — wrap one agent task as one tool/command, exposed both as an MCP server and a CLI.
-- [`extract_anything`](examples/extract_anything/): **bring-your-own-schema pattern** — one MCP tool (and matching CLI) that takes a URL plus a caller-supplied JSON Schema and returns matching JSON.
-- [`counterfeit_detection`](examples/counterfeit_detection/): **single-agent + custom-tools pattern** — upgrade one agent with local Python tools (Playwright screenshots, Holo visual compare) and a step/time budget, no orchestration.
+- **MCP server** — Claude Code calls the agent like any other MCP tool.
+- **CLI + Claude Code skill** — Claude Code runs a shell command that a skill knows how to invoke.
 
 ## Quickstart
 
 ```bash
 git clone <this-repo>
 cd hai-agent-demos
-uv sync                                          # or: pip install -e . (see below)
-cp .env.example .env  # add your HAI_API_KEY from https://platform.hcompany.ai/settings/api-keys
+uv sync
+cp .env.example .env   # add your HAI_API_KEY from https://platform.hcompany.ai/settings/api-keys
 claude                 # opens Claude Code in the repo; the MCP server is auto-registered
 ```
 
@@ -56,28 +48,18 @@ The `.mcp.json` registration assumes `uv run` is available — if you go the pip
 
 ## Examples
 
+Each example is a self-contained recipe with its own README. See [`examples/`](examples/README.md) for the full index and the shared architecture.
+
 | Example | What it shows | Interface |
 | --- | --- | --- |
-| [`qa/mcp`](examples/qa/mcp/) | Autonomous browser agent QAs a remote URL and returns structured `{verdict, summary, findings}` | MCP server (`review_web_ui`, `visual_check`) |
-| [`qa/cli`](examples/qa/cli/) | Same QA agent exposed as a shell command, surfaced to Claude Code via the `hai-qa-via-cli` skill | CLI (`qa-cli review / visual`) |
-| [`extract_anything`](examples/extract_anything/) | One MCP tool (and matching CLI) that takes a URL, a task, and a caller-supplied JSON Schema; a cloud browser agent drives the page and returns JSON matching the schema. Demoed against Wikipedia's Picture of the Day — describing the featured image by actually looking at the pixels, which no scraper can do | MCP server (`extract`) + CLI (`extract-cli picture`) |
-| [`counterfeit_detection`](examples/counterfeit_detection/) | Three-stage cookbook: a bare `run_session` finds one counterfeit of a genuine product; local custom tools add screenshot-grounded visual verdicts; a `max_steps`/`max_time_s` budget turns it into an exhaustive sweep | CLI (`counterfeit-cli simple / tooled / sweep`) |
+| [`qa/mcp`](examples/qa/mcp/README.md) | Autonomous browser agent QAs a remote URL and returns structured `{verdict, summary, findings}` | MCP server (`review_web_ui`, `visual_check`) |
+| [`qa/cli`](examples/qa/cli/README.md) | Same QA agent exposed as a shell command, surfaced to Claude Code via the `hai-qa-via-cli` skill | CLI (`qa-cli review / visual`) |
+| [`extract_anything`](examples/extract_anything/README.md) | Wrap an agent call as a typed Python function — generic `extract(url, task, schema)` or curated `get_*` tools — exposed as both MCP and CLI | MCP server (`extract`) + CLI (`extract-cli`) |
+| [`counterfeit_detection`](examples/counterfeit_detection/README.md) | Single-agent + custom-tools cookbook in three stages: bare `run_session`, then local screenshot-compare tools, then a `max_steps`/`max_time_s` budget for an exhaustive sweep | CLI (`counterfeit-cli simple / tooled / sweep`) |
 
-## How it works
+## Skills
 
-```mermaid
-flowchart LR
-  user[You in Claude Code] -->|tool call| mcp[MCP server\nexamples/qa/mcp/server.py]
-  mcp -->|hai_agents.run_session| api[H Agent API]
-  api -->|controls| browser[Headless browser]
-  browser -->|screenshots + DOM| api
-  api -->|structured answer| mcp
-  mcp -->|findings| user
-```
-
-The MCP server is a thin FastMCP wrapper around `hai_agents.run_session`. Each tool defines an inline agent (with a browser environment and shared skills), submits the user's instruction, and surfaces the structured answer back to Claude Code.
-
-Generic helpers (browser env, API-key check, logging/printing utilities) live in [`examples/_shared.py`](examples/_shared.py). QA-specific bits (the reviewer instructions, `ReviewResult` model, agent-skill loader) live in [`examples/qa/shared.py`](examples/qa/shared.py) and are imported by both `examples/qa/mcp` and `examples/qa/cli`.
+This repo doubles as a **Claude Code plugin marketplace**: each skill ([`hai-platform`](skills/hai-platform/), [`hai-qa-via-cli`](skills/hai-qa-via-cli/)) is published under the `hai-skills` marketplace so it can be installed without cloning. See [`skills/`](skills/README.md) for install instructions and how to add your own.
 
 ## Configuration
 
@@ -156,5 +138,6 @@ hai-agent-demos/
 ## Links
 
 - [hai-agents on PyPI](https://pypi.org/project/hai-agents/)
+- [hai-agents on Npm](https://npmjs.com/package/hai-agents)
 - [H Company Platform](https://platform.hcompany.ai)
 - [Model Context Protocol](https://modelcontextprotocol.io)
