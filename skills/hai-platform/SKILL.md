@@ -1,6 +1,6 @@
 ---
 name: hai-platform
-description: Expert knowledge of the two H Company backends — the portal (portal, API at portal.api.eu.hcompany.ai / portal.production.hcompany.ai — auth, organizations, API keys, invitations, billing) and the agent platform v2 API (agp.hcompany.ai — sessions, agents, skills, environments, vaults, long-polling, the hai-agents SDK). Use this skill whenever the user mentions portal, agent_platform, platform.hcompany.ai, agp.hcompany.ai, H_API_KEY or hk-... keys, hai-agents / hai_agents, run_session, agent sessions or trajectories, agent-view or replaying/reviewing a run, /api/v2 endpoints, browser agent environments, vaults for agent secrets, organizations or invitations on the H platform, the desktop OAuth/PKCE login flow, or wants to call, integrate with, debug, or automate anything against an H Company API — even without naming it (e.g. "get me an API key", "set up my .env", "launch a web agent", "why is my session stuck", "show me what the agent did", "why am I getting 401 from the platform?").
+description: Expert knowledge of the two H Company backends — the portal (portal, API at portal.api.eu.hcompany.ai / portal.production.hcompany.ai — auth, organizations, API keys, invitations, billing) and the agent platform v2 API (agp.hcompany.ai — sessions, agents, skills, environments, vaults, long-polling, the hai-agents SDK). Use this skill whenever the user mentions portal, agent_platform, platform.hcompany.ai, agp.hcompany.ai, HAI_API_KEY or hk-... keys, hai-agents / hai_agents, run_session, agent sessions or trajectories, agent-view or replaying/reviewing a run, /api/v2 endpoints, browser agent environments, vaults for agent secrets, organizations or invitations on the H platform, the desktop OAuth/PKCE login flow, or wants to call, integrate with, debug, or automate anything against an H Company API — even without naming it (e.g. "get me an API key", "set up my .env", "launch a web agent", "why is my session stuck", "show me what the agent did", "why am I getting 401 from the platform?").
 ---
 
 # H Company APIs (portal + agent platform)
@@ -24,12 +24,12 @@ They connect through one object: the **H API key (`hk-...`)** is *created* on th
 
 Critical constraint: **the full `hk-...` value is returned only once, at creation** (`POST /api/organizations/{org_id}/keys/`, SHA256-hashed in storage). To "retrieve" a key, create a new one and revoke the old by name.
 
-## Getting an H_API_KEY into .env automatically
+## Getting an HAI_API_KEY into .env automatically
 
 Don't make the user copy-paste from the settings page (`https://platform.hcompany.ai/settings/api-keys`) — run the bundled script (stdlib-only):
 
 ```bash
-python scripts/h_login.py                 # full desktop PKCE flow → writes H_API_KEY into ./.env, no-op if set
+python scripts/h_login.py                 # full desktop PKCE flow → writes HAI_API_KEY into ./.env, no-op if set
 python scripts/h_login.py --force         # rotate/replace; also --region us|eu (default: eu), --env-file, --key-name, --no-rotate
 ```
 

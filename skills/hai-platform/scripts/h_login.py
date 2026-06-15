@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 """Obtain an H platform API key via the portal desktop OAuth flow (RFC 8252 + PKCE)
-and write it to a .env file as H_API_KEY. Stdlib only — no dependencies.
+and write it to a .env file as HAI_API_KEY. Stdlib only — no dependencies.
 
 Usage:
-    python h_login.py                       # writes H_API_KEY into ./.env (skips if already set)
+    python h_login.py                       # writes HAI_API_KEY into ./.env (skips if already set)
     python h_login.py --env-file path/.env  # target a specific .env
-    python h_login.py --force               # replace an existing H_API_KEY
+    python h_login.py --force               # replace an existing HAI_API_KEY
     python h_login.py --key-name "my-key"   # custom key name (default: "<cwd-name> @ <hostname>")
     python h_login.py --no-rotate           # keep older keys with the same name (default: revoke them)
 
@@ -44,7 +44,7 @@ CALLBACK_TIMEOUT_S = 180
 SUCCESS_HTML = b"""<!doctype html><html><head><meta charset="utf-8"><title>H Login</title></head>
 <body style="font-family:system-ui;display:flex;justify-content:center;margin-top:15vh">
 <div style="text-align:center"><h1>&#10003; Logged in</h1>
-<p>Your H_API_KEY is being written to your .env file.<br>You can close this tab.</p></div>
+<p>Your HAI_API_KEY is being written to your .env file.<br>You can close this tab.</p></div>
 </body></html>"""
 
 
@@ -108,8 +108,8 @@ def write_env(env_path: str, key_value: str) -> None:
     if os.path.exists(env_path):
         with open(env_path) as f:
             lines = f.read().splitlines()
-    lines = [line for line in lines if not line.startswith("H_API_KEY=")]
-    lines.append(f"H_API_KEY={key_value}")
+    lines = [line for line in lines if not line.startswith("HAI_API_KEY=")]
+    lines.append(f"HAI_API_KEY={key_value}")
     with open(env_path, "w") as f:
         f.write("\n".join(lines) + "\n")
     os.chmod(env_path, 0o600)
@@ -121,15 +121,15 @@ def main() -> None:
     p.add_argument("--base-url", default=os.environ.get("H_PORTAL_URL"), help="override the portal API URL")
     p.add_argument("--env-file", default=".env")
     p.add_argument("--key-name", default=None)
-    p.add_argument("--force", action="store_true", help="replace an existing H_API_KEY")
+    p.add_argument("--force", action="store_true", help="replace an existing HAI_API_KEY")
     p.add_argument("--no-rotate", action="store_true", help="keep older keys with the same name")
     args = p.parse_args()
     base_url = args.base_url or PORTAL_API_URLS[args.region]
 
     if not args.force and os.path.exists(args.env_file):
         with open(args.env_file) as f:
-            if any(line.startswith("H_API_KEY=") and line.strip() != "H_API_KEY=" for line in f):
-                print(f"H_API_KEY already set in {args.env_file} — nothing to do (use --force to replace).")
+            if any(line.startswith("HAI_API_KEY=") and line.strip() != "HAI_API_KEY=" for line in f):
+                print(f"HAI_API_KEY already set in {args.env_file} — nothing to do (use --force to replace).")
                 return
 
     key_name = args.key_name or f"{os.path.basename(os.getcwd())} @ {socket.gethostname()}"
@@ -196,7 +196,7 @@ def main() -> None:
         validated = "WARNING: key not (yet) accepted by AgP — it may take a moment to propagate"
 
     write_env(args.env_file, created["key"])
-    print(f"✓ H_API_KEY written to {args.env_file} (key '{key_name}', org {org_id}, {validated})")
+    print(f"✓ HAI_API_KEY written to {args.env_file} (key '{key_name}', org {org_id}, {validated})")
 
 
 if __name__ == "__main__":

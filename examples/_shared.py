@@ -46,11 +46,11 @@ def browser_env(start_url: str) -> Browser:
 
 
 def require_api_key() -> str:
-    """Return ``H_API_KEY`` from the environment or raise with a remediation hint."""
-    api_key = os.environ.get("H_API_KEY")
+    """Return ``HAI_API_KEY`` from the environment or raise with a remediation hint."""
+    api_key = os.environ.get("HAI_API_KEY")
     if not api_key:
         raise RuntimeError(
-            "H_API_KEY is not set. Copy .env.example to .env and add a key from "
+            "HAI_API_KEY is not set. Copy .env.example to .env and add a key from "
             "https://platform.hcompany.ai/settings/api-keys, then re-run."
         )
     return api_key

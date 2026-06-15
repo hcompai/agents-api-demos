@@ -12,7 +12,7 @@ Give one agent the URL of a genuine product; get back counterfeit listing URL(s)
 
 ```bash
 uv sync && uv run playwright install chromium    # chromium: one-time, for the local screenshot tool
-cp .env.example .env                             # add H_API_KEY
+cp .env.example .env                             # add HAI_API_KEY
 
 uv run counterfeit-cli simple --genuine-url "https://www.<brand>.com/<product-page>"
 uv run counterfeit-cli tooled --genuine-url "https://www.<brand>.com/<product-page>"
