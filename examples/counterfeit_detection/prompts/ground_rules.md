@@ -59,6 +59,19 @@ Confirm a site as counterfeit only when it shows **at least 3** of:
 Always browse the candidate to verify the product actually matches your extracted reference before
 confirming.
 
+## What you must report as the counterfeit URL
+
+The `counterfeit_url` you return MUST be the **actual merchant/product/listing page you opened and
+inspected** — e.g. `https://shop-xyz.vip/product/123` or a specific marketplace listing URL.
+
+- NEVER report a search-engine results page (`google.com/search?...`, Bing, etc.), a marketplace
+  *search* URL, or any aggregator results page. A list of results is a lead, not a listing.
+- If sponsored/search results clearly point to replicas but you could not open a specific listing
+  (page blocked, render failed), DO NOT return the search URL. Either try another candidate, or
+  report `counterfeit_url = null` with `confidence = "none"` and explain in `reasoning` what you saw.
+- Whenever you return a non-null `counterfeit_url`, populate `red_flags` with the specific flags you
+  observed on that page (don't leave it empty and bury them in prose).
+
 ## Hard safety rules
 
 - NEVER buy anything, add to cart, create an account, or submit any form.

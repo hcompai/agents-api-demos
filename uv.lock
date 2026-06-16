@@ -592,6 +592,7 @@ source = { editable = "." }
 dependencies = [
     { name = "fastmcp" },
     { name = "hai-agents" },
+    { name = "httpx" },
     { name = "openai" },
     { name = "playwright" },
     { name = "pydantic" },
@@ -609,6 +610,7 @@ dev = [
 requires-dist = [
     { name = "fastmcp", specifier = ">=2.0" },
     { name = "hai-agents", specifier = ">=0.1.7" },
+    { name = "httpx", specifier = ">=0.27" },
     { name = "openai", specifier = ">=1.40" },
     { name = "playwright", specifier = ">=1.40" },
     { name = "pydantic", specifier = ">=2.7" },
