@@ -10,11 +10,11 @@
   },
   "plugins": [
     {
-      "name": "hai-platform",
+      "name": "hai-agents",
       "description": "Expert knowledge of the H Company APIs: portal (auth, orgs, API keys), agent platform v2 (sessions, agents, skills, environments, vaults), hai-agents Python/TS SDKs, automated HAI_API_KEY setup, and agent-view run replay.",
       "source": "./",
       "strict": false,
-      "skills": ["./skills/hai-platform"]
+      "skills": ["./skills/hai-agents"]
     },
     {
       "name": "hai-qa-via-cli",
