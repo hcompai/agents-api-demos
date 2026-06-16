@@ -10,7 +10,7 @@ purely host wiring. Where Claude Code reads `.mcp.json`, Hermes reads `~/.hermes
 | In Claude Code | In Hermes Agent |
 | --- | --- |
 | `.mcp.json` → `hai-agent-demos-qa`, `...-extract-anything` | `~/.hermes/config.yaml` `mcp_servers:` ([config.example.yaml](config.example.yaml)) |
-| `skills/hai-qa-via-cli`, `skills/hai-platform` | `~/.hermes/skills/...` (agentskills.io format, same `SKILL.md`) |
+| `skills/hai-qa-via-cli`, `skills/hai-agents` | `~/.hermes/skills/...` (agentskills.io format, same `SKILL.md`) |
 | `qa-cli` / `extract-cli` / `counterfeit-cli` | identical shell commands |
 
 ## Prerequisites
@@ -105,14 +105,14 @@ Both skills have Hermes-adapted entry docs under `hermes/skills/`, in agentskill
 ```bash
 mkdir -p ~/.hermes/skills/hai
 cp -r  hermes/skills/hai-qa-via-cli ~/.hermes/skills/hai/hai-qa-via-cli   # self-contained
-cp -RL hermes/skills/hai-platform   ~/.hermes/skills/hai/hai-platform     # -L dereferences its symlinks (see below)
+cp -RL hermes/skills/hai-agents   ~/.hermes/skills/hai/hai-agents     # -L dereferences its symlinks (see below)
 # then restart Hermes; it re-scans ~/.hermes/skills/
 ```
 
-`hai-qa-via-cli` is forked to invoke the CLI with `uv run --directory <repo>`. For `hai-platform`,
+`hai-qa-via-cli` is forked to invoke the CLI with `uv run --directory <repo>`. For `hai-agents`,
 only the `SKILL.md` is Hermes-adapted (frontmatter, where `h_login.py` runs, and writing the key
 into the demo repo's `.env`); its `references/` and `scripts/` are symlinks into the canonical
-`skills/hai-platform/`, so there's no duplication and `cp -RL` copies the real files. (The
+`skills/hai-agents/`, so there's no duplication and `cp -RL` copies the real files. (The
 symlinks need a symlink-aware checkout: macOS, Linux, or WSL2.)
 
 ## CLI demos

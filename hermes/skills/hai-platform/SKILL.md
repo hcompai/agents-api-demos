@@ -1,5 +1,5 @@
 ---
-name: hai-platform
+name: hai-agents
 description: >
   Expert knowledge of the two H Company backends: the portal (auth, organizations, API keys,
   invitations, billing at portal.api.eu.hcompany.ai / portal.production.hcompany.ai) and the
@@ -22,7 +22,7 @@ metadata:
 # H Company APIs (portal + agent platform)
 
 > Reference docs (`references/`) and the login script (`scripts/`) are relative symlinks into the
-> canonical `skills/hai-platform/`, so they're single-sourced (no duplication) yet the
+> canonical `skills/hai-agents/`, so they're single-sourced (no duplication) yet the
 > `references/...` links below resolve in-repo. `cp -RL` at install (bottom of this file) copies
 > the real files.
 
@@ -55,7 +55,7 @@ create a new one and revoke the old by name.
 
 Don't make the user copy-paste from the settings page
 (`https://platform.hcompany.ai/settings/api-keys`). Run the bundled script (stdlib only). In
-Hermes, run it from this skill's directory (after install, `~/.hermes/skills/hai/hai-platform/`):
+Hermes, run it from this skill's directory (after install, `~/.hermes/skills/hai/hai-agents/`):
 
 ```bash
 python3 scripts/h_login.py                                          # desktop PKCE flow → writes HAI_API_KEY into ./.env, no-op if already set
@@ -145,11 +145,11 @@ public agp OpenAPI is authoritative: `https://agp.hcompany.ai/share/docs`.
 
 ## Install (Hermes Agent)
 
-`references/` and `scripts/` are symlinks into the canonical `skills/hai-platform/`. Install with
+`references/` and `scripts/` are symlinks into the canonical `skills/hai-agents/`. Install with
 `cp -RL` (run from the repo root) so the `-L` dereferences them into a self-contained copy:
 
 ```bash
 mkdir -p ~/.hermes/skills/hai
-cp -RL hermes/skills/hai-platform ~/.hermes/skills/hai/hai-platform
+cp -RL hermes/skills/hai-agents ~/.hermes/skills/hai/hai-agents
 # then restart Hermes; it re-scans ~/.hermes/skills/ on startup
 ```

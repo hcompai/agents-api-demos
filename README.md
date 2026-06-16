@@ -59,13 +59,13 @@ Each example is a self-contained recipe with its own README. See [`examples/`](e
 
 ## Skills
 
-This repo doubles as a **Claude Code plugin marketplace**: each skill ([`hai-platform`](skills/hai-platform/), [`hai-qa-via-cli`](skills/hai-qa-via-cli/)) is published under the `hai-skills` marketplace so it can be installed without cloning. See [`skills/`](skills/README.md) for install instructions and how to add your own.
+This repo doubles as a **Claude Code plugin marketplace**: each skill ([`hai-agents`](skills/hai-agents/), [`hai-qa-via-cli`](skills/hai-qa-via-cli/)) is published under the `hai-skills` marketplace so it can be installed without cloning. See [`skills/`](skills/README.md) for install instructions and how to add your own.
 
 ## Configuration
 
 | Env var | Required | Source |
 | --- | --- | --- |
-| `HAI_API_KEY` | yes | auto-setup via `python3 skills/hai-platform/scripts/h_login.py`, or manually from https://platform.hcompany.ai/settings/api-keys |
+| `HAI_API_KEY` | yes | auto-setup via `python3 skills/hai-agents/scripts/h_login.py`, or manually from https://platform.hcompany.ai/settings/api-keys |
 
 The hosted `hai-agent-platform` server in [`.mcp.json`](.mcp.json) (the generic platform MCP, for any H agent) is HTTP, not stdio, so it can't read `.env` like the others: Claude Code expands `${HAI_API_KEY}` in its auth header from the environment. Export the key before launching (`export HAI_API_KEY=hk-...`). It uses the EU endpoint (the demos' default); swap to `agp.hcompany.ai` for US.
 
@@ -74,7 +74,7 @@ The hosted `hai-agent-platform` server in [`.mcp.json`](.mcp.json) (the generic 
 ```
 hai-agent-demos/
 ├── examples/    qa · extract_anything · counterfeit_detection (+ _shared.py helpers)
-├── skills/      hai-platform · hai-qa-via-cli (published to the marketplace)
+├── skills/      hai-agents · hai-qa-via-cli (published to the marketplace)
 ├── hermes/      run the same demos in Hermes Agent (config + setup guide)
 ├── .mcp.json    registers the MCP servers with Claude Code
 ├── .claude-plugin/marketplace.json
