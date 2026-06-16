@@ -1,6 +1,6 @@
 # MCP registration for the hai-agent-demos servers. Copy this `mcp_servers:` block into
 # ~/.hermes/config.yaml, replace /ABSOLUTE/PATH/TO/agent-sdk-demo with your clone's path,
-# then run /reload-mcp in Hermes. Full walkthrough + gotchas: README.md (this directory).
+# then run /reload-mcp in Hermes.
 #
 # Why absolute paths: Hermes runs from ~/.hermes, so the relative `--env-file .env` that
 # .mcp.json uses won't resolve. `uv run --directory` pins the project and the absolute

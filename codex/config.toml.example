@@ -1,8 +1,6 @@
 # OpenAI Codex CLI MCP config for the hai-agent-demos servers.
 # Copy these tables into ~/.codex/config.toml (or a project-scoped .codex/config.toml in a
 # trusted project), then replace /ABSOLUTE/PATH/TO/agent-sdk-demo with your clone's path.
-# Full guide: README.md (this directory). The timeouts, tool scoping, and env-based secrets
-# below follow Codex best practices (rationale is in the inline comments and the README).
 
 [mcp_servers.hai-agent-demos-qa]
 command = "uv"
