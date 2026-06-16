@@ -1,6 +1,6 @@
 # hai-agent-demos
 
-Recipes for the [`hai-agents`](https://pypi.org/project/hai-agents/) Python SDK, wired up as **MCP servers and CLI tools for Claude Code**. Each example shows one way to use the SDK in a real workflow.
+Recipes for the [`hai-agents`](https://pypi.org/project/hai-agents/) Python SDK, wired up as **MCP servers and CLI tools for Claude Code**, and runnable in [Hermes Agent](hermes/) too. Each example shows one way to use the SDK in a real workflow.
 
 ## What is this?
 
@@ -28,6 +28,10 @@ claude                 # opens Claude Code in the repo; the MCP server is auto-r
 In Claude Code:
 
 > *"Use `review_web_ui` to check https://news.ycombinator.com — verify the top story link works and the page has reasonable accessibility."*
+
+### Run in Hermes Agent (Nous Research)
+
+These demos aren't limited to Claude Code. Hermes Agent consumes the same MCP servers, agentskills.io skills, and CLIs, so the SDK code is unchanged and only the host wiring differs. See [`hermes/`](hermes/) for the one-time setup (a config block plus a tool-call timeout bump).
 
 ### Installing the dependencies
 
@@ -127,6 +131,7 @@ Once installed, the skills trigger automatically when a conversation matches the
 hai-agent-demos/
 ├── .claude-plugin/marketplace.json  # Claude Code plugin marketplace (skills below)
 ├── .mcp.json                        # registers MCP servers with Claude Code
+├── hermes/                          # run the same demos in Hermes Agent (config + skill + setup guide)
 ├── skills/
 │   ├── hai-platform/                # H Company APIs skill (portal + agp + SDKs)
 │   └── hai-qa-via-cli/              # skill for invoking qa-cli

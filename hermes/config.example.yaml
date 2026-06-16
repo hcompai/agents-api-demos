@@ -1,0 +1,42 @@
+# MCP registration for the hai-agent-demos servers. Copy this `mcp_servers:` block into
+# ~/.hermes/config.yaml, replace /ABSOLUTE/PATH/TO/agent-sdk-demo with your clone's path,
+# then run /reload-mcp in Hermes. Full walkthrough + gotchas: README.md (this directory).
+#
+# Why absolute paths: Hermes runs from ~/.hermes, so the relative `--env-file .env` that
+# .mcp.json uses won't resolve. `uv run --directory` pins the project and the absolute
+# `--env-file` loads HAI_API_KEY no matter Hermes' cwd.
+
+mcp_servers:
+  hai-agent-demos-qa:
+    command: uv
+    args:
+      - run
+      - --directory
+      - /ABSOLUTE/PATH/TO/agent-sdk-demo       # edit: your clone's root
+      - --env-file
+      - /ABSOLUTE/PATH/TO/agent-sdk-demo/.env  # edit: same path + /.env (holds HAI_API_KEY)
+      - hai-agent-demos-qa
+    timeout: 420                               # cloud sessions exceed Hermes' 120s default (server ceiling is 360s)
+    tools:
+      include: [review_web_ui, visual_check]   # only expose what this demo offers
+      resources: false
+      prompts: false
+
+  hai-agent-demos-extract-anything:
+    command: uv
+    args:
+      - run
+      - --directory
+      - /ABSOLUTE/PATH/TO/agent-sdk-demo
+      - --env-file
+      - /ABSOLUTE/PATH/TO/agent-sdk-demo/.env
+      - hai-agent-demos-extract-anything
+    timeout: 420
+    tools:
+      # include unset → all extract tools; or pin a subset, e.g.:
+      # include: [extract, describe_picture_of_the_day, get_flight_options]
+      resources: false
+      prompts: false
+
+# Rather not point at the repo's .env? Drop the --env-file args and add an inline secret:
+#   env: { HAI_API_KEY: "hk-..." }   # stored in this file instead
