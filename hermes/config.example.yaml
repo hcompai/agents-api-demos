@@ -38,5 +38,14 @@ mcp_servers:
       resources: false
       prompts: false
 
+  # Generic H agent-platform server (hosted, not demo-specific): run and manage ANY H agent.
+  # Remote streamable-HTTP proxy over /api/v2, registry io.github.hcompai/hai-agents. Tools:
+  # run_agent, wait_for_session, list_agents, send_message, cancel_session, share_session.
+  hai-agent-platform:
+    url: https://agp.eu.hcompany.ai/mcp           # EU (matches the SDK default the demos use); US: https://agp.hcompany.ai/mcp
+    headers:
+      Authorization: "Bearer hk-...your-key..."   # same hk- / HAI_API_KEY; this stores the secret in the file
+    timeout: 420                                  # run_agent self-caps ~24s; wait_for_session can run longer
+
 # Rather not point at the repo's .env? Drop the --env-file args and add an inline secret:
 #   env: { HAI_API_KEY: "hk-..." }   # stored in this file instead
