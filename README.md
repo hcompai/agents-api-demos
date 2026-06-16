@@ -85,6 +85,8 @@ Generic helpers (browser env, API-key check, logging/printing utilities) live in
 | --- | --- | --- |
 | `HAI_API_KEY` | yes | auto-setup via `python3 skills/hai-platform/scripts/h_login.py`, or manually from https://platform.hcompany.ai/settings/api-keys |
 
+The hosted `hai-agent-platform` server in [`.mcp.json`](.mcp.json) (the generic platform MCP, for any H agent) is HTTP, not stdio, so it can't read `.env` like the others: Claude Code expands `${HAI_API_KEY}` in its auth header from the environment. Export the key before launching (`export HAI_API_KEY=hk-...`). It uses the EU endpoint (the demos' default); swap to `agp.hcompany.ai` for US.
+
 The [`counterfeit_detection`](examples/counterfeit_detection/) example additionally renders pages locally with Playwright; one-time setup:
 
 ```bash
