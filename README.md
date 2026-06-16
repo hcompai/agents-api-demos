@@ -92,3 +92,7 @@ hai-agent-demos/
 - [hai-agents on Npm](https://npmjs.com/package/hai-agents)
 - [H Company Platform](https://platform.hcompany.ai)
 - [Model Context Protocol](https://modelcontextprotocol.io)
+
+## License
+
+[MIT](LICENSE.txt) © H Company
