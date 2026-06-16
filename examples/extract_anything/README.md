@@ -37,11 +37,11 @@ Two categories from the OG mcpify-anything are deliberately excluded here: tools
 uv sync
 cp .env.example .env                            # add HAI_API_KEY
 
-uv run hai-agent-demos-extract-anything         # MCP server over stdio (Claude Code auto-registers via .mcp.json)
+uv run hai-agents-demos-extract-anything         # MCP server over stdio (Claude Code auto-registers via .mcp.json)
 ```
 
 In Claude Code, any of the curated tools works:
-
+hai-agents
 > *"Call `get_flight_options` — site `https://www.kayak.com`, origin `SFO`, destination `JFK`, depart_date `2026-07-04`, max_results `5`."*
 
 …or the generic shape, when you need a custom schema:

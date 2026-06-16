@@ -23,7 +23,7 @@ When the user asks you to QA a web UI, review a deployed page, or check a URL fo
 
 ## 2. Invoke
 
-The `qa-cli` command lives in the `hai-agent-demos` repo and must run against that project.
+The `qa-cli` command lives in the `hai-agents-demos` repo and must run against that project.
 `uv run --directory` resolves it regardless of your current working directory. Point
 `HAI_DEMOS` at your clone, or export it once in your shell to avoid editing this file:
 
@@ -47,7 +47,7 @@ For `visual`: just relay the answer.
 
 ## Notes
 
-- Prerequisite: the `qa-cli` command comes from the [`hai-agent-demos`](https://github.com/hcompai/hai-agent-demos) repo. If `uv run ... qa-cli` errors with "command not found" or a project-resolution error, the repo isn't at the `--directory` path. Tell the user to clone it and run `uv sync`, or fix the path, before retrying.
+- Prerequisite: the `qa-cli` command comes from the [`hai-agents-demos`](https://github.com/hcompai/hai-agents-demos) repo. If `uv run ... qa-cli` errors with "command not found" or a project-resolution error, the repo isn't at the `--directory` path. Tell the user to clone it and run `uv sync`, or fix the path, before retrying.
 - Requires `HAI_API_KEY` in the repo's `.env` (passed via `--env-file` above). On a missing key the CLI exits with `error: HAI_API_KEY is not set...`. Relay that to the user verbatim; don't retry.
 - `review` is expensive (one cloud session per call). Don't run multiple `review`s in parallel for the same task; call it once with a focused `--instruction`.
 - The browser-agent intelligence runs in the H cloud, not in your model. You only launch the command and surface the JSON, so this works the same whichever model is driving Hermes.

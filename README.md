@@ -1,4 +1,4 @@
-# hai-agent-demos
+# hai-agents-demos
 
 Recipes for the [`hai-agents`](https://pypi.org/project/hai-agents/) Python SDK, wired up as **MCP servers and CLI tools for Claude Code**, and runnable in other MCP hosts ([Hermes Agent](hermes/), [Codex](codex/)) too. Each example shows one way to use the SDK in a real workflow.
 
@@ -11,7 +11,7 @@ The SDK lets you spin up autonomous agents — web-surfing, code-running, vision
 
 ```bash
 git clone <this-repo>
-cd hai-agent-demos
+cd hai-agents-demos
 uv sync
 cp .env.example .env   # add your HAI_API_KEY from https://platform.hcompany.ai/settings/api-keys
 claude                 # opens Claude Code in the repo; the MCP server is auto-registered
@@ -71,12 +71,12 @@ This repo doubles as a **Claude Code plugin marketplace**: each skill ([`hai-age
 | --- | --- | --- |
 | `HAI_API_KEY` | yes | auto-setup via `python3 skills/hai-agents/scripts/h_login.py`, or manually from https://platform.hcompany.ai/settings/api-keys |
 
-The hosted `hai-agent-platform` server in [`.mcp.json`](.mcp.json) (the generic platform MCP, for any H agent) is HTTP, not stdio, so it can't read `.env` like the others: Claude Code expands `${HAI_API_KEY}` in its auth header from the environment. Export the key before launching (`export HAI_API_KEY=hk-...`). It uses the EU endpoint (the demos' default); swap to `agp.hcompany.ai` for US.
+The hosted `hai-agents-platform` server in [`.mcp.json`](.mcp.json) (the generic platform MCP, for any H agent) is HTTP, not stdio, so it can't read `.env` like the others: Claude Code expands `${HAI_API_KEY}` in its auth header from the environment. Export the key before launching (`export HAI_API_KEY=hk-...`). It uses the EU endpoint (the demos' default); swap to `agp.hcompany.ai` for US.
 
 ## Project layout
 
 ```
-hai-agent-demos/
+hai-agents-demos/
 ├── examples/    qa · extract_anything · counterfeit_detection (+ _shared.py helpers)
 ├── skills/      hai-agents · hai-qa-via-cli (published to the marketplace)
 ├── hermes/      run the same demos in Hermes Agent (config + setup guide)

@@ -45,5 +45,5 @@
     ]
   },
   "enableAllProjectMcpServers": true,
-  "enabledMcpjsonServers": ["hai-agent-demos-qa"]
+  "enabledMcpjsonServers": ["hai-agents-demos-qa"]
 }

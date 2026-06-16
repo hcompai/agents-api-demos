@@ -37,7 +37,7 @@ For `visual`: just relay the answer.
 
 ## Notes
 
-- **Prerequisite**: the `qa-cli` command comes from the [`hai-agent-demos`](https://github.com/hcompai/hai-agent-demos) repo. If `uv run qa-cli ...` errors with "command not found", that repo isn't installed in the current working directory — tell the user to clone it and run `uv sync` before retrying, or fall back to whichever QA tool is already on PATH.
+- **Prerequisite**: the `qa-cli` command comes from the [`hai-agents-demos`](https://github.com/hcompai/hai-agents-demos) repo. If `uv run qa-cli ...` errors with "command not found", that repo isn't installed in the current working directory — tell the user to clone it and run `uv sync` before retrying, or fall back to whichever QA tool is already on PATH.
 - Requires `HAI_API_KEY` in `.env`. On a missing key the CLI exits with `error: HAI_API_KEY is not set...` — relay that to the user verbatim; don't retry.
 - `review` is expensive (one cloud session per call). Don't run multiple `review`s in parallel for the same task — call it once with a focused `--instruction`.
 

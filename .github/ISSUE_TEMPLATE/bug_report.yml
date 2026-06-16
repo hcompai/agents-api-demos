@@ -9,7 +9,7 @@ body:
         Thanks for filing a bug. These are demo recipes for the `hai-agents` SDK,
         so anything that helps us reproduce the problem locally helps us fix it sooner.
 
-        Before opening, please search [existing issues](https://github.com/hcompai/hai-agent-demos/issues)
+        Before opening, please search [existing issues](https://github.com/hcompai/hai-agents-demos/issues)
         to avoid duplicates.
   - type: checkboxes
     id: checks

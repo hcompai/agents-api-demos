@@ -14,7 +14,7 @@ This repo doubles as a **Claude Code plugin marketplace** ([`.claude-plugin/mark
 In any Claude Code session:
 
 ```
-/plugin marketplace add hcompai/hai-agent-demos      # or a local clone path
+/plugin marketplace add hcompai/hai-agents-demos      # or a local clone path
 /plugin install hai-agents@hai-skills
 /plugin install hai-qa-via-cli@hai-skills
 ```

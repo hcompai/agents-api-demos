@@ -1,6 +1,6 @@
 # Run the demos inside Codex
 
-The same `hai-agent-demos`, with [OpenAI Codex CLI](https://developers.openai.com/codex/) as the
+The same `hai-agents-demos`, with [OpenAI Codex CLI](https://developers.openai.com/codex/) as the
 host. Like Claude Code and Hermes, Codex is an MCP client, so the SDK code is unchanged; only the
 config format differs.
 
@@ -24,7 +24,7 @@ npm install -g @openai/codex   # see the Codex docs for other install options
 
 Copy the tables from [`config.toml.example`](config.toml.example) into `~/.codex/config.toml`
 (or a project-scoped `.codex/config.toml` in a trusted project) and set `cwd` to your clone's path.
-The hosted `hai-agent-platform` server reads the `hk-` key from `HAI_API_KEY` via
+The hosted `hai-agents-platform` server reads the `hk-` key from `HAI_API_KEY` via
 `bearer_token_env_var`, so export it first; the stdio demo servers load `.env` themselves.
 
 ```bash

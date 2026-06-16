@@ -1,4 +1,4 @@
-# AGENTS.md — hai-agent-demos
+# AGENTS.md — hai-agents-demos
 
 ## Working with Users
 

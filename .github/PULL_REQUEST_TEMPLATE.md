@@ -1,5 +1,5 @@
 <!--
-Thanks for contributing to hai-agent-demos. Please read AGENTS.md for the
+Thanks for contributing to hai-agents-demos. Please read AGENTS.md for the
 coding conventions this repo enforces (Ruff line length 120, tyro CLIs,
 Pydantic `.make()` configs, file-structure ordering, etc.).
 -->

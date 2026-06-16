@@ -1,14 +1,14 @@
 {
   "mcpServers": {
-    "hai-agent-demos-qa": {
+    "hai-agents-demos-qa": {
       "command": "uv",
-      "args": ["run", "--env-file", ".env", "hai-agent-demos-qa"]
+      "args": ["run", "--env-file", ".env", "hai-agents-demos-qa"]
     },
-    "hai-agent-demos-extract-anything": {
+    "hai-agents-demos-extract-anything": {
       "command": "uv",
-      "args": ["run", "--env-file", ".env", "hai-agent-demos-extract-anything"]
+      "args": ["run", "--env-file", ".env", "hai-agents-demos-extract-anything"]
     },
-    "hai-agent-platform": {
+    "hai-agents-platform": {
       "type": "http",
       "url": "https://agp.eu.hcompany.ai/mcp",
       "headers": {

@@ -1,6 +1,6 @@
 # Run the demos inside Hermes Agent
 
-The same `hai-agent-demos`, with [Hermes Agent](https://hermes-agent.nousresearch.com)
+The same `hai-agents-demos`, with [Hermes Agent](https://hermes-agent.nousresearch.com)
 (Nous Research's open-source agent harness) as the host instead of Claude Code.
 
 Nothing about the SDK or the agents changes. Hermes consumes the same three interfaces these
@@ -9,7 +9,7 @@ purely host wiring. Where Claude Code reads `.mcp.json`, Hermes reads `~/.hermes
 
 | In Claude Code | In Hermes Agent |
 | --- | --- |
-| `.mcp.json` → `hai-agent-demos-qa`, `...-extract-anything` | `~/.hermes/config.yaml` `mcp_servers:` ([config.example.yaml](config.example.yaml)) |
+| `.mcp.json` → `hai-agents-demos-qa`, `...-extract-anything` | `~/.hermes/config.yaml` `mcp_servers:` ([config.example.yaml](config.example.yaml)) |
 | `skills/hai-qa-via-cli`, `skills/hai-agents` | `~/.hermes/skills/...` (agentskills.io format, same `SKILL.md`) |
 | `qa-cli` / `extract-cli` / `counterfeit-cli` | identical shell commands |
 
@@ -51,10 +51,10 @@ but it writes only `command`/`args`, so you set the timeout separately:
 
 ```bash
 REPO="$(pwd)"   # run from the repo root
-hermes mcp add hai-agent-demos-qa               --command uv --args run --directory "$REPO" --env-file "$REPO/.env" hai-agent-demos-qa
-hermes mcp add hai-agent-demos-extract-anything --command uv --args run --directory "$REPO" --env-file "$REPO/.env" hai-agent-demos-extract-anything
-hermes config set mcp_servers.hai-agent-demos-qa.timeout 420
-hermes config set mcp_servers.hai-agent-demos-extract-anything.timeout 420
+hermes mcp add hai-agents-demos-qa               --command uv --args run --directory "$REPO" --env-file "$REPO/.env" hai-agents-demos-qa
+hermes mcp add hai-agents-demos-extract-anything --command uv --args run --directory "$REPO" --env-file "$REPO/.env" hai-agents-demos-extract-anything
+hermes config set mcp_servers.hai-agents-demos-qa.timeout 420
+hermes config set mcp_servers.hai-agents-demos-extract-anything.timeout 420
 ```
 
 ### Also register the generic platform server
@@ -65,7 +65,7 @@ hosted agent-platform server, `io.github.hcompai/hai-agents`: a streamable-HTTP 
 `send_message`, `cancel_session`, `share_session`.
 
 ```bash
-hermes mcp add hai-agent-platform --url https://agp.eu.hcompany.ai/mcp --auth header
+hermes mcp add hai-agents-platform --url https://agp.eu.hcompany.ai/mcp --auth header
 # set the header to: Authorization: Bearer hk-...   (US endpoint: https://agp.hcompany.ai/mcp)
 ```
 
@@ -76,7 +76,7 @@ Config-block form (it stores the key in the file) is in [`config.example.yaml`](
 ## 3. Verify
 
 ```bash
-hermes mcp test hai-agent-demos-qa     # MCP handshake + tools/list; no cloud session, no cost
+hermes mcp test hai-agents-demos-qa     # MCP handshake + tools/list; no cloud session, no cost
 ```
 
 It should report `review_web_ui` and `visual_check`. Inside a `hermes chat` session you can
@@ -84,7 +84,7 @@ also `/reload-mcp` and ask "what tools do you have?". You should additionally se
 `describe_picture_of_the_day`, and the `get_*` tools.
 
 > **Name normalization.** Hermes rewrites hyphens and dots to underscores in server names, so
-> `hai-agent-demos-qa` is surfaced as `hai_agent_demos_qa`. Tool names like `review_web_ui` are
+> `hai-agents-demos-qa` is surfaced as `hai_agents_demos_qa`. Tool names like `review_web_ui` are
 > already valid identifiers and stay as-is.
 
 ## 4. First slice: QA a page

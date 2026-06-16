@@ -160,7 +160,7 @@ Error body shape: `{"detail": "...", "title": "..."}`.
 ## Lifecycle & gotchas
 
 - **The full key appears exactly once** — in the `key` field of the create response. Capture it immediately; afterwards only `key_display` (`hk-3...e2b`) is available. Losing it means creating a new key.
-- **Deterministic naming + revoke-by-name**: names are unique per org, so use a stable, deterministic name per purpose (e.g. `ci-{repo}`, `hai-agent-demos-local`). To rotate without orphans: GET the list, find entries with your name, DELETE them by `id`, then POST a fresh key with the same name. Creating first and deleting later fails with `api_key_name_already_exists`.
+- **Deterministic naming + revoke-by-name**: names are unique per org, so use a stable, deterministic name per purpose (e.g. `ci-{repo}`, `hai-agents-demos-local`). To rotate without orphans: GET the list, find entries with your name, DELETE them by `id`, then POST a fresh key with the same name. Creating first and deleting later fails with `api_key_name_already_exists`.
 - **Org access is mandatory**: all management routes sit behind `require_org_access` — a valid session for a user who is a member of `{org_id}`. API keys cannot manage API keys.
 - **Owner-only deletion**: listing is org-wide, deletion is owner-only. Cleanup scripts must run as the user who created the keys.
 - **Expiry is date-based and lazy**: a key expires at the start of its `expires_at` date and is rejected at auth time, but stays visible in list output until explicitly deleted.

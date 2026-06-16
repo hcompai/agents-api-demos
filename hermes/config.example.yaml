@@ -1,4 +1,4 @@
-# MCP registration for the hai-agent-demos servers. Copy this `mcp_servers:` block into
+# MCP registration for the hai-agents-demos servers. Copy this `mcp_servers:` block into
 # ~/.hermes/config.yaml, replace /ABSOLUTE/PATH/TO/agent-sdk-demo with your clone's path,
 # then run /reload-mcp in Hermes.
 #
@@ -7,7 +7,7 @@
 # `--env-file` loads HAI_API_KEY no matter Hermes' cwd.
 
 mcp_servers:
-  hai-agent-demos-qa:
+  hai-agents-demos-qa:
     command: uv
     args:
       - run
@@ -15,14 +15,14 @@ mcp_servers:
       - /ABSOLUTE/PATH/TO/agent-sdk-demo       # edit: your clone's root
       - --env-file
       - /ABSOLUTE/PATH/TO/agent-sdk-demo/.env  # edit: same path + /.env (holds HAI_API_KEY)
-      - hai-agent-demos-qa
+      - hai-agents-demos-qa
     timeout: 420
     tools:
       include: [review_web_ui, visual_check]   # only expose what this demo offers
       resources: false
       prompts: false
 
-  hai-agent-demos-extract-anything:
+  hai-agents-demos-extract-anything:
     command: uv
     args:
       - run
@@ -30,7 +30,7 @@ mcp_servers:
       - /ABSOLUTE/PATH/TO/agent-sdk-demo
       - --env-file
       - /ABSOLUTE/PATH/TO/agent-sdk-demo/.env
-      - hai-agent-demos-extract-anything
+      - hai-agents-demos-extract-anything
     timeout: 420
     tools:
       # include unset → all extract tools; or pin a subset, e.g.:
@@ -41,7 +41,7 @@ mcp_servers:
   # Generic H agent-platform server (hosted, not demo-specific): run and manage ANY H agent.
   # Remote streamable-HTTP proxy over /api/v2, registry io.github.hcompai/hai-agents. Tools:
   # run_agent, wait_for_session, list_agents, send_message, cancel_session, share_session.
-  hai-agent-platform:
+  hai-agents-platform:
     url: https://agp.eu.hcompany.ai/mcp           # EU (matches the SDK default the demos use); US: https://agp.hcompany.ai/mcp
     headers:
       Authorization: "Bearer hk-...your-key..."   # same hk- / HAI_API_KEY; this stores the secret in the file

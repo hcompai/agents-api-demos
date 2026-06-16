@@ -586,7 +586,7 @@ wheels = [
 ]
 
 [[package]]
-name = "hai-agent-demos"
+name = "hai-agents-demos"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [

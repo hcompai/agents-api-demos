@@ -1,5 +1,5 @@
 [project]
-name = "hai-agent-demos"
+name = "hai-agents-demos"
 version = "0.1.0"
 description = "Demo recipes for the hai-agents Python SDK, wired up as MCP servers for Claude Code."
 readme = "README.md"
@@ -15,8 +15,8 @@ dependencies = [
 ]
 
 [project.scripts]
-hai-agent-demos-qa = "examples.qa.mcp.server:main"
-hai-agent-demos-extract-anything = "examples.extract_anything.server:main"
+hai-agents-demos-qa = "examples.qa.mcp.server:main"
+hai-agents-demos-extract-anything = "examples.extract_anything.server:main"
 debug-qa = "examples.qa.mcp.debug:main"
 qa-cli = "examples.qa.cli.main:main"
 counterfeit-cli = "examples.counterfeit_detection.main:main"

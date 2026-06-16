@@ -17,7 +17,7 @@ __import__("examples.extract_anything.functions")
 
 
 def main() -> None:
-    """Entry point for the ``hai-agent-demos-extract-anything`` console script."""
+    """Entry point for the ``hai-agents-demos-extract-anything`` console script."""
     load_dotenv()
     setup_server_logging()
     mcp.run()

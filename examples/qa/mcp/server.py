@@ -9,7 +9,7 @@ from hai_agents import Client, run_session
 from examples._shared import require_api_key, setup_server_logging
 from examples.qa.shared import ReviewResult, build_reviewer_agent, build_visual_checker_agent
 
-mcp = FastMCP("hai-agent-demos-qa")
+mcp = FastMCP("hai-agents-demos-qa")
 _client_instance: Client | None = None
 
 
@@ -62,7 +62,7 @@ def _client() -> Client:
 
 
 def main() -> None:
-    """Entry point for the ``hai-agent-demos-qa`` console script."""
+    """Entry point for the ``hai-agents-demos-qa`` console script."""
     load_dotenv()
     setup_server_logging()
     mcp.run()

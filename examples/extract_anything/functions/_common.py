@@ -33,7 +33,7 @@ Price = Annotated[Decimal, WithJsonSchema({"anyOf": [{"type": "number"}, {"type"
 # The single FastMCP instance every tool module decorates against. Importing a tool
 # module registers its ``@mcp.tool`` as a side effect, so server.py just imports the
 # functions package and then calls ``mcp.run()``.
-mcp = FastMCP("hai-agent-demos-extract-anything")
+mcp = FastMCP("hai-agents-demos-extract-anything")
 
 T = TypeVar("T", bound=BaseModel)
 
