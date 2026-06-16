@@ -1,0 +1,28 @@
+# OpenAI Codex CLI MCP config for the hai-agent-demos servers.
+# Copy these tables into ~/.codex/config.toml (or a project-scoped .codex/config.toml in a
+# trusted project), then replace /ABSOLUTE/PATH/TO/agent-sdk-demo with your clone's path.
+# Full guide: README.md (this directory). The timeouts, tool scoping, and env-based secrets
+# below follow Codex best practices (rationale is in the inline comments and the README).
+
+[mcp_servers.hai-agent-demos-qa]
+command = "uv"
+args = ["run", "--env-file", ".env", "hai-agent-demos-qa"]
+cwd = "/ABSOLUTE/PATH/TO/agent-sdk-demo"            # your clone's root; --env-file .env resolves from here
+enabled_tools = ["review_web_ui", "visual_check"]  # expose only this demo's tools
+startup_timeout_sec = 60                            # the first `uv run` resolves deps; default 10s is tight
+tool_timeout_sec = 420                              # review_web_ui runs up to 360s; default 60s
+
+[mcp_servers.hai-agent-demos-extract-anything]
+command = "uv"
+args = ["run", "--env-file", ".env", "hai-agent-demos-extract-anything"]
+cwd = "/ABSOLUTE/PATH/TO/agent-sdk-demo"
+# enabled_tools = ["extract", "describe_picture_of_the_day"]   # pin a subset if you don't need all ~11
+startup_timeout_sec = 60
+tool_timeout_sec = 420
+
+# Generic hosted agent-platform server: run and manage any H agent. HTTP, so no path needed;
+# the hk- key is read from the HAI_API_KEY env var (export it) and kept out of this file.
+[mcp_servers.hai-agent-platform]
+url = "https://agp.eu.hcompany.ai/mcp"     # EU (the demos' default); US: https://agp.hcompany.ai/mcp
+bearer_token_env_var = "HAI_API_KEY"
+tool_timeout_sec = 420
