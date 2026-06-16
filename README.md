@@ -1,6 +1,6 @@
 # hai-agent-demos
 
-Recipes for the [`hai-agents`](https://pypi.org/project/hai-agents/) Python SDK, wired up as **MCP servers and CLI tools for Claude Code**, and runnable in [Hermes Agent](hermes/) too. Each example shows one way to use the SDK in a real workflow.
+Recipes for the [`hai-agents`](https://pypi.org/project/hai-agents/) Python SDK, wired up as **MCP servers and CLI tools for Claude Code**, and runnable in other MCP hosts ([Hermes Agent](hermes/), [Codex](codex/)) too. Each example shows one way to use the SDK in a real workflow.
 
 The SDK lets you spin up autonomous agents — web-surfing, code-running, vision-capable — and drive them from Python. This repo wraps that SDK into two interface patterns so you can call the agents from inside Claude Code while you work:
 
@@ -24,6 +24,10 @@ In Claude Code:
 ### Run in Hermes Agent (Nous Research)
 
 These demos aren't limited to Claude Code. Hermes Agent consumes the same MCP servers, agentskills.io skills, and CLIs, so the SDK code is unchanged and only the host wiring differs. See [`hermes/`](hermes/) for the one-time setup (a config block plus a tool-call timeout bump).
+
+### Run in Codex (OpenAI)
+
+Codex is an MCP client too. See [`codex/`](codex/) for the same servers in `config.toml` form, including the hosted platform server via `bearer_token_env_var`. Mind Codex's 60 s default tool timeout.
 
 ### Installing the dependencies
 
@@ -76,6 +80,7 @@ hai-agent-demos/
 ├── examples/    qa · extract_anything · counterfeit_detection (+ _shared.py helpers)
 ├── skills/      hai-platform · hai-qa-via-cli (published to the marketplace)
 ├── hermes/      run the same demos in Hermes Agent (config + setup guide)
+├── codex/       run the same demos in OpenAI Codex (config.toml + setup guide)
 ├── .mcp.json    registers the MCP servers with Claude Code
 ├── .claude-plugin/marketplace.json
 └── pyproject.toml · AGENTS.md

@@ -8,15 +8,15 @@
 command = "uv"
 args = ["run", "--env-file", ".env", "hai-agent-demos-qa"]
 cwd = "/ABSOLUTE/PATH/TO/agent-sdk-demo"            # your clone's root; --env-file .env resolves from here
-enabled_tools = ["review_web_ui", "visual_check"]  # expose only this demo's tools
-startup_timeout_sec = 60                            # the first `uv run` resolves deps; default 10s is tight
-tool_timeout_sec = 420                              # review_web_ui runs up to 360s; default 60s
+enabled_tools = ["review_web_ui", "visual_check"]   # expose only this demo's tools
+startup_timeout_sec = 60
+tool_timeout_sec = 420
 
 [mcp_servers.hai-agent-demos-extract-anything]
 command = "uv"
 args = ["run", "--env-file", ".env", "hai-agent-demos-extract-anything"]
 cwd = "/ABSOLUTE/PATH/TO/agent-sdk-demo"
-# enabled_tools = ["extract", "describe_picture_of_the_day"]   # pin a subset if you don't need all ~11
+# enabled_tools = ["extract", "describe_picture_of_the_day"]   # pin a subset if you don't need all
 startup_timeout_sec = 60
 tool_timeout_sec = 420
 
