@@ -17,6 +17,7 @@ import time
 import typing
 from typing import Literal
 
+import httpx
 import tyro
 from dotenv import load_dotenv
 from hai_agents import Agent, Client, SessionRunResult, Tool
@@ -38,6 +39,10 @@ from examples.counterfeit_detection.prompts import (
     SWEEP_TASK,
     TOOLED_INSTRUCTIONS,
 )
+
+# A long-poll that read-times-out (or a brief connection drop) shouldn't kill a multi-minute run —
+# the session keeps running server-side, so we resume the watch this many times before giving up.
+_MAX_POLL_RETRIES = 6
 
 
 class ProductInfo(BaseModel):
@@ -161,11 +166,29 @@ def _run_watched(
 
     The platform link is the same for watching the agent act live and replaying the
     finished trajectory, so it is printed once at start and once after completion.
+
+    The agent runs server-side; the client just long-polls for changes. A transient network
+    blip (``httpx.ReadTimeout`` / connection reset) on a single poll otherwise crashes the whole
+    run even though the session is fine — so we resume the wait, which re-polls from the session's
+    current state. Already-answered tool calls are not re-dispatched (the server only advertises
+    still-pending ones).
     """
     handle = client.start_session(tools=tools, **create_params)
     url = f"https://platform.hcompany.ai/agent-view/{handle.id}"
     print(f"session {handle.id}\nwatch live: {url}", file=sys.stderr, flush=True)
-    result = handle.wait_for_completion()
+    for attempt in range(1, _MAX_POLL_RETRIES + 1):
+        try:
+            result = handle.wait_for_completion()
+            break
+        except httpx.TransportError as exc:  # ReadTimeout, ConnectError, RemoteProtocolError, …
+            if attempt == _MAX_POLL_RETRIES:
+                raise
+            print(
+                f"poll dropped ({type(exc).__name__}); agent still running server-side, "
+                f"resuming watch [{attempt}/{_MAX_POLL_RETRIES - 1}]",
+                file=sys.stderr,
+                flush=True,
+            )
     print(f"replay: {url}", file=sys.stderr)
     return result
 
