@@ -16,7 +16,7 @@ mcp_servers:
       - --env-file
       - /ABSOLUTE/PATH/TO/agent-sdk-demo/.env  # edit: same path + /.env (holds HAI_API_KEY)
       - hai-agent-demos-qa
-    timeout: 420                               # cloud sessions exceed Hermes' 120s default (server ceiling is 360s)
+    timeout: 420
     tools:
       include: [review_web_ui, visual_check]   # only expose what this demo offers
       resources: false
@@ -37,6 +37,15 @@ mcp_servers:
       # include: [extract, describe_picture_of_the_day, get_flight_options]
       resources: false
       prompts: false
+
+  # Generic H agent-platform server (hosted, not demo-specific): run and manage ANY H agent.
+  # Remote streamable-HTTP proxy over /api/v2, registry io.github.hcompai/hai-agents. Tools:
+  # run_agent, wait_for_session, list_agents, send_message, cancel_session, share_session.
+  hai-agent-platform:
+    url: https://agp.eu.hcompany.ai/mcp           # EU (matches the SDK default the demos use); US: https://agp.hcompany.ai/mcp
+    headers:
+      Authorization: "Bearer hk-...your-key..."   # same hk- / HAI_API_KEY; this stores the secret in the file
+    timeout: 420
 
 # Rather not point at the repo's .env? Drop the --env-file args and add an inline secret:
 #   env: { HAI_API_KEY: "hk-..." }   # stored in this file instead

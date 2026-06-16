@@ -7,6 +7,13 @@
     "hai-agent-demos-extract-anything": {
       "command": "uv",
       "args": ["run", "--env-file", ".env", "hai-agent-demos-extract-anything"]
+    },
+    "hai-agent-platform": {
+      "type": "http",
+      "url": "https://agp.eu.hcompany.ai/mcp",
+      "headers": {
+        "Authorization": "Bearer ${HAI_API_KEY}"
+      }
     }
   }
 }

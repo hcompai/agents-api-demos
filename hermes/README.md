@@ -57,6 +57,22 @@ hermes config set mcp_servers.hai-agent-demos-qa.timeout 420
 hermes config set mcp_servers.hai-agent-demos-extract-anything.timeout 420
 ```
 
+### Also register the generic platform server
+
+The two servers above are this repo's typed recipes. To drive any H agent, also register the
+hosted agent-platform server, `io.github.hcompai/hai-agents`: a streamable-HTTP proxy over
+`/api/v2`, `hk-`-key auth, exposing `run_agent`, `wait_for_session`, `list_agents`,
+`send_message`, `cancel_session`, `share_session`.
+
+```bash
+hermes mcp add hai-agent-platform --url https://agp.eu.hcompany.ai/mcp --auth header
+# set the header to: Authorization: Bearer hk-...   (US endpoint: https://agp.hcompany.ai/mcp)
+```
+
+Config-block form (it stores the key in the file) is in [`config.example.yaml`](config.example.yaml).
+`run_agent` caps its wait at ~24 s, then returns a handle to poll with `wait_for_session`, so the
+`timeout` bump applies for long tasks.
+
 ## 3. Verify
 
 ```bash
