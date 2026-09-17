@@ -1,22 +1,22 @@
 <p align="center">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="assets/banner-dark.gif" />
-    <img src="assets/banner-light.gif" alt="Computer-Use Agents" width="700" />
+    <img src="assets/banner-light.gif" alt="Agents API" width="700" />
   </picture>
 </p>
 
 <p align="center">
-  <a href="https://hub.hcompany.ai/computer-use-agents"><img src="https://img.shields.io/badge/docs-hub.hcompany.ai-blue.svg" alt="Documentation" /></a>
+  <a href="https://hub.hcompany.ai/agents-api/introduction"><img src="https://img.shields.io/badge/docs-hub.hcompany.ai-blue.svg" alt="Documentation" /></a>
   <a href="https://pypi.org/project/hai-agents/"><img src="https://img.shields.io/pypi/v/hai-agents.svg?label=hai-agents" alt="hai-agents on PyPI" /></a>
   <a href="LICENSE.txt"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT" /></a>
 </p>
 
 <p align="center">
-  Use cases and integrations for <a href="https://hcompany.ai">H Company</a>'s <a href="https://hub.hcompany.ai/computer-use-agents">Computer-Use Agents</a>, built on the <code>hai-agents</code> SDK.
+  Use cases and integrations for <a href="https://hcompany.ai">H Company</a>'s <a href="https://hub.hcompany.ai/agents-api/introduction">Agents API</a>, built on the <code>hai-agents</code> SDK.
 </p>
 
 <p align="center">
-  <b><a href="https://hub.hcompany.ai/computer-use-agents">Documentation</a></b>
+  <b><a href="https://hub.hcompany.ai/agents-api/introduction">Documentation</a></b>
   &nbsp;·&nbsp;
   <a href="https://platform.hcompany.ai/settings/api-keys">Get an API key</a>
   &nbsp;·&nbsp;
@@ -27,7 +27,7 @@
   <a href="https://hcompany.ai">H Company</a>
 </p>
 
-Build with H's Computer-Use Agents, powered by our harness and [VLM](https://hcompany.ai/holo3.1). A Computer-Use Agent sees the screen and decides what to click, type, and scroll, just like a person would. You describe a task in plain language; H provisions the environment, runs the agent, and returns the result. It's the way in when the work lives behind a UI with no API to call.
+Build with H's Agents API, powered by our harness and [VLM](https://hcompany.ai/holo3.1). A Computer-Use Agent sees the screen and decides what to click, type, and scroll, just like a person would. You describe a task in plain language; H provisions the environment, runs the agent, and returns the result. It's the way in when the work lives behind a UI with no API to call.
 
 The `hai-agents` SDK gives you programmatic access to our agents from a few lines of [Python](https://pypi.org/project/hai-agents/) or [TypeScript](https://npmjs.com/package/hai-agents).
 
@@ -146,7 +146,7 @@ The `.mcp.json` registration assumes `uv run` is available. If you go the pip ro
 
 ## Links
 
-- [Computer-Use Agents documentation](https://hub.hcompany.ai/computer-use-agents)
+- [Agents API documentation](https://hub.hcompany.ai/agents-api/introduction)
 - [hai-agents on PyPI](https://pypi.org/project/hai-agents/)
 - [hai-agents on Npm](https://npmjs.com/package/hai-agents)
 - [H Company Platform](https://platform.hcompany.ai)
