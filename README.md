@@ -40,8 +40,8 @@ This repo is a tour of three ways to build with the SDK, from a one-line prompt 
 ## Quickstart
 
 ```bash
-git clone https://github.com/hcompai/computer-use-agents-demos.git
-cd computer-use-agents-demos
+git clone https://github.com/hcompai/agents-api-demos.git
+cd agents-api-demos
 uv sync
 cp .env.example .env   # add your HAI_API_KEY from https://platform.hcompany.ai/settings/api-keys
 ```
@@ -67,7 +67,7 @@ The [`/hai-agents`](skills/hai-agents) skill plugs into your coding agent and ca
 This repo also doubles as a [Claude Code plugin marketplace](skills/README.md), so you can install the skill into your own Claude Code without cloning anything:
 
 ```
-/plugin marketplace add hcompai/computer-use-agents-demos
+/plugin marketplace add hcompai/agents-api-demos
 /plugin install hai-agents@hai-skills
 ```
 
@@ -121,7 +121,7 @@ The hosted `hai-agents-platform` server in [`.mcp.json`](.mcp.json) (the generic
 ## Project layout
 
 ```
-computer-use-agents-demos/
+agents-api-demos/
 ├── examples/    qa · extract_anything · counterfeit_detection · add_to_cart · product_availability (+ _shared.py helpers)
 ├── skills/      /hai-agents · /hai-qa-via-cli skills for your coding agent
 ├── hermes/      run the same demos in Hermes Agent (config + setup guide)

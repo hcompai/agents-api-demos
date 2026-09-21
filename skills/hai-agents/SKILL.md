@@ -4,7 +4,7 @@ description: Expert knowledge of the two H Company backends — the portal (port
 metadata:
   version: "1.0.1"
   author: hcompai
-  repository: https://github.com/hcompai/computer-use-agents-demos/skills
+  repository: https://github.com/hcompai/agents-api-demos/skills
 ---
 
 # H Company APIs (portal + agent platform)

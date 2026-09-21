@@ -1,6 +1,6 @@
 # Run the demos inside Hermes Agent
 
-The same `computer-use-agents-demos`, with [Hermes Agent](https://hermes-agent.nousresearch.com)
+The same `agents-api-demos`, with [Hermes Agent](https://hermes-agent.nousresearch.com)
 (Nous Research's open-source agent harness) as the host instead of Claude Code.
 
 Nothing about the SDK or the agents changes. Hermes consumes the same three interfaces these

@@ -1,4 +1,4 @@
-# AGENTS.md — computer-use-agents-demos
+# AGENTS.md — agents-api-demos
 
 ## Working with Users
 

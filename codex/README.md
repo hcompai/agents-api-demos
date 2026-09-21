@@ -1,6 +1,6 @@
 # Run the demos inside Codex
 
-The same `computer-use-agents-demos`, with [OpenAI Codex CLI](https://developers.openai.com/codex/) as the
+The same `agents-api-demos`, with [OpenAI Codex CLI](https://developers.openai.com/codex/) as the
 host. Like Claude Code and Hermes, Codex is an MCP client, so the SDK code is unchanged; only the
 config format differs.
 
