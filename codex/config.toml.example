@@ -1,4 +1,4 @@
-# OpenAI Codex CLI MCP config for the computer-use-agents-demos servers.
+# OpenAI Codex CLI MCP config for the agents-api-demos servers.
 # Copy these tables into ~/.codex/config.toml (or a project-scoped .codex/config.toml in a
 # trusted project), then replace /ABSOLUTE/PATH/TO/agent-sdk-demo with your clone's path.
 

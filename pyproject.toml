@@ -1,5 +1,5 @@
 [project]
-name = "computer-use-agents-demos"
+name = "agents-api-demos"
 version = "0.1.0"
 description = "Demo recipes for the hai-agents Python SDK, wired up as MCP servers for Claude Code."
 readme = "README.md"
