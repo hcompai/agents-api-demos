@@ -16,12 +16,12 @@ from pathlib import Path
 
 import tyro
 from dotenv import load_dotenv
-from hai_agents import Client, SessionRunResult, run_session
+from hai_agents import SessionRunResult, run_session
 
 from examples._shared import (
+    cloud_client,
     print_freeform_answer,
     print_structured_answer,
-    require_api_key,
     setup_cli_logging,
 )
 from examples.qa.shared import ReviewResult, build_reviewer_agent, build_visual_checker_agent
@@ -38,7 +38,7 @@ def review(url: str, instruction: str = "Review the page for usability and acces
     """
     started = time.monotonic()
     result = run_session(
-        _client(),
+        cloud_client(),
         agent=build_reviewer_agent(url),
         messages=instruction,
         max_steps=25,
@@ -58,7 +58,7 @@ def visual(url: str, question: str) -> None:
     """
     started = time.monotonic()
     result = run_session(
-        _client(),
+        cloud_client(),
         agent=build_visual_checker_agent(url),
         messages=question,
         max_steps=3,
@@ -67,10 +67,6 @@ def visual(url: str, question: str) -> None:
     trace_path = _save_trace("visual", url, question, time.monotonic() - started, result)
     print(f"trace → {trace_path}", file=sys.stderr)
     print_freeform_answer(result, started)
-
-
-def _client() -> Client:
-    return Client(api_key=require_api_key())
 
 
 def _save_trace(subcommand: str, url: str, instruction: str, elapsed: float, result: SessionRunResult) -> Path:
