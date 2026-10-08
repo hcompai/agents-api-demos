@@ -133,7 +133,7 @@ The hosted `hai-agents-platform` server in [`.mcp.json`](.mcp.json) (the generic
 
 ```
 agents-api-demos/
-├── examples/    qa · extract_anything · counterfeit_detection · add_to_cart · product_availability · creative_building · 3d_printing (+ _shared.py helpers)
+├── examples/    qa · extract_anything · counterfeit_detection · add_to_cart · product_availability · creative_building · design_and_print (+ _shared.py helpers)
 ├── skills/      /hai-agents · /hai-qa-via-cli skills for your coding agent
 ├── hermes/      run the same demos in Hermes Agent (config + setup guide)
 ├── codex/       run the same demos in OpenAI Codex (config.toml + setup guide)
