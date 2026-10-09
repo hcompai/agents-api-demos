@@ -10,6 +10,7 @@ Each subdirectory is one self-contained recipe for the `hai-agents` SDK.
 | [`counterfeit_detection`](counterfeit_detection/) | Cookbook for the single-agent + custom-tools pattern: find counterfeit listings of a genuine product. Three stages — a bare `run_session`, then local Playwright/Holo screenshot-compare tools, then a `max_steps`/`max_time_s` budget that turns "find one" into "find as many as the budget allows". |
 | [`add_to_cart`](add_to_cart/) | Minimal "drive the SDK straight" recipe (Python): a visual browser agent searches a shopping site for a product and adds it to the cart, printing the live agent-view link first. |
 | [`product_availability`](product_availability/) | The TypeScript counterpart: find a product on a store's site and report availability across sizes, with a `zod`-validated answer schema. |
+| [`3d_printing`](3d_printing/) | Local agent mode: a Holo agent on your Mac designs a part in FreeCAD, slices it in Bambu Studio and starts the print, all through the GUI. |
 
 ## How it works
 
