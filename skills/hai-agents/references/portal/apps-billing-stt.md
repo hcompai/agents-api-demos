@@ -222,7 +222,7 @@ There is **no global rate-limit middleware** on the FastAPI app — `core/middle
 ### Environments & base URLs
 
 - **Portal API hosts (verified live):** production US `https://portal.production.hcompany.ai` (unauthenticated browser requests 302 to the Cognito flow on `oauth.hcompany.ai`), production EU `https://portal.api.eu.hcompany.ai` (302 to `sso.hcompany.ai`), staging `https://portal.api.eu.staging.sandboxh.ai`. All portal routes in these docs live under these hosts + `/api`.
-- **Portal frontends** (cookie domain, login pages): `https://portal.hcompany.ai` (US) and `https://portal.eu.hcompany.ai` (EU).
+- **Frontend** (cookie domain, login pages): `https://platform.hcompany.ai`.
 - **`https://platform.hcompany.ai` is NOT the portal API** — it is the separate Next.js product frontend (`platform-frontend`). It hosts the API-keys management UI at `/settings/api-keys` and a server-side proxy `/api/portal/[...path]` that forwards (cookies only) to the portal API. Calling `platform.hcompany.ai/api/auth/*` directly returns the HTML app shell, not JSON.
 - **Environment switch:** `ENVIRONMENT` env var ∈ `DEV` (default), `SANDBOX`, `STAGING`, `PRODUCTION`, `test`. It drives cookie naming (`{env}_access_token` prefix except production), `DEBUG` (DEV only), and `COOKIE_SECURE` (true for SANDBOX/STAGING/PRODUCTION). `COOKIE_DOMAIN` env sets the cookie scope (e.g. `.hcompany.ai` in production).
 - **Local dev:** backend `http://localhost:8000` (public app), frontend `http://localhost:3000`. With `ENVIRONMENT=DEV` the Django admin panel is additionally mounted at `/web`.

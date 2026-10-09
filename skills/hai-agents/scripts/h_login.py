@@ -29,7 +29,7 @@ import urllib.request
 import webbrowser
 from http.server import BaseHTTPRequestHandler, HTTPServer
 
-# portal API hosts (portal.hcompany.ai / platform.hcompany.ai are frontends, NOT the API)
+# portal API hosts
 PORTAL_API_URLS = {
     "us": "https://portal.production.hcompany.ai",
     "eu": "https://portal.api.eu.hcompany.ai",
