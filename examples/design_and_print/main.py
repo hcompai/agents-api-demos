@@ -19,6 +19,7 @@ from examples._shared import print_freeform_answer, require_api_key, run_session
 _HERE = Path(__file__).parent
 JOBS_DIR = _HERE / "jobs"
 INSTRUCTIONS = (_HERE / "instructions.md").read_text()
+RUNTIME_START_TIMEOUT_S = 180.0  # the local runtime's cold start can exceed the SDK's 45 s default on a busy Mac
 
 
 def design_and_print(prompt: str, printer: str, max_steps: int = 300, max_time_s: float = 1500.0) -> None:
@@ -33,7 +34,7 @@ def design_and_print(prompt: str, printer: str, max_steps: int = 300, max_time_s
     require_api_key()
     JOBS_DIR.mkdir(exist_ok=True)
     started = time.monotonic()
-    with Client.local() as client:
+    with Client.local(local_options={"timeout_s": RUNTIME_START_TIMEOUT_S}) as client:
         result = run_session_streaming(
             client,
             started=started,
