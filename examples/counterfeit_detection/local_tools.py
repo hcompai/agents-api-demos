@@ -179,8 +179,11 @@ def _holo_verdict(models_client: OpenAI, store: SnapshotStore, suspect_path: Pat
         content.append(_image_part(Path(reference["path"])))
     content.append(_image_part(suspect_path))
     message: ChatCompletionUserMessageParam = {"role": "user", "content": content}
-    response = models_client.chat.completions.create(model=HOLO_MODEL, messages=[message], max_tokens=160)
-    return str(response.choices[0].message.content).strip()
+    response = models_client.chat.completions.create(
+        model=HOLO_MODEL, messages=[message], max_tokens=160, reasoning_effort="none"
+    )
+    verdict = response.choices[0].message.content
+    return verdict.strip() if verdict else "INCONCLUSIVE: the vision model returned no verdict."
 
 
 def _image_part(path: Path) -> ChatCompletionContentPartImageParam:
