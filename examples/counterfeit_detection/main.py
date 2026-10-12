@@ -24,7 +24,7 @@ from hai_agents import Agent, Client, SessionRunResult, Tool
 from openai import OpenAI
 from pydantic import BaseModel
 
-from examples._shared import browser_env, print_structured_answer, require_api_key, setup_cli_logging
+from examples._shared import browser_env, cloud_client, print_structured_answer, require_api_key, setup_cli_logging
 from examples.counterfeit_detection.local_tools import (
     MODELS_BASE_URL,
     FindingsLog,
@@ -82,7 +82,7 @@ def simple(genuine_url: str) -> None:
     """
     started = time.monotonic()
     result = _run_watched(
-        _client(),
+        cloud_client(),
         agent=Agent(
             name="counterfeit-spotter",
             description="Finds one counterfeit listing of a genuine product.",
@@ -106,7 +106,7 @@ def tooled(genuine_url: str) -> None:
     started = time.monotonic()
     store = SnapshotStore()
     result = _run_watched(
-        _client(),
+        cloud_client(),
         agent=Agent(
             name="counterfeit-spotter",
             description="Finds one counterfeit listing, visually verified against cached references.",
@@ -135,7 +135,7 @@ def sweep(genuine_url: str, max_steps: int = 80, max_time_s: float = 1200.0) -> 
     store = SnapshotStore()
     log = FindingsLog()
     result = _run_watched(
-        _client(),
+        cloud_client(),
         agent=Agent(
             name="counterfeit-sweeper",
             description="Enumerates as many counterfeit listings as the budget allows.",
@@ -149,10 +149,6 @@ def sweep(genuine_url: str, max_steps: int = 80, max_time_s: float = 1200.0) -> 
         max_time_s=max_time_s,
     )
     _print_sweep_result(result, log, started)
-
-
-def _client() -> Client:
-    return Client(api_key=require_api_key())
 
 
 def _models_client() -> OpenAI:

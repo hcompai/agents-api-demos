@@ -13,12 +13,11 @@ import time
 
 import tyro
 from dotenv import load_dotenv
-from hai_agents import Client
 
 from examples._shared import (
+    cloud_client,
     print_freeform_answer,
     print_structured_answer,
-    require_api_key,
     run_session_streaming,
     setup_cli_logging,
 )
@@ -35,7 +34,7 @@ def review(url: str, instruction: str = "Do a general usability and accessibilit
     started = time.monotonic()
     print(f"reviewing {url}…", file=sys.stderr)
     result = run_session_streaming(
-        _client(),
+        cloud_client(),
         started=started,
         agent=build_reviewer_agent(url),
         messages=instruction,
@@ -55,7 +54,7 @@ def visual(url: str, question: str) -> None:
     started = time.monotonic()
     print(f"opening {url}…", file=sys.stderr)
     result = run_session_streaming(
-        _client(),
+        cloud_client(),
         started=started,
         agent=build_visual_checker_agent(url),
         messages=question,
@@ -63,10 +62,6 @@ def visual(url: str, question: str) -> None:
         max_time_s=120.0,
     )
     print_freeform_answer(result, started)
-
-
-def _client() -> Client:
-    return Client(api_key=require_api_key())
 
 
 def main() -> None:

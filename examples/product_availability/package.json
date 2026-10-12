@@ -7,7 +7,7 @@
     "start": "tsx src/index.ts"
   },
   "dependencies": {
-    "hai-agents": "^0.1.11",
+    "hai-agents": "^1.2.1",
     "zod": "^4.4.3"
   },
   "devDependencies": {

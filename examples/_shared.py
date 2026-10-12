@@ -11,15 +11,15 @@ import os
 import sys
 import threading
 import time
-from typing import IO, Iterator
+from typing import IO, Any, Iterator
 
-from hai_agents import Browser, Client, SessionRunResult, TrajectoryEvent, wait_for_session
+from hai_agents import Client, Environment_Web, SessionEvent, SessionRunResult, wait_for_session
 from pydantic import BaseModel
 
 _LOG_FORMAT = "%(asctime)s %(name)s %(levelname)s %(message)s"
 
 
-def browser_env(start_url: str) -> Browser:
+def browser_env(start_url: str) -> Environment_Web:
     """Build the inline cloud browser environment a tool drives.
 
     A catalog-id ``str`` would also be valid in ``Agent.environments`` (the env-agnostic
@@ -33,15 +33,15 @@ def browser_env(start_url: str) -> Browser:
         start_url: The URL the browser should navigate to as it boots the session.
 
     Returns:
-        A configured ``Browser`` object ready to slot into ``Agent.environments``.
+        A configured web environment ready to slot into ``Agent.environments``.
     """
-    return Browser(
-        id="browser",
-        kind="web",  # the API's environment union discriminates on this tag; the SDK doesn't default it
-        width=1280,
-        height=800,
-        start_url=start_url,
-    )
+    return Environment_Web(id="browser", start_url=start_url)
+
+
+def cloud_client() -> Client:
+    """Return a cloud SDK client authenticated with ``HAI_API_KEY``."""
+    client: Client = Client(api_key=require_api_key())
+    return client
 
 
 def require_api_key() -> str:
@@ -84,7 +84,7 @@ def setup_cli_logging(level: int = logging.WARNING, *, http_level: int | None = 
         logging.getLogger("httpx").setLevel(http_level)
 
 
-def run_session_streaming(client: Client, *, started: float, **create_params: object) -> SessionRunResult:
+def run_session_streaming(client: Client, *, started: float, **create_params: Any) -> SessionRunResult:
     """Like ``run_session``, but tails the trajectory and prints each event to stderr as it arrives.
 
     Splits ``run_session`` into ``create_session`` + ``wait_for_session`` so a daemon thread can
@@ -133,14 +133,14 @@ def print_freeform_answer(result: SessionRunResult, started: float) -> None:
     print(result.answer if isinstance(result.answer, str) else json.dumps(result.answer))
 
 
-def _summarize_event(ev: TrajectoryEvent) -> str:
-    """Best-effort one-line summary of a trajectory event.
+def _summarize_event(ev: SessionEvent) -> str:
+    """Best-effort one-line summary of a session event.
 
     Shape-agnostic so it survives SDK schema changes: tries tool-call shape (``name`` +
     ``arguments``), then a small set of message-bearing keys, then recurses into common
     wrapper keys, then JSON-dumps as a last resort. No hard-coded event-type table.
     """
-    body = _extract_body(ev.data)
+    body = _extract_body(ev.model_dump(mode="json").get("data"))
     return f"{ev.type}: {_truncate(body)}" if body else ev.type
 
 
@@ -151,7 +151,8 @@ def _extract_body(data: object, depth: int = 0) -> str:
     if isinstance(data, str):
         return data
     if isinstance(data, dict):
-        name, args = data.get("name"), data.get("arguments")
+        name = data.get("name") or data.get("tool_name")
+        args = data.get("arguments") or data.get("args")
         if isinstance(name, str) and isinstance(args, dict):
             kv = ", ".join(f"{k}={_short_value(v)}" for k, v in list(args.items())[:3])
             return f"{name}({kv})"
@@ -159,7 +160,7 @@ def _extract_body(data: object, depth: int = 0) -> str:
             value = data.get(key)
             if isinstance(value, str) and value.strip():
                 return value
-        for key in ("event", "policy_event", "tool_call", "observation_event"):
+        for key in ("event", "policy_event", "tool_call", "tool_req", "observation_event"):
             inner = _extract_body(data.get(key), depth + 1)
             if inner:
                 return inner

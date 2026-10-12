@@ -223,3 +223,5 @@ traces/
 
 # counterfeit_detection example: locally rendered screenshots
 examples/counterfeit_detection/snapshots/
+# design_and_print job outputs
+examples/design_and_print/jobs/
