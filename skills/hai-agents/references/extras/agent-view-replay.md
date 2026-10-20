@@ -51,4 +51,4 @@ Same URL for both: while the session runs, the view follows it live; once it fin
 ## Who can open it, and sharing
 
 - A **logged-in platform user of the same org** can open the link directly — no sharing step needed.
-- To show the run to someone **outside the org** (or unauthenticated), make it public first via the share endpoint — exact request/response and revoke semantics in the live doc: [Share a session](https://hub.hcompany.ai/computer-use-agent/sessions/share.md).
+- To show the run to someone **outside the org** (or unauthenticated), make it public first via the share endpoint — exact request/response and revoke semantics in the live doc: [Share a session](https://hub.hcompany.ai/agents-api/sessions/share.md).

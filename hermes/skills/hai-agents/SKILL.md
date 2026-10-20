@@ -12,9 +12,9 @@ description: >
   with, debug, or automate anything against an H Company API, even without naming it (e.g. "get
   me an API key", "set up my .env", "launch a web agent", "why is my session stuck", "show me
   what the agent did", "why am I getting 401 from the platform?").
-version: 1.0.0
+version: 1.0.2
 metadata:
-  version: "1.0.1"
+  version: "1.0.2"
   author: hcompai
   repository: https://github.com/hcompai/agents-api-demos/tree/main/hermes/skills
   hermes:
@@ -34,7 +34,7 @@ H Company runs two backends that work together. Pick the right one first:
 | You're touching | Product | Base URL | Read |
 |---|---|---|---|
 | Login, users, organizations, invitations, API key management, billing, STT tokens | **Portal** | EU: `https://portal.api.eu.hcompany.ai/api` · US: `https://portal.production.hcompany.ai/api` | [references/portal/](references/portal/) |
-| Running agents: sessions, stored agents, skills, environments, vaults, events/long-polling, hai-agents SDK, MCP server | **Agent platform** (agp) | EU (default): `https://agp.eu.hcompany.ai/api` · US: `https://agp.hcompany.ai/api` | [references/agp/](references/agp/) |
+| Running agents: sessions, stored agents, skills, environments, vaults, events/long-polling, hai-agents SDK, MCP server | **Agents API** (agp) | EU (default): `https://agp.eu.hcompany.ai/api` · US: `https://agp.hcompany.ai/api` | [Live docs index](https://hub.hcompany.ai/llms.txt) |
 
 Note: `https://platform.hcompany.ai` is the product frontend (the API-keys UI lives at
 `/settings/api-keys`), not the portal API. Its `/api/*` paths return the HTML app shell, except
@@ -82,7 +82,6 @@ Portal (`references/portal/`):
 
 Agent platform (agp):
 - For exact request/response shapes (every endpoint, param, body, status code), the swagger is the source of truth: `https://agp.hcompany.ai/share/docs` (raw spec at `/share/openapi.json`).
-- [agp/api-notes.md](references/agp/api-notes.md): the behavior the swagger can't express, including session lifecycle, the `/changes` 204+ETag long-poll and cursor rule, idempotency semantics, event kinds, the reserved `h/` namespace, the `web` environment, vault/proxy gotchas, the MCP server, and gateway auth.
 
 SDKs (`hai-agents`; prefer the SDK over hand-rolled HTTP when it fits, and check the package page for the current surface, versions, and examples):
 - Python: [pypi.org/project/hai-agents](https://pypi.org/project/hai-agents/): `run_session`/`start_session` → `SessionHandle`, events/polling, exceptions (defaults to the EU endpoint; set `base_url` for US).
@@ -91,9 +90,8 @@ SDKs (`hai-agents`; prefer the SDK over hand-rolled HTTP when it fits, and check
 Extras (`references/extras/`, dev UI/UX knowledge, not endpoint docs):
 - [agent-view-replay.md](references/extras/agent-view-replay.md): reviewing and replaying runs in the browser (`platform[.eu].hcompany.ai/agent-view/{id}`), deep-linking to an event, sharing a run with someone outside the org.
 
-Official hub docs ([references/llms.txt](references/llms.txt), the index of the full public docs on hub.hcompany.ai; more complete than the distilled notes above, but without their gotchas):
-- The public hub brands agp as the "Computer-Use Agent API" (URLs are `hub.hcompany.ai/computer-use-agent/...`). Same product as the agent platform / agp here, just a different name.
-- Every entry has a one-line description and a live URL. Fetch the matching page (the URLs already end in `.md`) for full endpoint docs: request/response shapes and examples.
+Official hub docs ([live docs index](https://hub.hcompany.ai/llms.txt)):
+- Start every agp task by fetching the live index, then fetch the matching `.md` pages for guides, request/response shapes, and examples. Use the live index rather than a bundled copy so renamed and newly added pages stay discoverable.
 - If a hub page is unreachable or moved (these are fetched live, not bundled), fall back to the agp OpenAPI for shapes: `https://agp.hcompany.ai/share/openapi.json` (`/share/docs` for the rendered swagger); it's unauthenticated and always current.
 
 ## The canonical agent workflow (agp)
@@ -142,7 +140,7 @@ is sent: they press Send, not you.
 
 ## Source of truth
 
-Shapes in doubt → start from the docs index in [references/llms.txt](references/llms.txt) and
+Shapes in doubt → start from the [live docs index](https://hub.hcompany.ai/llms.txt) and
 fetch the matching live page on hub.hcompany.ai. For the exact request/response shapes, the
 public agp OpenAPI is authoritative: `https://agp.hcompany.ai/share/docs`.
 
