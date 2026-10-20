@@ -152,7 +152,8 @@ def sweep(genuine_url: str, max_steps: int = 80, max_time_s: float = 1200.0) -> 
 
 
 def _client() -> Client:
-    return Client(api_key=require_api_key())
+    client: Client = Client(api_key=require_api_key())
+    return client
 
 
 def _models_client() -> OpenAI:

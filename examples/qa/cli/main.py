@@ -66,7 +66,8 @@ def visual(url: str, question: str) -> None:
 
 
 def _client() -> Client:
-    return Client(api_key=require_api_key())
+    client: Client = Client(api_key=require_api_key())
+    return client
 
 
 def main() -> None:

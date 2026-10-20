@@ -8,6 +8,45 @@ resolution-markers = [
 ]
 
 [[package]]
+name = "agents-api-demos"
+version = "0.1.0"
+source = { editable = "." }
+dependencies = [
+    { name = "fastmcp" },
+    { name = "hai-agents" },
+    { name = "httpx" },
+    { name = "openai" },
+    { name = "playwright" },
+    { name = "pydantic" },
+    { name = "python-dotenv" },
+    { name = "tyro" },
+]
+
+[package.dev-dependencies]
+dev = [
+    { name = "mypy" },
+    { name = "ruff" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "fastmcp", specifier = ">=2.0" },
+    { name = "hai-agents", specifier = ">=1.2.6,<2" },
+    { name = "httpx", specifier = ">=0.27" },
+    { name = "openai", specifier = ">=1.40" },
+    { name = "playwright", specifier = ">=1.40" },
+    { name = "pydantic", specifier = ">=2.7" },
+    { name = "python-dotenv", specifier = ">=1.0" },
+    { name = "tyro", specifier = ">=0.9" },
+]
+
+[package.metadata.requires-dev]
+dev = [
+    { name = "mypy", specifier = ">=1.10" },
+    { name = "ruff", specifier = ">=0.6" },
+]
+
+[[package]]
 name = "aiofile"
 version = "3.9.0"
 source = { registry = "https://pypi.org/simple" }
@@ -15,7 +54,7 @@ resolution-markers = [
     "python_full_version < '3.11'",
 ]
 dependencies = [
-    { name = "caio", marker = "python_full_version < '3.11'" },
+    { name = "caio" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/67/e2/d7cb819de8df6b5c1968a2756c3cb4122d4fa2b8fc768b53b7c9e5edb646/aiofile-3.9.0.tar.gz", hash = "sha256:e5ad718bb148b265b6df1b3752c4d1d83024b93da9bd599df74b9d9ffcf7919b", size = 17943, upload-time = "2024-10-08T10:39:35.846Z" }
 wheels = [
@@ -31,7 +70,7 @@ resolution-markers = [
     "python_full_version >= '3.11' and python_full_version < '3.15'",
 ]
 dependencies = [
-    { name = "caio", marker = "python_full_version >= '3.11'" },
+    { name = "caio" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/48/41/2fea7e193e061ce54eacc3b7bc0e6a99e4fcff43c78cf0a76dd781ed8334/aiofile-3.11.1.tar.gz", hash = "sha256:1f91912c6643d2a4e49ca4ae3514f0bf3867ce948a36d99a6411b8f4755f4cf9", size = 19342, upload-time = "2026-05-16T08:18:33.538Z" }
 wheels = [
@@ -586,56 +625,17 @@ wheels = [
 ]
 
 [[package]]
-name = "agents-api-demos"
-version = "0.1.0"
-source = { editable = "." }
-dependencies = [
-    { name = "fastmcp" },
-    { name = "hai-agents" },
-    { name = "httpx" },
-    { name = "openai" },
-    { name = "playwright" },
-    { name = "pydantic" },
-    { name = "python-dotenv" },
-    { name = "tyro" },
-]
-
-[package.dev-dependencies]
-dev = [
-    { name = "mypy" },
-    { name = "ruff" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "fastmcp", specifier = ">=2.0" },
-    { name = "hai-agents", specifier = ">=0.1.7" },
-    { name = "httpx", specifier = ">=0.27" },
-    { name = "openai", specifier = ">=1.40" },
-    { name = "playwright", specifier = ">=1.40" },
-    { name = "pydantic", specifier = ">=2.7" },
-    { name = "python-dotenv", specifier = ">=1.0" },
-    { name = "tyro", specifier = ">=0.9" },
-]
-
-[package.metadata.requires-dev]
-dev = [
-    { name = "mypy", specifier = ">=1.10" },
-    { name = "ruff", specifier = ">=0.6" },
-]
-
-[[package]]
 name = "hai-agents"
-version = "0.1.7"
+version = "1.2.6"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "httpx" },
     { name = "pydantic" },
     { name = "typing-extensions" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/58/37/5949618e9b9761b1aef2027492681365b63343901216a43c76f5e14a04df/hai_agents-0.1.7.tar.gz", hash = "sha256:a202a4714d3d8051a996e9c02f2c4aa2f084e6cf34d8f0b7b748460c0ca01f31", size = 1219115, upload-time = "2026-06-10T21:17:56.724Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/c0/39/766b5fe3994326fa768cdb177ecf9349d3342b9359bb7502a46d0b6108e7/hai_agents-1.2.6.tar.gz", hash = "sha256:ef48b1e354aff0fb26bcac48b006f7210cf92ec6300c4acb56d64d7cf690019a", size = 1307036, upload-time = "2026-10-15T22:08:45.663Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/17/6b/6c460ca35cf584d924ad6e7fe7772c65eb34c2fe46be2c923df7a043aef1/hai_agents-0.1.7-py3-none-any.whl", hash = "sha256:8ea62f306a061045a4ce75afe72f64828a1d83876735df0706ce0ef24aa20f3a", size = 133106, upload-time = "2026-06-10T21:17:55.084Z" },
+    { url = "https://files.pythonhosted.org/packages/0f/22/e977d7f50d3cb0f04fdf6c7eda4687877beca72fe26b30f1e59e88362e15/hai_agents-1.2.6-py3-none-any.whl", hash = "sha256:76279d2f6072a5521cf86b41f384cd0a183a51c6c63029ef62fc37d0614356db", size = 288946, upload-time = "2026-10-15T22:08:43.828Z" },
 ]
 
 [[package]]
@@ -689,7 +689,7 @@ name = "importlib-metadata"
 version = "9.0.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "zipp", marker = "python_full_version < '3.15'" },
+    { name = "zipp" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/a9/01/15bb152d77b21318514a96f43af312635eb2500c96b55398d020c93d86ea/importlib_metadata-9.0.0.tar.gz", hash = "sha256:a4f57ab599e6a2e3016d7595cfd72eb4661a5106e787a95bcc90c7105b831efc", size = 56405, upload-time = "2026-03-20T06:42:56.999Z" }
 wheels = [

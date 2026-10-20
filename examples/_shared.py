@@ -13,33 +13,32 @@ import threading
 import time
 from typing import IO, Iterator
 
-from hai_agents import Browser, Client, SessionRunResult, TrajectoryEvent, wait_for_session
+from hai_agents import (
+    Agent,
+    BrowserMode_Visual,
+    Client,
+    Environment_Web,
+    SessionEvent,
+    SessionRunResult,
+    wait_for_session,
+)
 from pydantic import BaseModel
 
 _LOG_FORMAT = "%(asctime)s %(name)s %(levelname)s %(message)s"
 
 
-def browser_env(start_url: str) -> Browser:
-    """Build the inline cloud browser environment a tool drives.
-
-    A catalog-id ``str`` would also be valid in ``Agent.environments`` (the env-agnostic
-    seam), but every shipped example today binds to an inline cloud browser.
-
-    ``mode`` is left unset (``None``) so it is omitted from the wire and the server applies its
-    own default (currently ``visual``). Omitting keeps us forward-compatible if the field's
-    values change, and avoids pinning a default the backend owns.
+def browser_env(start_url: str) -> Environment_Web:
+    """Build a cloud browser with the demos' 1280 by 800 viewport.
 
     Args:
         start_url: The URL the browser should navigate to as it boots the session.
 
     Returns:
-        A configured ``Browser`` object ready to slot into ``Agent.environments``.
+        A web environment ready to slot into ``Agent.environments``.
     """
-    return Browser(
+    return Environment_Web(
         id="browser",
-        kind="web",  # the API's environment union discriminates on this tag; the SDK doesn't default it
-        width=1280,
-        height=800,
+        mode=BrowserMode_Visual(width=1280, height=800),
         start_url=start_url,
     )
 
@@ -84,7 +83,9 @@ def setup_cli_logging(level: int = logging.WARNING, *, http_level: int | None = 
         logging.getLogger("httpx").setLevel(http_level)
 
 
-def run_session_streaming(client: Client, *, started: float, **create_params: object) -> SessionRunResult:
+def run_session_streaming(
+    client: Client, *, started: float, agent: Agent, messages: str, max_steps: int, max_time_s: float
+) -> SessionRunResult:
     """Like ``run_session``, but tails the trajectory and prints each event to stderr as it arrives.
 
     Splits ``run_session`` into ``create_session`` + ``wait_for_session`` so a daemon thread can
@@ -94,9 +95,12 @@ def run_session_streaming(client: Client, *, started: float, **create_params: ob
     Args:
         client: Authenticated SDK client.
         started: ``time.monotonic()`` captured before the call, used to label each event line.
-        **create_params: Forwarded to ``client.sessions.create_session`` (agent, messages, etc.).
+        agent: Inline agent to run.
+        messages: Task to perform.
+        max_steps: Maximum agent steps.
+        max_time_s: Session time budget in seconds.
     """
-    session = client.sessions.create_session(**create_params)
+    session = client.sessions.create_session(agent=agent, messages=messages, max_steps=max_steps, max_time_s=max_time_s)
     print(f"session {session.id} started", file=sys.stderr, flush=True)
     with _event_tailer(client, session.id, started=started):
         return wait_for_session(client, session.id)
@@ -133,14 +137,14 @@ def print_freeform_answer(result: SessionRunResult, started: float) -> None:
     print(result.answer if isinstance(result.answer, str) else json.dumps(result.answer))
 
 
-def _summarize_event(ev: TrajectoryEvent) -> str:
+def _summarize_event(ev: SessionEvent) -> str:
     """Best-effort one-line summary of a trajectory event.
 
     Shape-agnostic so it survives SDK schema changes: tries tool-call shape (``name`` +
     ``arguments``), then a small set of message-bearing keys, then recurses into common
     wrapper keys, then JSON-dumps as a last resort. No hard-coded event-type table.
     """
-    body = _extract_body(ev.data)
+    body = _extract_body(ev.model_dump(mode="json")["data"])
     return f"{ev.type}: {_truncate(body)}" if body else ev.type
 
 
@@ -151,15 +155,16 @@ def _extract_body(data: object, depth: int = 0) -> str:
     if isinstance(data, str):
         return data
     if isinstance(data, dict):
-        name, args = data.get("name"), data.get("arguments")
+        name = data.get("name") or data.get("tool_name")
+        args = data.get("arguments", data.get("args"))
         if isinstance(name, str) and isinstance(args, dict):
             kv = ", ".join(f"{k}={_short_value(v)}" for k, v in list(args.items())[:3])
             return f"{name}({kv})"
-        for key in ("message", "text", "content", "reasoning", "thought", "action", "url", "name"):
+        for key in ("message", "text", "content", "reasoning_content", "reasoning", "thought", "action", "url", "name"):
             value = data.get(key)
             if isinstance(value, str) and value.strip():
                 return value
-        for key in ("event", "policy_event", "tool_call", "observation_event"):
+        for key in ("event", "policy_event", "tool_call", "tool_req", "observation_event"):
             inner = _extract_body(data.get(key), depth + 1)
             if inner:
                 return inner
