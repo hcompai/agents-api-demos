@@ -70,19 +70,15 @@ def visual(url: str, question: str) -> None:
 
 
 def _client() -> Client:
-    return Client(api_key=require_api_key())
+    client: Client = Client(api_key=require_api_key())
+    return client
 
 
 def _save_trace(subcommand: str, url: str, instruction: str, elapsed: float, result: SessionRunResult) -> Path:
     TRACES_DIR.mkdir(exist_ok=True)
     timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
     path = TRACES_DIR / f"{subcommand}_{timestamp}.json"
-    events = []
-    for event in result.events:
-        try:
-            events.append({"type": event.type, "data": event.data})
-        except Exception:
-            events.append({"type": type(event).__name__, "data": repr(event)})
+    events = [event.model_dump(mode="json") for event in result.events]
     path.write_text(
         json.dumps(
             {

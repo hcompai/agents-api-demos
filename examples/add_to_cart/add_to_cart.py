@@ -33,8 +33,6 @@ def main() -> int:
         print("Missing HAI_API_KEY. `source .env` first, or export it in the environment.", file=sys.stderr)
         return 1
 
-    # Pass the key explicitly: the repo's convention is HAI_API_KEY, while the Python
-    # SDK would otherwise look for H_API_KEY.
     client = Client(api_key=api_key)
 
     # Create the session first so we can print the live link *before* the run blocks.
