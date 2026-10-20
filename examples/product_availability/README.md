@@ -12,9 +12,17 @@ Entry point: [`src/index.ts`](src/index.ts).
 ```bash
 cd examples/product_availability
 npm install
-# HAI_API_KEY must be in the environment or in examples/product_availability/.env
+# Export the repository's .env variables (bash/zsh)
+set -a
+source ../../.env
+set +a
 npm start
 ```
 
-Set `HAI_REGION=us` to target the US endpoint (EU is the default). The script prints the
-live `agent-view` link first, then a clear per-size availability report.
+If `HAI_API_KEY` is already exported, skip the three environment-loading commands.
+`npm start` reads environment variables; it does not load `.env` itself.
+
+Set `HAI_REGION=us` to target the US endpoint (EU is the default). Both regions use
+`platform.hcompany.ai` for Agent View. The script prints the live link first, then a
+per-size availability report. It exits nonzero if the session does not complete or
+returns no structured answer.

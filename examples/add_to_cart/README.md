@@ -10,11 +10,11 @@ Single file: [`add_to_cart.py`](add_to_cart.py).
 ## Run
 
 ```bash
-# from the repo root, with HAI_API_KEY in your environment (or .env)
-python3 -m venv .hai-venv && .hai-venv/bin/pip install -q hai-agents
-source .env && .hai-venv/bin/python examples/add_to_cart/add_to_cart.py
+# from the repo root, with HAI_API_KEY in .env
+uv run --env-file .env python examples/add_to_cart/add_to_cart.py
 ```
 
 The script prints the live `agent-view` link up front so you can watch the run, then
 reports the product title, format, price, and whether it was added to the cart. It
-never proceeds to checkout.
+never proceeds to checkout. The command exits nonzero if the session does not complete
+or returns no answer.
