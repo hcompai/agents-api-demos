@@ -37,6 +37,17 @@ This repo is a tour of three ways to build with the SDK, from a one-line prompt 
 2. **Build with the skill** Let the `/hai-agents` skill scaffold reusable SDK code for you.
 3. **Integrate** Call the agent as an MCP tool from your coding workflow (Claude Code, Hermes Agent, Codex, NemoClaw).
 
+## Built with the Agents API
+
+HoloBricks and HoloBlocks turn a prompt into a 3D model. Holo4 writes Python on a Workstation, inspects renders through a custom tool, and revises the build when you ask for changes.
+
+| HoloBricks | HoloBlocks |
+| --- | --- |
+| [![HoloBricks showing a brick model of the Parthenon](https://raw.githubusercontent.com/hcompai/holobricks/457251512e31981251a9347a706b62e6f628a90f/docs/holobricks.jpg)](https://bricks.hcompany.ai) | [![HoloBlocks showing a snow-covered village built from blocks](https://raw.githubusercontent.com/hcompai/holoblocks/2f8806ee3816b0abe9e24e24ac398cb9916c83f0/docs/holoblocks.jpg)](https://blocks.hcompany.ai) |
+| Build with LDraw parts. [Try it](https://bricks.hcompany.ai) · [Source](https://github.com/hcompai/holobricks) | Build with a block palette and export a WorldEdit schematic. [Try it](https://blocks.hcompany.ai) · [Source](https://github.com/hcompai/holoblocks) |
+
+The [creative-building walkthrough](examples/creative_building/README.md) follows the SDK calls behind both apps: toolkit attachments, the `look` tool, and follow-up messages in the same session.
+
 ## Quickstart
 
 ```bash
@@ -122,7 +133,7 @@ The hosted `hai-agents-platform` server in [`.mcp.json`](.mcp.json) (the generic
 
 ```
 agents-api-demos/
-├── examples/    qa · extract_anything · counterfeit_detection · add_to_cart · product_availability (+ _shared.py helpers)
+├── examples/    qa · extract_anything · counterfeit_detection · add_to_cart · product_availability · creative_building (+ _shared.py helpers)
 ├── skills/      /hai-agents · /hai-qa-via-cli skills for your coding agent
 ├── hermes/      run the same demos in Hermes Agent (config + setup guide)
 ├── codex/       run the same demos in OpenAI Codex (config.toml + setup guide)
