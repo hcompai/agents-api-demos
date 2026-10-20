@@ -8,23 +8,19 @@
  *   - handle.waitForCompletion() -> blocks until the run settles, returns the
  *                              schema-validated answer
  *
- * Region: EU is the SDK default (agp.eu.hcompany.ai) -> the agent-view UI lives
- * at platform.eu.hcompany.ai.
+ * EU is the SDK default. Both regions use platform.hcompany.ai for Agent View.
  */
 import { HaiAgentsClient } from "hai-agents";
 import { z } from "zod";
 
-// The SDK reads HAI_API_KEY from the environment; `source .env` first, or export it.
+// The SDK reads HAI_API_KEY from the environment; see README.md for .env setup.
 if (!process.env.HAI_API_KEY) {
-  console.error("Missing HAI_API_KEY. Run the hai-agents login or set it in the environment.");
+  console.error("Missing HAI_API_KEY. Export it in the environment; see README.md for .env setup.");
   process.exit(1);
 }
 
 // --- Region (EU is the default; flip to US by setting HAI_REGION=us) ----------
 const region = (process.env.HAI_REGION ?? "eu").toLowerCase();
-const agentViewHost =
-  region === "us" ? "platform.hcompany.ai" : "platform.eu.hcompany.ai";
-
 const client = new HaiAgentsClient(
   region === "us" ? { environment: "https://agp.hcompany.ai" } : {}, // EU default needs no override
 );
@@ -66,7 +62,7 @@ async function main(): Promise<void> {
   });
 
   // Print the live agent-view link first (flushed) so the user can watch now.
-  const agentViewUrl = `https://${agentViewHost}/agent-view/${handle.id}`;
+  const agentViewUrl = `https://platform.hcompany.ai/agent-view/${handle.id}`;
   console.log(`\n▶ Watch live: ${agentViewUrl}`);
   console.log(`  session id: ${handle.id}\n  working… (this can take a couple of minutes)\n`);
 
@@ -74,9 +70,10 @@ async function main(): Promise<void> {
 
   console.log(`Session status: ${result.status}`);
   const answer = result.answer;
-  if (!answer) {
-    console.log("No structured answer was returned. Final text/changes:");
+  if (result.status !== "completed" || !answer) {
+    console.error("The session did not complete with a structured answer. Final text/changes:");
     console.log(JSON.stringify(result.finalChanges?.answer ?? null, null, 2));
+    process.exitCode = 1;
     return;
   }
 
