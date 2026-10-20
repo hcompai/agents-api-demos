@@ -2,7 +2,7 @@
 name: hai-agents
 description: Expert knowledge of the two H Company backends — the portal (portal, API at portal.api.eu.hcompany.ai / portal.production.hcompany.ai — auth, organizations, API keys, invitations, billing) and the agent platform v2 API (agp.hcompany.ai — sessions, agents, skills, environments, vaults, long-polling, the hai-agents SDK). Use this skill whenever the user mentions portal, agent_platform, platform.hcompany.ai, agp.hcompany.ai, HAI_API_KEY or hk-... keys, hai-agents / hai_agents, run_session, agent sessions or trajectories, agent-view or replaying/reviewing a run, /api/v2 endpoints, browser agent environments, vaults for agent secrets, organizations or invitations on the H platform, the desktop OAuth/PKCE login flow, or wants to call, integrate with, debug, or automate anything against an H Company API — even without naming it (e.g. "get me an API key", "set up my .env", "launch a web agent", "why is my session stuck", "show me what the agent did", "why am I getting 401 from the platform?").
 metadata:
-  version: "1.0.1"
+  version: "1.0.2"
   author: hcompai
   repository: https://github.com/hcompai/agents-api-demos/skills
 ---
@@ -14,19 +14,19 @@ H runs two backends, joined by one key. Figure out which you need — then **rea
 | You're touching… | Backend | Base URL | Source of truth |
 |---|---|---|---|
 | Users, orgs, **API keys**, invitations, billing, STT | **Portal** | EU `https://portal.api.eu.hcompany.ai/api` · US `https://portal.production.hcompany.ai/api` | no public docs → [references/portal/](references/portal/) |
-| **Running agents**: sessions, agents, skills, environments, vaults, events/long-poll, SDK, MCP | **Agent platform (agp)** — the public hub brands it the "Computer-Use Agent API" | EU (default) `https://agp.eu.hcompany.ai/api` · US `https://agp.hcompany.ai/api` | live docs + swagger (below) |
+| **Running agents**: sessions, agents, skills, environments, vaults, events/long-poll, SDK, MCP | **Agents API (agp)** | EU (default) `https://agp.eu.hcompany.ai/api` · US `https://agp.hcompany.ai/api` | live docs + swagger (below) |
 
 The **`hk-…` key** is *created* on the portal (by a logged-in user) and *consumed* by agp (`Authorization: Bearer hk-…`). "Get a key" → portal; "use a key" → agp. The full value is shown **only once at creation** — to "retrieve" one, make a new key and revoke the old.
 
 `https://platform.hcompany.ai` is the product **frontend** (API-keys UI at `/settings/api-keys`), not an API.
 
-## Before anything on agp: read references/llms.txt first
+## Before anything on agp: fetch the live docs index
 
-Start every agp task by opening [references/llms.txt](references/llms.txt) — a complete index of the live public docs (every page, one line + a `.md` URL). Find the page(s) for your task, fetch them, and work from those, not from memory. This file keeps no agp endpoint/param/field/limit/model detail on purpose: the docs are current, this file isn't.
+Start every agp task by fetching the [live docs index](https://hub.hcompany.ai/llms.txt). Find the pages for your task and fetch their `.md` URLs. Use the live index rather than a bundled copy so renamed and newly added pages stay discoverable. If the index is unavailable, use the OpenAPI for request and response shapes; don't guess model or agent ids.
 
 Two anchors the index points into, worth calling out:
 - **Exact shapes** (params, bodies, status codes, enums, limits) → the OpenAPI, authoritative and always current, unauthenticated: `https://agp.hcompany.ai/share/openapi.json` (rendered at `/share/docs`).
-- **The `model` field** → the [Agents](https://hub.hcompany.ai/computer-use-agent/agents/overview.md) page. Non-obvious trap: the swagger types `model` as a free string and won't validate it, so a wrong id is accepted at create then fails at run — take the id from the docs, never from memory.
+- **The `model` field** → the [Agents](https://hub.hcompany.ai/agents-api/agents/overview.md) page. Non-obvious trap: the swagger types `model` as a free string and won't validate it, so a wrong id is accepted at create then fails at run — take the id from the docs, never from memory.
 
 ## Get a key into .env (the one thing the docs can't do for you)
 
