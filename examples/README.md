@@ -11,6 +11,7 @@ Runnable recipes and an application walkthrough for the `hai-agents` SDK.
 | [`add_to_cart`](add_to_cart/) | Minimal "drive the SDK straight" recipe (Python): a visual browser agent searches a shopping site for a product and adds it to the cart, printing the live agent-view link first. |
 | [`product_availability`](product_availability/) | The TypeScript counterpart: find a product on a store's site and report availability across sizes, with a `zod`-validated answer schema. |
 | [`creative_building`](creative_building/) | Walk through HoloBricks and HoloBlocks: Workstation sessions, toolkit attachments, browser-rendered custom tool results, and follow-up messages. Run the full apps from their source repositories. |
+| [`design_and_print`](design_and_print/) | Local agent mode: a Holo agent on your Mac designs a part in FreeCAD, slices it in Bambu Studio and starts the print, all through the GUI. |
 
 ## How the browser recipes work
 
@@ -24,7 +25,7 @@ flowchart LR
   recipe -->|result| caller
 ```
 
-The browser recipes use a prebuilt agent or define an inline one, submit the user's instruction, and return its answer to the coding agent or shell. The [creative-building walkthrough](creative_building/) follows applications that use a Workstation and a browser-side renderer.
+The browser recipes use a prebuilt agent or define an inline one, submit the user's instruction, and return its answer to the coding agent or shell. The [creative-building walkthrough](creative_building/) follows applications that use a Workstation and a browser-side renderer. `design_and_print` uses `Client.local()` with desktop and workstation environments on your Mac.
 
 ## Shared code
 
