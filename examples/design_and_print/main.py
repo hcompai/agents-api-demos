@@ -6,6 +6,9 @@ Local agent mode: ``Client.local()`` runs the agent runtime and its desktop + wo
 See this folder's README.md.
 """
 
+from __future__ import annotations
+
+import shlex
 import sys
 import time
 from pathlib import Path
@@ -16,9 +19,9 @@ from hai_agents import Agent, Client, Environment_Desktop, Environment_Workstati
 
 from examples._shared import print_freeform_answer, require_api_key, run_session_streaming, setup_cli_logging
 
-_HERE = Path(__file__).parent
+_HERE = Path(__file__).resolve().parent
 JOBS_DIR = _HERE / "jobs"
-INSTRUCTIONS = (_HERE / "instructions.md").read_text()
+INSTRUCTIONS = (_HERE / "instructions.md").read_text(encoding="utf-8")
 RUNTIME_START_TIMEOUT_S = 180.0  # the local runtime's cold start can exceed the SDK's 45 s default on a busy Mac
 
 
@@ -43,7 +46,7 @@ def design_and_print(prompt: str, printer: str, max_steps: int = 300, max_time_s
                 description="Designs a part in FreeCAD and prints it from Bambu Studio.",
                 model="holo4-27b",
                 reasoning_effort="disabled",
-                instructions=INSTRUCTIONS.replace("{jobs}", str(JOBS_DIR)).replace("{printer}", printer),
+                instructions=INSTRUCTIONS.replace("{jobs}", shlex.quote(str(JOBS_DIR))).replace("{printer}", printer),
                 environments=[
                     Environment_Desktop(id="desktop", host="user_device"),
                     Environment_Workstation(id="workstation", host="user_device"),
@@ -53,6 +56,8 @@ def design_and_print(prompt: str, printer: str, max_steps: int = 300, max_time_s
             max_steps=max_steps,
             max_time_s=max_time_s,
         )
+    if result.status != "completed":
+        raise RuntimeError(f"Print session ended with status={result.status}: {result.error or 'task unfinished'}")
     print_freeform_answer(result, started)
 
 

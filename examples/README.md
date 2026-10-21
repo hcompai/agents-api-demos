@@ -25,7 +25,7 @@ flowchart LR
   recipe -->|result| caller
 ```
 
-The browser recipes use a prebuilt agent or define an inline one, submit the user's instruction, and return its answer to the coding agent or shell. The [creative-building walkthrough](creative_building/) follows applications that use a Workstation and a browser-side renderer.
+The browser recipes use a prebuilt agent or define an inline one, submit the user's instruction, and return its answer to the coding agent or shell. The [creative-building walkthrough](creative_building/) follows applications that use a Workstation and a browser-side renderer. `design_and_print` uses `Client.local()` with desktop and workstation environments on your Mac.
 
 ## Shared code
 
