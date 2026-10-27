@@ -41,7 +41,7 @@ page: `demo@nimbus.test / holo-qa-1`.
 Install the `holo` CLI and sign in once:
 
 ```bash
-pip install "hai-agents[cli,workstation]"
+pip install "hai-agents[cli,workstation]>=1.4.0"
 holo login
 holo mcp install claude-code
 ```
