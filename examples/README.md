@@ -12,6 +12,7 @@ Runnable recipes and an application walkthrough for the `hai-agents` SDK.
 | [`product_availability`](product_availability/) | The TypeScript counterpart: find a product on a store's site and report availability across sizes, with a `zod`-validated answer schema. |
 | [`creative_building`](creative_building/) | Walk through HoloBricks and HoloBlocks: Workstation sessions, toolkit attachments, browser-rendered custom tool results, and follow-up messages. Run the full apps from their source repositories. |
 | [`design_and_print`](design_and_print/) | Local agent mode: a Holo agent on your Mac designs a part in FreeCAD, slices it in Bambu Studio and starts the print, all through the GUI. |
+| [`software_qa`](software_qa/) | Claude Code edits a small React app, asks a Holo desktop agent to test the visible UI through `holo mcp`, then fixes the bug Holo reports and verifies again. |
 
 ## How the browser recipes work
 

@@ -39,3 +39,7 @@ jobs:
       - name: Install locked npm dependencies
         run: npm ci
         working-directory: examples/product_availability
+
+      - name: Build the software QA demo app
+        run: npm ci && npm run build
+        working-directory: examples/software_qa
