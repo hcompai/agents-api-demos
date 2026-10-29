@@ -1,11 +1,11 @@
 ---
 name: holo-qa
-description: Use when asked to QA Nimbus Desk, run a qa/*.md behavioral spec, verify UI behavior, check a regression, or confirm a UI fix. Drives the running app through the root Holo MCP tool, run_agent(task, agent="h/holo-desktop"), and returns a QA report.
+description: Use when asked to QA Nimbus Desk, run a qa/*.md behavioral spec, verify UI behavior, check a regression, or confirm a UI fix. Drives the running app through the root Holo MCP tool, run_agent(task, agent="local-desktop"), and returns a QA report.
 ---
 
 # holo-qa: behavioral QA through root Holo MCP
 
-Use the normal installed Holo MCP tool: `run_agent(task, agent="h/holo-desktop")`. Claude Code should
+Use the normal installed Holo MCP tool: `run_agent(task, agent="local-desktop")`. Claude Code should
 be set up with `holo mcp install claude-code`.
 Do not configure or launch a project-local QA MCP server, and do not use a
 separate QA runner; this example intentionally has one desktop-agent path.
@@ -23,7 +23,7 @@ separate QA runner; this example intentionally has one desktop-agent path.
 3. Read the full markdown spec, including YAML frontmatter. Use the `url`,
    `viewport`, `timeout_s`, and `credentials` fields when composing the Holo
    task.
-4. Call `run_agent(task, agent="h/holo-desktop")` once with a self-contained task using the template
+4. Call `run_agent(task, agent="local-desktop")` once with a self-contained task using the template
    below. Wait for the final result.
 5. Treat the Holo report as the UI evidence. Do not manually browse the app as a
    substitute. Quote failures verbatim.

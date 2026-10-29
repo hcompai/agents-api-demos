@@ -2,7 +2,7 @@
 
 This example shows the closed loop between Claude Code and Holo: Claude Code
 edits a running app, asks Holo to test the UI through the normal
-`run_agent(task, agent="h/holo-desktop")` MCP tool, then uses the visible QA report to fix and verify
+`run_agent(task, agent="local-desktop")` MCP tool, then uses the visible QA report to fix and verify
 the source change.
 
 ## What you will do
@@ -38,19 +38,21 @@ page: `demo@nimbus.test / holo-qa-1`.
 
 ## Prepare Holo
 
-Install the `holo` CLI and sign in once:
+Install the `holo` CLI, sign in, and create the desktop agent once:
 
 ```bash
-pip install "hai-agents[cli,workstation]>=1.4.0"
+pip install "hai-agents[cli,desktop]>=1.4.0"
 holo login
+python -c 'from hai_agents import Client; Client().agents.create_agent(name="local-desktop", description="Drives the desktop on my own machine.", environments=[{"id": "my-desktop", "kind": "desktop", "host": "user_device"}])'
 holo mcp install claude-code
 ```
 
-This wires the root Holo MCP server into Claude Code.
+This wires the root Holo MCP server into Claude Code. `local-desktop` drives this
+machine: see [Your desktop](https://hub.hcompany.ai/agents-api/your-desktop).
 
 The checked-in Claude Code skill at `.claude/skills/holo-qa/SKILL.md` teaches
 Claude how to choose a spec from `qa/`, compose a self-contained QA task, and
-call `run_agent(task, agent="h/holo-desktop")`.
+call `run_agent(task, agent="local-desktop")`.
 
 ## Run the workflow
 
